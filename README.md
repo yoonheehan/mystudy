@@ -21,7 +21,7 @@ npm run build
 node build
 ```
 
-운영에서는 adapter-node의 `ORIGIN`을 실제 사이트 origin으로 지정하고 프록시·TLS·프로세스 관리를 구성하세요. 이 작업에서는 외부 배포를 하지 않았습니다.
+운영 배포는 아래 Vercel 배포 설정을 사용합니다. 로컬 LAN 개발 서버는 기존 `npm run dev`로 실행합니다.
 
 ## 학습
 
@@ -79,3 +79,13 @@ CS 32개 단원의 역할·동작 부분에는 단원별 상태 변화 그림이
 
 디자인은 인파 블로그의 JWT 글에서 본문 중심의 읽기 흐름을 참고해 새로 구성했습니다. 원문 글·이미지·CSS는 복제하지 않았습니다. `static/journal-theme.css`가 흰 바탕, 큰 제목, 박스형 본문 목차, 구분된 소제목, 차분한 코드 영역을 제공합니다. 홈은 두 학습 분야의 글 목록 형태이며 백엔드·알고리즘·코딩 실전에도 공통 색감을 적용했습니다. 모바일 본문 19px와 실습 코드 17px를 유지합니다.
 # mystudy
+
+## Vercel 배포
+
+이 프로젝트는 서버 API가 있어 `@sveltejs/adapter-vercel`을 사용합니다. SvelteKit 2와 호환되는 어댑터 6 버전과 Node.js 22를 사용합니다. `npm run build`는 Vercel Build Output API 형식의 `.vercel/output`을 생성합니다.
+
+Vercel 프로젝트의 Framework Preset은 **SvelteKit**, Build Command는 **npm run build**, Install Command는 **npm ci**로 설정합니다. Output Directory는 **기본값으로 두고 Override를 끕니다**. 기존 프로젝트에 `build` 출력 경로를 수동 설정했다면 해제하세요. Root Directory는 이 폴더의 `package.json`이 있는 저장소 내 위치로 설정합니다. 별도 `python/algorithm` 프로젝트 설정을 사용하지 않습니다.
+
+`prebuild`가 Pyodide 파일을 정적 자산에 복사합니다. `/vendor/python/`의 WASM·표준 라이브러리는 정적 자산으로 제공되고 `/api/practice/[id]`와 `/api/health`는 Vercel 함수로 제공됩니다. Python 코드는 사용자 브라우저에서 실행됩니다. GitHub 배포 시 `package.json`, `package-lock.json`, `svelte.config.js`, `vercel.json`을 함께 반영하세요.
+
+Windows 로컬 빌드에서는 공식 어댑터의 함수 별칭 symlink가 EPERM으로 실패할 때 `scripts/build.mjs`가 `.vercel/output/functions` 내부 디렉터리 별칭에 한해 junction을 사용합니다. Linux/Vercel에서는 이 대체 처리가 실행되지 않습니다. 시스템의 개발자 모드나 보안 설정은 변경하지 않습니다.
