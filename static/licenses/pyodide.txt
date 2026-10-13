@@ -1,0 +1,6 @@
+Pyodide 314.0.7
+License: Mozilla Public License 2.0 (MPL-2.0)
+Official license: https://github.com/pyodide/pyodide/blob/main/LICENSE
+Source: https://github.com/pyodide/pyodide/tree/314.0.7
+Distribution: https://www.npmjs.com/package/pyodide/v/314.0.7
+Runtime files are distributed without modification. Bundled CPython and dependencies retain their respective licenses; see upstream distribution and sources.

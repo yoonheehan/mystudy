@@ -1,0 +1,159 @@
+/* Reading comes first: desktop 18px, phone lessons 19px. */
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body { font-size: 18px; line-height: 1.8; }
+button, input, textarea, select { font: inherit; }
+button, summary, .btn { touch-action: manipulation; }
+:is(.hub, .shell, .layout) p { font-size: 18px; line-height: 1.9; color: #43566d; }
+:is(.hub, .shell, .layout) :is(input, textarea) { font-size: 18px; line-height: 1.8; }
+:is(.shell, .layout) :is(button, summary), .topnav button, .algorithm-nav a { font-size: 16px; line-height: 1.6; min-height: 44px; }
+:is(.shell, .layout) :is(h2, .section-label h2, .card h2) { font-size: 24px; line-height: 1.5; }
+:is(.shell, .layout) h3 { font-size: 21px; line-height: 1.6; }
+:is(.shell, .layout) :is(.eyebrow, .chapter, .reading, .margin-label, .exercise-label, .pill, .tag, .category, .group, .breadcrumb, .legend, .muted, .save-note, .lesson-sources, .lesson-sources a, .aside-footer, .code-head, .code-head button, .completion p, .lesson-pager small, .lesson-pager > span, .page-footer, .page-footer button, .algorithm-home-note, .progress-title span, .aside-intro small) { font-size: 14px; line-height: 1.7; color: #526880; }
+:is(.shell, .layout) :is(.lesson-link, .map-card button, .road-card p, .source-list a, .code-notes, .rubric, .journey) { font-size: 17px; line-height: 1.8; }
+:is(.shell, .layout) :is(.lesson-link .num, .lesson-pager small, .map-card small, .architecture-row small, .packet-path small, .packet-path span:not(.packet-arrow)) { font-size: 14px; }
+:is(.shell, .layout) :is(pre, pre code) { font-size: 16px; line-height: 1.85; }
+:is(.shell, .layout) pre { white-space: pre; overflow-x: auto; }
+:is(.shell, .layout) :is(.paper p, .card p, .steps p, .memory p, .narration p, .model-answer > p, .quiz-feedback p, .warning p, details p, .packet-caption p) { font-size: 18px; line-height: 1.9; }
+:is(.shell, .layout) .analogy p { color: #6a503d; }
+:is(.shell, .layout) :is(.quiz-options button, .rubric) { font-size: 18px; }
+:is(.shell, .layout) :is(table, caption, .packet-path b, .architecture-row > div, .viz-note) { font-size: 16px; line-height: 1.7; }
+.shell > main, .layout > main { min-width: 0; }
+.hero-meta, .hero-bottom, .card-head, .lab-head, .code-head { flex-wrap: wrap; }
+.memory { flex-wrap: wrap; }
+.memory p { flex: 1 1 220px; }
+.definition { grid-template-columns: 65px minmax(0, 1fr); }
+.study-tabs button { white-space: normal; }
+.topbar, header.algo-topbar { height: auto; min-height: 84px; padding-top: 10px; padding-bottom: 10px; }
+.brand small, .algo-topbar .brand small { font-size: 13px; color: #526880; letter-spacing: 0; }
+.algorithm-nav a { color: #526880; }
+.hub-nav a { font-size: 17px; min-height: 50px; line-height: 1.6; }
+.hub-brand small, .sidebar-label, .nav-count, .sidebar-progress > span, .sidebar-progress small, .sidebar-footnote { font-size: 14px; line-height: 1.6; }
+.sidebar-progress b { font-size: 17px; }
+.sidebar-label { letter-spacing: .6px; }
+.hub-breadcrumb, .private-label, .hub-eyebrow, .hub-stats small, .hub-section-heading > span, .course-meta, .course-meta .badge, .topic-chips > span, .course-progress > div, .course-progress b, .continue-strip > div > span, .hub-footer, .hub-footer > span, .hub-footer button, .search-results small { font-size: 14px; line-height: 1.7; }
+.hub-eyebrow { letter-spacing: 1px; }
+.hub-stats small { white-space: normal; }
+.hub-stats b > span { font-size: 15px; }
+.welcome h1 { font-size: 38px; }
+.hub-section-heading h2, .hub-section-heading.compact h2, .study-method h2 { font-size: 25px; line-height: 1.5; }
+.course-grid { gap: 24px; }
+.course-body h3 { font-size: 32px; }
+.course-meta { flex-wrap: wrap; }
+.course-body p { font-size: 18px; }
+.course-cta, .continue-strip .btn, .quick-topics a, .design-resources a { font-size: 17px; min-height: 48px; line-height: 1.6; }
+.continue-strip h3 { font-size: 23px; line-height: 1.5; }
+.continue-strip p { font-size: 16px; }
+.study-method ol, .search-results a, .hub-search input { font-size: 18px; line-height: 1.8; }
+.study-method li > span, .hub-search kbd { font-size: 14px; }
+.hub-footer { flex-wrap: wrap; }
+.hub-footer summary { font-size: 15px; min-height: 44px; color: #526880; }
+.hub-notice, .design-resources p { font-size: 17px; }
+.hub-footer, .course-meta, .course-progress > div, .topic-chips > span, .hub-eyebrow, .hub-stats small { color: #526880; }
+.quick-topics a, .search-results a { color: #3e648c; }
+.practice-theory-link { display:flex; gap:16px; justify-content:space-between; flex-wrap:wrap; margin:20px 0; }
+.practice-theory-link a { text-decoration:underline; font-size:17px; }
+.practice-theory-link > span { font-size:15px; color:#526880; }
+:is(.shell, .layout) :is(.ghost, .secondary, summary, .tab, .study-tabs button, .lesson-link, .reset, .footer-nav .ghost) { color: #405f7e; }
+:is(.shell, .layout) :is(.lesson-link.active, .lesson-link.selected, .client-choice .active) { color: white; }
+.hero-copy p, .intro p, .hero-bottom > span, .english { color: #526880; }
+.layout .legend { display: block; white-space: normal; overflow-wrap: anywhere; }
+.layout .legend i { width: 8px; height: 8px; }
+.hub-brand small, .sidebar-progress small, .sidebar-footnote, .sidebar-label, .nav-count { color: #b5c7d8; }
+.answer-outline ol { padding-left: 24px; font-size: 18px; line-height: 1.9; color: #43566d; }
+.answer-outline li { margin: 8px 0; }
+.shell .interview-credit { font-size: 15px; line-height: 1.8; }
+.interview-credit a { text-decoration: underline; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .answer-outline ol { font-size: 19px; } }
+@media (max-width: 1100px) {
+  .hub { grid-template-columns: 245px minmax(0, 1fr); }
+  .course-grid { grid-template-columns: 1fr; }
+  .hub-main { padding-left: 24px; padding-right: 24px; }
+}
+@media (max-width: 720px) {
+  body { font-size: 19px; }
+  .hub { display: block; }
+  .hub-main, .shell > main, .layout > main { padding: 26px 16px 0; }
+  .hub-topbar { min-height: 68px; }
+  .hub-sidebar { width: min(310px, 90vw); }
+  .hub-nav a { font-size: 18px; }
+  .hub-menu { min-height: 48px; min-width: 48px; }
+  .hub-breadcrumb { font-size: 16px; }
+  .welcome h1 { font-size: 32px; letter-spacing: -1px; }
+  .welcome p, .course-body p, .study-method ol { font-size: 18px; }
+  .hub-section-heading h2, .hub-section-heading.compact h2 { font-size: 24px; }
+  .course-body { padding: 24px 22px 0; }
+  .course-body h3 { font-size: 30px; }
+  .hub-stats { gap: 24px 0; }
+  .hub-stats > div, .hub-stats > a { padding: 0 12px; gap: 8px; }
+  .hub-stats .stat-icon { display: none; }
+  .continue-strip { flex-wrap: wrap; }
+  .continue-strip > div { flex: 1; min-width: 0; }
+  .continue-strip .btn { width: 100%; justify-content: center; font-size: 18px; white-space: normal; margin-top: 10px; }
+  .topbar, header.algo-topbar { flex-wrap: wrap; gap: 12px; min-height: 112px; padding: 12px 16px; }
+  .topnav, .algorithm-nav { width: 100%; margin: 0; justify-content: space-around; gap: 10px; }
+  .topnav button, .algorithm-nav a { font-size: 16px; min-height: 44px; }
+  .brand small, .algo-topbar .brand small { font-size: 13px; }
+  .shell > aside { top: 112px; height: calc(100dvh - 112px); width: min(320px, 90vw); }
+  .mobile-toggle { font-size: 17px; min-height: 48px; padding: 12px 20px; }
+  .hero-copy, .intro { padding: 24px 20px; }
+  .hero-copy h1, .intro h1 { font-size: 32px; line-height: 1.5; }
+  .hero-copy p, .intro p { font-size: 18px; }
+  .hero-bottom > span, .hero-meta .chapter, .reading, .english { font-size: 14px; }
+  .study-tabs { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; gap: 6px; }
+  .study-tabs button { font-size: 17px; min-height: 52px; padding: 12px 8px; }
+  .paper, .card { padding: 24px 20px; }
+  .definition { grid-template-columns: 1fr; }
+  .margin-label { border-right: 0; }
+  :is(.shell, .layout) :is(.paper p, .card p, .steps p, .memory p, .narration p, .model-answer > p, .quiz-feedback p, .warning p, details p, .packet-caption p, .code-notes, .rubric) { font-size: 19px; line-height: 1.95; }
+  .analogy { padding: 24px 20px; gap: 10px; }
+  .analogy p { font-size: 19px; }
+  .steps li { gap: 12px; }
+  .steps li > span { font-size: 15px; width: 34px; height: 34px; }
+  .memory { display: block; }
+  .memory > span:first-child { display: block; font-size: 15px; margin-bottom: 10px; }
+  .memory > span:last-child { display: none; }
+  :is(.shell, .layout) :is(pre, pre code) { font-size: 17px; line-height: 1.9; }
+  :is(.shell, .layout) pre { padding: 22px 16px; }
+  :is(.shell, .layout) :is(.primary, .secondary, .ghost, .controls button, .answer-row button, .footer-nav button, .lesson-link, .tab, summary) { font-size: 17px; min-height: 48px; }
+  .controls-left { flex-wrap: wrap; }
+  .lesson-link { min-width: 190px; }
+  .packet-path { flex-direction: column; align-items: stretch; overflow: visible; }
+  .packet-path > div { min-width: 0; }
+  .packet-arrow { align-self: center; transform: rotate(90deg); }
+  :is(.shell, .layout) :is(.packet-path b, .packet-path small, .packet-path span:not(.packet-arrow)) { font-size: 16px; overflow-wrap: anywhere; }
+  .nat-lab { overflow-x: auto; }
+  .nat-lab table { min-width: 430px; font-size: 15px; }
+  .legend { line-height: 2; }
+  .pointer, .index { font-size: 14px; }
+  .cell { font-size: 22px; }
+  .completion .primary, .next-section .primary { white-space: normal; }
+  .lesson-pager { flex-wrap: wrap; }
+  .lesson-pager button { max-width: 45%; white-space: normal; }
+  .algorithm-home-note { flex-wrap: wrap; padding-bottom: 28px; }
+}
+
+/* Home: two study paths and a clear starting point. */
+.hub .welcome-aside,.hub .course-art{display:none}.hub .welcome{margin-bottom:30px}.hub .home-study-guide{font-size:18px;line-height:1.9;margin:30px 0;color:#476079}.hub .course-body{padding-top:28px}.hub .sidebar-label{font-size:16px}.hub .practice-theory-link{margin-top:26px}.hub .sidebar-bottom{margin-top:auto}.hub .welcome h1{font-size:32px;line-height:1.5}
+@media(max-width:720px){.hub .welcome h1{font-size:29px}.hub .home-study-guide{font-size:19px}.hub .course-body h3{font-size:28px}}
+
+/* Adjustable algorithm diagrams and touch-friendly timeline. */
+.layout .visual-timeline{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin-top:24px;font-size:18px;color:#36536b}
+.layout .visual-timeline input{grid-column:1/-1;width:100%;accent-color:#315b79;min-height:40px;padding:0;cursor:pointer}
+.layout .visual-timeline select{font:inherit;min-height:48px;padding:8px;background:white;border:1px solid #b8ccd9;border-radius:5px;max-width:100%;color:#304d64}
+.layout .visual-reading-note{font-size:17px;line-height:1.9;margin-top:18px}
+.layout .dot{width:44px;height:44px;min-height:44px;border:1px solid #b6c9d8;background:#fff;color:#3d5c74;padding:0;border-radius:6px;font-size:17px}
+.layout .dot.filled{background:#315b79;color:white;border-color:#315b79}
+.layout .stack-cells{flex-direction:column-reverse;align-items:center;gap:8px;min-height:80px;width:100%}
+.layout .stack-cells .cell-wrap{width:min(200px,100%)}
+.layout .stack-cells .cell{height:54px;width:100%}
+.layout .stack-cells .index{display:none}
+.layout .pointer{min-height:30px;height:auto;font-size:17px;color:#315b79;line-height:1.7}
+.layout .viz-note{font-size:19px;line-height:1.9;color:#2e526e;padding:12px 16px;background:white;border:1px solid #d4e1eb;border-radius:6px}
+.layout .structure-count{font-size:18px;margin:12px 0 0}
+.layout .cell.hot{animation:step-arrives .4s ease-out}
+.layout .graph{height:auto;width:100%;max-width:540px}
+.layout .graph text{font-size:21px!important}
+.layout .graph circle{transition:fill .3s,stroke .3s}
+@keyframes step-arrives{from{transform:translateY(7px);opacity:.5}to{transform:translateY(0);opacity:1}}
+@media(max-width:720px){.layout .visual-timeline{font-size:18px}.layout .step-dots{gap:8px}.layout .viz{padding:18px 10px}.layout .cells{flex-wrap:wrap;gap:9px}.layout .cell-wrap{min-width:43px}.layout .cell{min-width:43px;font-size:23px}.layout .index{font-size:16px}.layout .graph{min-width:0}.layout .controls button{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.layout .cell.hot{animation:none}.layout .graph circle{transition:none}}

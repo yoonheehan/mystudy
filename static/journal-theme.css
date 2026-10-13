@@ -1,0 +1,138 @@
+/* Original editorial theme. Reference: the reading structure of Korean dev blogs. */
+:root{--journal-ink:#292b2a;--journal-muted:#737773;--journal-line:#e4e5e1;--journal-accent:#a55735;--journal-paper:#fff;--journal-note:#f6f6f2}
+body{background:#fff;color:var(--journal-ink);-webkit-font-smoothing:antialiased}
+.journal-home{min-height:100vh;background:#fff;color:#292b2a;font:19px/1.9 'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+.journal-home *{box-sizing:border-box}
+.journal-home a{color:inherit;text-decoration:none}
+.journal-home a:hover{color:#a55735}
+.journal-home a:focus-visible,.journal-home summary:focus-visible{outline:3px solid #bf8053;outline-offset:5px}
+.journal-header{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:30px;padding:28px 35px;border-bottom:1px solid #dedfdc}
+.journal-brand{font-size:29px;font-weight:800;letter-spacing:-1px;display:flex;gap:16px;align-items:baseline;white-space:nowrap}
+.journal-brand span{font-size:15px;font-weight:400;letter-spacing:0;color:#777d76}
+.journal-header nav{display:flex;gap:25px;flex-wrap:wrap;font-size:17px}
+.journal-header nav a{padding:5px 0;min-height:44px;display:flex;align-items:center}
+.journal-header nav a[aria-current]{color:#a55735;border-bottom:2px solid #a55735}
+.journal-main{max-width:1000px;margin:auto;padding:60px 45px 25px}
+.journal-intro{border-bottom:2px solid #343b35;padding-bottom:35px;margin-bottom:38px}
+.journal-intro>span{color:#7c776b;font-size:17px}
+.journal-intro h1{font-size:42px;line-height:1.5;font-weight:750;letter-spacing:-1.4px;margin:18px 0;color:#292b2a}
+.journal-intro p{font-size:20px;line-height:1.95;color:#616660;margin:0}
+.journal-tracks>article{padding:18px 0 38px;margin-bottom:28px;border-bottom:1px solid #dfe1dc}
+.journal-category{font-size:17px;color:#a55735;margin-bottom:12px}
+.journal-tracks h2{font-size:31px;line-height:1.6;margin:0 0 15px;letter-spacing:-.8px;color:#242825}
+.journal-tracks p{font-size:19px;line-height:2;max-width:790px;margin:0 0 18px;color:#424842}
+.journal-topics{font-size:17px;color:#777c76;margin:17px 0}
+.journal-track-bottom{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:24px}
+.journal-track-bottom>span,.journal-related>span{color:#757a74;font-size:17px;white-space:nowrap}
+.journal-home .journal-start{font-size:19px;color:#a55735;font-weight:600;padding:8px 0;text-decoration:underline;text-underline-offset:5px}
+.journal-related{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;background:#f7f7f4;padding:18px 22px;margin-top:18px;font-size:17px;border-left:3px solid #bfc4b9}
+.journal-note{padding:22px 25px;background:#faf8f2;border-left:3px solid #bd996f;margin-top:35px}
+.journal-note>strong{font-size:20px}.journal-note p{font-size:18px;line-height:1.95;margin:10px 0 0;color:#575c52}
+.journal-footer{display:flex;justify-content:space-between;align-items:baseline;gap:25px;flex-wrap:wrap;border-top:1px solid #e3e5df;padding:25px 0;margin-top:45px;font-size:16px;color:#72796f}
+.journal-footer details{max-width:600px;border:0}.journal-footer summary{cursor:pointer;min-height:44px;font-size:16px}.journal-footer p{font-size:16px;line-height:1.9;margin:15px 0;color:#697162}.journal-footer p a{text-decoration:underline}
+.journal-notice{padding:18px;background:#faf2e9;border-left:3px solid #aa784c;font-size:18px}
+/* Text-first backend articles, with a quiet category sidebar. */
+body .study-book{background:#fff;color:#292d29;--book-ink:#292d29;--book-line:#e1e4de;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+body .study-book p{color:#383e38;font-size:19px;line-height:2.05}
+body .study-book a{color:#57704d;text-underline-offset:4px}
+body .study-book .book-header{background:#fff;color:#292d29;max-width:1240px;margin:auto;padding:25px 35px;border-bottom:1px solid #dedfdc;min-height:90px;gap:45px}
+body .study-book .book-brand{color:#292d29;font-size:29px;letter-spacing:-1px}
+body .study-book .book-header nav a,body .study-book .book-header nav button{color:#525b51;font-size:17px}
+body .study-book .book-header nav .active{color:#a55735;border-bottom:2px solid #a55735!important}
+body .study-book .book-layout{max-width:1240px;grid-template-columns:240px minmax(0,1fr)}
+body .study-book .book-sidebar{background:#fff;border-right:1px solid #e7e8e3;padding:30px 24px}
+body .study-book .course-link{color:#5e695a;font-size:17px}
+body .study-book .book-progress strong{color:#303a2d;font-size:22px}
+body .study-book .book-progress progress{accent-color:#9ba58d;height:4px}
+body .study-book .book-search{color:#72796b}
+body .study-book .book-search input{background:#fafbf8;border-color:#d9ded2;border-radius:2px;font-size:17px}
+body .study-book .book-chapter{border-color:#e5e7e0}
+body .study-book .book-chapter summary{color:#414d3d;font-size:17px}
+body .study-book .book-chapter button{font-size:16px;padding:12px 5px;color:#66735d}
+body .study-book .book-chapter button.active{border-left:3px solid #a55735;border-radius:0;background:#f8f5ef;color:#4c493c}
+body .study-book .book-chapter button>span:first-child{color:#90977e}
+body .study-book .book-main{padding:45px clamp(25px,4vw,60px) 0;max-width:1000px}
+body .study-book .reading-heading{padding:0 0 30px;border-bottom:1px solid #e3e5dd;margin-bottom:30px}
+body .study-book .reading-heading>span,body .study-book .course-heading>span{font-size:17px;color:#8b7763}
+body .study-book h1{font-size:38px;line-height:1.55;letter-spacing:-1px;color:#292d29;margin:20px 0 18px}
+body .study-book .reading-heading p{font-size:20px;color:#686f62;line-height:1.9}
+body .study-book .book-bookmark{border:0;background:#f5f5ef;border-radius:2px;color:#807048;padding:8px 15px;font-size:17px}
+body .study-book .reading-contents{display:grid;grid-template-columns:1fr 1fr;gap:10px 25px;max-width:840px;padding:22px 25px;background:#f7f8f4;border:1px solid #e0e4d8;border-radius:3px;margin:0 0 45px}
+body .study-book .reading-contents>strong{grid-column:1/-1;font-size:21px;color:#414e36;margin-bottom:6px}
+body .study-book .reading-contents a{font-size:18px;color:#677b56;min-height:42px;display:flex;align-items:center;text-decoration:none}
+body .study-book .reading-contents a:hover{text-decoration:underline}
+body .study-book .reading-page{border:0;border-radius:0;background:transparent;padding:0;box-shadow:none}
+body .study-book .reading-page>section{padding-bottom:45px}
+body .study-book .reading-page>section+section{border-top:1px solid #e5e6e0;padding-top:45px}
+body .study-book .reading-label{font-size:17px;color:#8a8e81;margin-bottom:14px}
+body .study-book .reading-page h2{font-size:27px;line-height:1.65;color:#30372f;background:#f3f4ef;border-left:4px solid #6c7961;padding:13px 19px;margin:0 0 30px;letter-spacing:-.6px}
+body .study-book .reading-page h3{font-size:23px;color:#333d30;margin:35px 0 17px;padding-bottom:10px;border-bottom:1px solid #e1e5da;font-weight:650}
+body .study-book .term-name{font:18px/1.9 Consolas,monospace;color:#8b755a;margin-bottom:20px}
+body .study-book .story-box{background:#f7f8f4;border-left:3px solid #b1bc9e;padding:22px 25px;border-radius:0;margin-top:28px}
+body .study-book .story-box h3{margin-top:0;background:none;border:0;padding:0;font-size:21px}
+body .study-book .design-note{background:#fcf9f2;border-color:#b99a65;padding:20px 24px;border-radius:0}
+body .study-book .design-note h3{margin-top:0;border:0;padding:0;font-size:21px}
+body .study-book .role-table table{font-size:18px;border-color:#d9ded3}
+body .study-book .role-table th,body .study-book .role-table td{border-color:#dfe3d8;line-height:1.95}
+body .study-book .role-table thead th{background:#f2f4ed;color:#4c5944}
+body .study-book .reading-code{background:#292c29;border-radius:3px;margin:25px 0}
+body .study-book .reading-code>div{color:#dddccf;background:#373b34;border-bottom:1px solid #50554a;font-size:17px}
+body .study-book .reading-code button{background:#4a5143;border-color:#68715d;border-radius:2px;color:#f0efe3;font-size:16px}
+body .study-book pre{background:#292c29;color:#eeeee3;border-radius:3px;font-size:17px;line-height:1.95;padding:25px}
+body .study-book .expected-output{background:#f4f6ef;color:#46553c;border-color:#dce2d2}
+body .study-book .memory-line{background:#f4f6ed;border-color:#9baa80;border-radius:0}
+body .study-book .execution-note{font-size:17px;color:#737c68}
+body .study-book button{border-radius:3px}
+body .study-book .book-primary{background:#a55735;border-color:#a55735;color:#fff}
+body .study-book .book-field textarea{border-radius:3px;border-color:#d0d8c6;background:#fff;font-size:19px}
+body .study-book .reading-quiz{border-color:#dbe1d3;border-radius:3px;background:#fafbf7}
+body .study-book .reading-quiz button.chosen{background:#ecefe4;border-color:#8c9d75}
+body .study-book .course-heading{border-bottom:2px solid #4e5847;margin-bottom:15px;padding-bottom:35px}
+body .study-book .course-outline>section{border-color:#e2e5dc}
+body .study-book .chapter-heading>span{color:#9b846b}
+body .study-book .chapter-heading h2{color:#333d2d;font-size:26px}
+body .study-book .chapter-heading p{color:#75806a;font-size:18px}
+body .study-book .course-outline button{border-radius:0;font-size:19px;color:#414d37}
+body .study-book .course-outline button:hover{background:#f6f8f0}
+body .study-book .course-outline small{font-size:17px;color:#7b846f}
+body .study-book .book-footer{color:#858b7d;font-size:16px}
+body .study-book .concept-animation{border-color:#d9e0d0;background:#f8faf5;border-radius:3px;box-shadow:none}
+/* Keep the coding workspace useful while sharing the same blog palette. */
+body .arena{background:#fff;color:#30372d;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+body .arena .arena-header{background:#fff;color:#30372d;border-bottom:1px solid #dde3d6}
+body .arena .arena-logo{color:#30372d!important;font-size:27px}
+body .arena .arena-header nav a,body .arena .arena-logo span,body .arena .arena-summary{color:#68745b}
+body .arena .problem-list{background:#f8faf5;border-color:#e1e6d9}
+body .arena .description-panel,body .arena .editor-panel,body .arena .results-panel,body .arena .submission-history{box-shadow:none;border-radius:3px;border-color:#dfe5d6}
+body .arena h1,body .arena h2,body .arena h3{color:#333d2c}
+body .arena p{color:#414b39}
+body .arena .problem-list nav button.selected,body .arena .level-filters .selected{background:#546348;border-color:#546348;color:#fff}
+body .arena .submit-button{background:#a55735;border-color:#a55735}
+body .arena .code-editor{background:#292c29;color:#eeeede;border-color:#575f4d;border-radius:3px;font-size:17px}
+body .arena .sample-box,body .arena .hint-box{border-radius:3px}
+/* Static algorithm articles use the same editorial surface. */
+body:has(header.algo-topbar){background:#fff;color:#31392d}
+body header.algo-topbar{background:#fff;border-bottom:1px solid #e0e4d9;box-shadow:none;min-height:85px}
+body header.algo-topbar .brand{color:#30392a;font-size:27px}
+body header.algo-topbar .logo{display:none}
+body header.algo-topbar .algorithm-nav a{color:#637454}
+body header.algo-topbar .algorithm-nav .active{border-color:#a55735;color:#a55735}
+body .layout aside{background:#fff;border-color:#e3e6db}
+body .layout main{background:#fff}
+body .layout .intro{background:#fff;border:0;border-bottom:1px solid #dfe4d5;box-shadow:none;border-radius:0;padding:0 0 30px}
+body .layout .intro h1{color:#30392a;font-size:36px}
+body .layout .card{box-shadow:none;border-radius:3px;border-color:#dce3d2}
+body .layout .card h2{color:#38482f;background:#f2f5ec;padding:12px 15px;border-left:4px solid #7b8e65;font-size:24px}
+body .layout .card p{color:#424e37}
+body .layout .tabs{background:#fafbf6;border-color:#dee4d3;box-shadow:none;border-radius:3px}
+body .layout .tab.selected{background:#eef2e5;color:#586d41}
+body .layout .lesson-link.active{background:#5e714c;box-shadow:none}
+body .layout .viz{border-radius:3px;background:#f8faf5;border-color:#dfe7d3}
+body .layout .narration{border-radius:3px;background:#f1f5e9;border-color:#dce6cf}
+body .layout .primary{background:#a55735;box-shadow:none}
+body .layout pre{background:#292c29;color:#eeeede;border-radius:3px}
+@media(max-width:900px){body .study-book .book-layout{grid-template-columns:205px minmax(0,1fr)}body .study-book .book-sidebar{padding:24px 16px}body .study-book .book-main{padding:35px 25px 0}.journal-header{gap:15px;padding:22px 25px}.journal-header nav{gap:18px}.journal-brand span{display:none}}
+@media(max-width:720px){
+ .journal-header{padding:19px 20px;flex-wrap:wrap;gap:14px}.journal-brand{font-size:28px}.journal-brand span{display:block;font-size:15px}.journal-header nav{width:100%;gap:9px 20px;font-size:17px}.journal-main{padding:35px 22px 15px}.journal-intro{padding-bottom:28px;margin-bottom:25px}.journal-intro h1{font-size:33px;line-height:1.6}.journal-intro p{font-size:19px}.journal-tracks h2{font-size:27px}.journal-tracks p{font-size:19px;line-height:2}.journal-track-bottom{flex-wrap:wrap}.journal-related{padding:17px 15px;font-size:18px}.journal-note{padding:20px 17px}.journal-note p{font-size:19px}.journal-footer{margin-top:35px}
+ body .study-book .book-header{padding:19px 20px;min-height:80px;gap:15px;flex-wrap:wrap}body .study-book .book-header nav{font-size:17px;gap:15px}body .study-book .book-menu{border-color:#d4dcc8;color:#596a4b;background:#f8faf4;border-radius:2px;font-size:17px}body .study-book .book-layout{display:block}body .study-book .book-sidebar{padding:24px 20px;border-bottom:1px solid #dfe5d6}body .study-book .book-main{padding:32px 21px 0}body .study-book h1{font-size:31px;line-height:1.65;margin:15px 0}body .study-book p{font-size:19px;line-height:2.05}body .study-book .reading-heading{padding:0 0 25px}body .study-book .reading-heading p{font-size:19px}body .study-book .reading-contents{grid-template-columns:1fr 1fr;gap:8px 12px;padding:20px 16px;margin-bottom:35px}body .study-book .reading-contents a{font-size:17px;min-height:44px}body .study-book .reading-page{padding:0}body .study-book .reading-page h2{font-size:25px;padding:13px 15px}body .study-book .reading-page h3{font-size:22px}body .study-book .story-box,body .study-book .design-note{padding:20px 17px}body .study-book pre{font-size:17px;padding:21px 16px}body .study-book .role-table table{font-size:17px}body .study-book .course-heading{padding:0 0 30px}body .study-book .course-outline>section{padding:27px 0}body .study-book .chapter-heading h2{font-size:24px}body .arena .arena-header{padding:20px}body header.algo-topbar{height:auto;padding:20px;flex-wrap:wrap;gap:15px}body header.algo-topbar .algorithm-nav{width:100%;justify-content:space-between;gap:10px;margin:0}body header.algo-topbar .algorithm-nav a{font-size:16px}body .layout .intro h1{font-size:30px}body .layout .card{padding:22px 18px}body .layout .card h2{font-size:23px}
+}
