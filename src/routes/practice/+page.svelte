@@ -2,6 +2,9 @@
  import { onMount, onDestroy } from 'svelte';
  import { problems, getProblem, starter, type Problem } from '$lib/practice/problems';
  import { HINT_COST, RETRY_DELAY, scoreSubmission, updateBest, grade } from '$lib/practice/scoring';
+ import '@tabler/core/dist/css/tabler.min.css';
+ import '../../app.css';
+ import '../../redesign.css';
  import './practice.css';
  type History={time:number;score:number;passed:number;total:number;hints:number;round:number;accepted:boolean;language:string};
  type RecordData={drafts:Record<string,string>;hints:number;attempts:number;round:number;best:number;accepted:boolean;lastAcceptedAt:number;history:History[]};
@@ -59,9 +62,9 @@
  onDestroy(()=>stop());
 </script>
 
-<svelte:head><title>{problem.title} · 코딩 실전 · CS 노트</title><meta name="description" content="24개 난이도별 문제를 Python로 직접 풀고 예시·경계값·무작위·큰 입력을 검사하세요."/></svelte:head>
+<svelte:head><link rel="stylesheet" href="/readability.css"/><link rel="stylesheet" href="/journal-theme.css"/><title>{problem.title} · 코딩 실전 · CS 노트</title><meta name="description" content="24개 난이도별 문제를 Python로 직접 풀고 예시·경계값·무작위·큰 입력을 검사하세요."/></svelte:head>
 <div class="arena">
- <header class="arena-header"><a class="arena-logo" href="/">CS 노트<span>코딩 실전</span></a><nav aria-label="학습 메뉴"><a href="/">학습 홈</a><a href="/algorithm.html" data-sveltekit-reload>그림으로 배우기</a><a href="/backend">백엔드·CS</a></nav><span class="arena-summary">{solved}/24 해결 · {totalScore}점</span></header>
+ <header class="arena-header"><a class="arena-logo" href="/" data-sveltekit-reload>CS 노트<span>코딩 실전</span></a><nav aria-label="학습 메뉴"><a href="/" data-sveltekit-reload>학습 홈</a><a href="/algorithm.html" data-sveltekit-reload>그림으로 배우기</a><a href="/backend" data-sveltekit-reload>백엔드·CS</a></nav><span class="arena-summary">{solved}/24 해결 · {totalScore}점</span></header>
  {#if storageWarning}<p class="arena-notice" role="status">{storageWarning}</p>{/if}
  <div class="arena-workspace">
   <aside class="problem-list"><div class="list-title"><h1>문제 목록</h1><span>24 problems</span></div><label class="arena-search">문제 검색<input aria-label="코딩 문제 검색" placeholder="배열, DP, 최단 경로…" bind:value={search}/></label><div class="level-filters" aria-label="문제 난이도">{#each ['전체','입문','중급','도전'] as item}<button class:selected={level===item} onclick={()=>level=item}>{item}{#if item!=='전체'} <small>8</small>{/if}</button>{/each}</div><nav aria-label="코딩 문제 목록">{#each filtered as item}<button disabled={running} class:selected={current===item.id} onclick={()=>choose(item.id)}><span class="problem-number">{String(problems.indexOf(item)+1).padStart(2,'0')}</span><span>{item.title}<small>{item.level} · {item.topic}</small></span><span class="problem-mark">{records[item.id]?.accepted?'✓':'·'}</span></button>{/each}{#if !filtered.length}<p>검색 결과가 없습니다.</p>{/if}</nav><details class="score-rules"><summary>점수·재도전 규칙</summary><p>통과율 100점에서 힌트 1/2/3개는 누적 8/18/30점 차감. 같은 회차의 제출 2회째부터 2점씩, 최대 10점 차감합니다.</p><p>전체 통과한 점수만 최고 기록에 반영합니다. S ≥ 90, A ≥ 80, B ≥ 65, 나머지는 C. 일부 통과는 ‘연습 중’입니다.</p><p>첫 전체 통과 뒤에는 마지막 전체 통과로부터 24시간이 지난 무힌트 재도전만 최고 점수를 최대 +10점 보정합니다. 실패하거나 낮은 점수를 받아도 최고 기록은 유지됩니다. 예시 실행은 감점하지 않습니다.</p><p>개인 연습 기록이며 기기·브라우저별 저장입니다. 공식 순위나 변조 방지 성적표는 아닙니다.</p></details></aside>
