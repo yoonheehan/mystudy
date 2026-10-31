@@ -116,6 +116,21 @@
 .memory-line p{margin:0;font-size:var(--step-lead);line-height:1.5}
 .execution-note{font-size:var(--step-small);color:var(--muted)}
 
+/* History: timeline, design decisions */
+.timeline{list-style:none;margin:48px 0 0;padding:0;display:grid;gap:40px}
+.timeline li{display:grid;grid-template-columns:120px minmax(0,1fr);gap:24px;margin:0}
+.timeline-year{font-size:var(--step-body);font-weight:700;color:var(--accent);line-height:1.4;padding-top:2px}
+.timeline h3{margin:0 0 8px}
+.timeline p{margin:0}
+.decisions-title{margin-top:96px!important;font-size:clamp(1.5rem,1.1rem + 1.4vw,2.25rem)!important}
+.decisions{display:grid;gap:56px;margin-top:32px}
+.decision h4{margin:0 0 12px;font-size:var(--step-lead);letter-spacing:-.02em}
+.decision-cost{margin:0!important;color:#3d3d3d}
+.decision-cost strong{color:var(--accent);margin-right:.5em}
+.today li{margin:.8em 0}
+.history-sources{padding-left:1.2em}
+.history-sources a{text-decoration:none}
+.history-sources a:hover{color:var(--accent)}
 .role-table{overflow-x:auto;margin:0 0 16px}
 .role-table table{width:100%;border-collapse:collapse;font-size:var(--step-body)}
 .role-table th,.role-table td{text-align:left;vertical-align:top;padding:14px 16px 14px 0;border-bottom:1px solid var(--surface-2);line-height:1.6}
@@ -205,5 +220,6 @@
  .reading-page section{padding-top:80px}
  .story-box,.practical-case,.memory-line,.design-note{padding:22px 20px;margin-inline:calc(var(--margin) * -1)}
  .book-pager{grid-template-columns:1fr 1fr}
+ .timeline li{grid-template-columns:1fr;gap:4px}
  .book-pager button:nth-child(2){grid-column:1/-1;grid-row:2;justify-self:center}
 }
