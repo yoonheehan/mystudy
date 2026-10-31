@@ -42,7 +42,7 @@ GitHub의 `jbee37142/Interview_Question_for_Beginner`(MIT), `ksundong/backend-in
 
 각 단원의 공식 문서 링크와 전체 참고 자료는 사이트 내부에 있습니다. 클라우드 적용은 설계 학습 예시이며 가격·상품 지원·존별 제한·실제 권한을 배포 시점에 재확인해야 합니다. 모든 코드가 통째로 실행되는 완성 서비스는 아닙니다. 교육용 모형, 서버 코드 조각, SQL·배포 구성 예시를 구분해 표시했습니다.
 
-디자인은 무료 MIT 라이선스의 [Tabler](https://tabler.io/admin-template)를 적용했습니다. SvelteKit에서는 `@tabler/core`의 CSS를 가져오고, 기존 알고리즘 화면에는 같은 CSS를 로컬 파일로 제공합니다. 사이드바·두 학습 카드·강의 화면을 같은 색상과 간격으로 구성했습니다. Tabler의 라이선스 고지는 `static/licenses/tabler.txt`에 있습니다. 외부 폰트는 실패해도 시스템 한국어 폰트로 표시됩니다.
+디자인은 흰 바탕, 검은 글자, 파란 강조색 하나로 통일했습니다. 공통 토큰은 `src/lib/styles/notebook.css`에 있고, SvelteKit 밖의 알고리즘 화면은 같은 값을 `static/algorithm.css`로 씁니다. 글꼴은 Pretendard이며 불러오지 못하면 시스템 한국어 글꼴로 표시됩니다. 각 장의 기록 사진은 공개 라이선스 자료이고 출처는 `static/archive/credits.json`과 홈 화면 하단에 있습니다.
 
 ## 면접 저장소 참고 보강
 2026-10-10에 ksundong/backend-interview-question을 읽고 교착 상태·정규화·JOIN·DB 선택 4개 단원을 추가했습니다. 기존 12개 단원과 새 4개 단원의 면접 화면에 구체적인 질문·질문 의도·답변 순서 힌트를 연결했습니다. 설명·코드·퀴즈는 별도로 작성했고 질문 주제를 원본과 연결했습니다. Java·Spring 등 원문 전체를 수입한 것은 아닙니다. 원문 Information의 CC BY-NC-SA 표기와 별도 CC BY-NC 2.0 KR 링크가 함께 있어 이용 조건은 원본 저장소에서 확인하세요.
@@ -77,7 +77,6 @@ CS 32개 단원의 역할·동작 부분에는 단원별 상태 변화 그림이
 
 알고리즘 12개 단원도 단계 선택·재생 속도를 지원합니다. 스택은 세로로 쌓고 큐에는 front/rear를 표시합니다. `/algorithm.html?lesson=스택`처럼 단원을 직접 열 수 있고 코딩 문제의 이론 복습 링크도 해당 단원으로 이동합니다. 기존 `oneStepAlgorithmV1` 기록은 유지합니다.
 
-디자인은 인파 블로그의 JWT 글에서 본문 중심의 읽기 흐름을 참고해 새로 구성했습니다. 원문 글·이미지·CSS는 복제하지 않았습니다. `static/journal-theme.css`가 흰 바탕, 큰 제목, 박스형 본문 목차, 구분된 소제목, 차분한 코드 영역을 제공합니다. 홈은 두 학습 분야의 글 목록 형태이며 백엔드·알고리즘·코딩 실전에도 공통 색감을 적용했습니다. 모바일 본문 19px와 실습 코드 17px를 유지합니다.
 # mystudy
 
 ## Vercel 배포

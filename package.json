@@ -23,7 +23,6 @@
     "vite": "^7.0.0"
   },
   "dependencies": {
-    "@tabler/core": "^1.6.1",
     "pyodide": "^314.0.7"
   },
   "engines": {

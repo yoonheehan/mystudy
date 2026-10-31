@@ -115,7 +115,7 @@
   <div class="close-credits">
    <h2>사진 출처</h2>
    <ul>{#each chapterPictures as picture}<li><a href={picture.page} target="_blank" rel="noreferrer">{picture.year} · {picture.credit}</a> · {picture.license}</li>{/each}</ul>
-   <p>UI 기반 <a href="/licenses/tabler.txt">Tabler</a> · Python 실행기 <a href="/licenses/pyodide.txt">Pyodide</a></p>
+   <p>Python 실행기 <a href="/licenses/pyodide.txt">Pyodide</a></p>
   </div>
  </div>
  <div class="close-legal"><span>학습 기록은 이 브라우저에만 저장됩니다.</span><a href="#top" onclick={(e)=>{e.preventDefault();window.scrollTo({top:0});}}>맨 위로</a></div>
