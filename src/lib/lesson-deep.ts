@@ -841,5 +841,252 @@ export const deeps:Record<string,LessonDeep>={
    {title:'장애 대응의 순서',body:'장애가 나면 원인을 찾기보다 영향을 줄이는 것이 먼저입니다. 누가 대응을 지휘하고 누가 기록하고 누가 사용자에게 알릴지 역할을 나눕니다. 최근 배포가 있었다면 되돌리는 것이 가장 빠른 완화책인 경우가 많습니다. 기능 플래그로 문제 기능만 끄거나, 트래픽을 다른 영역으로 돌리는 것도 방법입니다. 진행 상황은 시각과 함께 한곳에 기록해 두면 나중에 사후 분석의 재료가 됩니다.'},
    {title:'사후 분석에 들어가는 것',body:'장애가 끝나면 무슨 일이 언제 일어났는지(타임라인), 사용자에게 어떤 영향이 얼마나 있었는지, 근본 원인과 그것을 키운 요인, 왜 더 빨리 알아채지 못했는지, 무엇을 바꿀지와 담당자·기한을 정리합니다. 원인을 사람의 실수로 끝내지 않고 "그 실수가 왜 가능했는가"를 묻습니다. 같은 명령을 누구나 잘못 칠 수 있었다면 고칠 것은 사람이 아니라 확인 절차나 도구입니다.'}
   ]
+ },
+ sync:{
+  definition:'동기화는 여러 스레드가 공유 데이터를 다룰 때 실행 순서에 상관없이 올바른 결과가 나오도록 접근 순서를 통제하는 일입니다. 공유 데이터를 바꾸는 코드 구간을 임계 구역이라고 하고 한 번에 한 스레드만 들어가게 하는 것을 상호 배제라고 합니다. 뮤텍스는 상호 배제를 위한 락이고 세마포어는 들어갈 수 있는 수를 N으로 세는 카운터입니다. 조건 변수는 락과 함께 쓰여 "큐가 비어 있지 않을 때까지" 같은 조건을 기다리게 합니다. 이 도구들은 모두 CPU가 제공하는 원자적 명령 위에 만들어집니다.',
+  terms:[
+   ['경쟁 상태','결과가 스레드의 실행 순서와 타이밍에 따라 달라지는 상황입니다.'],
+   ['임계 구역','공유 데이터를 읽고 바꾸는 코드 구간입니다. 한 번에 한 스레드만 실행해야 합니다.'],
+   ['뮤텍스','임계 구역의 입장권 하나입니다. 잡은 스레드만 풀 수 있습니다.'],
+   ['세마포어','남은 입장권 수를 세는 카운터입니다. 0이면 기다립니다.'],
+   ['조건 변수','조건이 참이 될 때까지 스레드를 재워 두었다가 다른 스레드의 신호로 깨웁니다.'],
+   ['원자적 연산','중간에 끼어들 수 없이 한 번에 끝나는 연산입니다. compare-and-swap이 대표적입니다.']
+  ],
+  sections:[
+   {title:'counter += 1이 깨지는 과정',body:'파이썬의 한 줄은 기계에서 여러 단계입니다. 두 스레드가 동시에 실행하면 이렇게 됩니다.',list:['스레드 A가 counter의 값 5를 읽습니다.','스케줄러가 스레드 B로 바꿉니다. B도 5를 읽고 6을 써 넣습니다.','A로 돌아와 자기가 읽은 5에 1을 더한 6을 써 넣습니다.','두 번 더했는데 결과는 6입니다. B의 증가가 사라졌습니다.']},
+   {title:'락을 쓰는 규칙',body:'락은 쓰는 방법보다 지키는 규칙이 중요합니다.',list:['같은 데이터를 보호하는 코드는 모두 같은 락을 써야 합니다. 한 곳이라도 락 없이 바꾸면 소용이 없습니다.','확인과 변경을 같은 임계 구역에 넣습니다. 확인만 락 안에서 하고 변경을 밖에서 하면 그 사이에 끼어듭니다.','with lock:으로 잡아 예외가 나도 반드시 풀리게 합니다.','락 안에서는 네트워크 호출, 디스크 I/O, sleep을 하지 않습니다. 기다리는 모든 스레드가 그 시간만큼 멈춥니다.']},
+   {title:'세마포어로 동시 실행 수 제한하기',body:'외부 API가 동시 요청 5개까지만 허용한다면 Semaphore(5)를 두고 호출 전에 acquire, 끝나면 release 합니다. 6번째 스레드는 앞의 하나가 끝날 때까지 기다립니다. asyncio에서는 asyncio.Semaphore를 같은 방식으로 씁니다. DB 커넥션 풀도 내부적으로 같은 원리입니다.'},
+   {title:'조건 변수와 생산자·소비자',body:'소비자는 큐가 비어 있으면 기다려야 합니다. 계속 확인하면 CPU를 낭비하므로 조건 변수에서 잠듭니다. 생산자가 큐에 넣고 notify하면 소비자가 깨어나 다시 조건을 확인합니다. 깨어났다고 조건이 참이라는 보장은 없으므로 if가 아니라 while로 조건을 다시 확인합니다. Python의 queue.Queue는 이 패턴을 안에 담고 있어서 직접 조건 변수를 쓸 일은 많지 않습니다.'},
+   {title:'교착 상태와 우선순위 역전',body:'두 스레드가 서로 상대가 가진 락을 기다리면 둘 다 영원히 멈춥니다. 락을 항상 같은 순서로 잡거나 시간 제한(acquire(timeout=…))을 두면 막을 수 있습니다. 실시간 시스템에서는 낮은 우선순위 작업이 락을 잡은 사이 중간 작업이 CPU를 차지해 높은 작업이 기다리는 우선순위 역전도 생깁니다. 락을 가진 작업의 우선순위를 잠시 올려 주는 우선순위 상속으로 해결합니다.'},
+   {title:'서버가 여러 대일 때',body:'threading.Lock은 같은 프로세스 안의 스레드끼리만 막습니다. gunicorn 워커가 4개면 서로 다른 프로세스라 락을 공유하지 않습니다. 여러 프로세스와 서버가 함께 지킬 규칙은 DB의 UPDATE … WHERE qty > 0 같은 조건부 쓰기나 SELECT … FOR UPDATE, Redis의 INCR이나 SET NX처럼 저장소가 원자적으로 처리하는 연산으로 옮깁니다.'}
+  ],
+  sources:[
+   ['Python · threading','https://docs.python.org/3/library/threading.html'],
+   ['Python · asyncio synchronization primitives','https://docs.python.org/3/library/asyncio-sync.html'],
+   ['Linux man-pages · pthreads','https://man7.org/linux/man-pages/man7/pthreads.7.html'],
+   ['Reeves, What Really Happened on Mars? (1997)','https://www.cs.cornell.edu/courses/cs614/1999sp/papers/pathfinder.html']
+  ]
+ },
+ scheduling:{
+  definition:'CPU 스케줄링은 실행할 준비가 된 여러 스레드 중 어느 것을 어느 코어에서 얼마 동안 실행할지 정하는 운영체제의 일입니다. 스레드는 실행 중, 실행 대기(실행 큐에 있음), 대기(I/O나 락을 기다리며 잠듦) 상태를 오갑니다. 스케줄러는 정해진 시간이 지나거나 더 급한 스레드가 깨어나면 실행 중인 스레드를 내리고 다른 스레드를 올립니다. Linux의 일반 스레드는 가중치를 반영한 가상 실행 시간이 가장 작은 스레드를 고르는 방식(CFS, 6.6부터 EEVDF)으로 공정하게 시간을 나눕니다. 컨테이너의 CPU 제한은 cgroup이 이 위에 주기별 할당량을 거는 방식입니다.',
+  terms:[
+   ['실행 큐','실행할 준비가 된 스레드들이 기다리는 자료구조입니다. 코어마다 하나씩 있습니다.'],
+   ['선점','실행 중인 스레드를 강제로 내리고 다른 스레드를 실행하는 것입니다.'],
+   ['문맥 교환','실행할 스레드를 바꾸며 레지스터와 상태를 저장하고 복원하는 일입니다.'],
+   ['가상 실행 시간','실제 실행 시간을 가중치로 나눈 값입니다. 작을수록 먼저 실행됩니다.'],
+   ['nice','스레드의 가중치를 정하는 값입니다. −20(가장 큼)부터 19(가장 작음)까지입니다.'],
+   ['스로틀링','cgroup 할당량을 다 써서 다음 주기까지 그룹 전체가 멈추는 것입니다.']
+  ],
+  sections:[
+   {title:'스레드가 오가는 상태',body:'스케줄러가 고를 수 있는 것은 실행 큐에 있는 스레드뿐입니다.',list:['DB 응답을 기다리는 스레드는 잠든 상태라 CPU를 쓰지 않고 큐에도 없습니다.','응답이 도착하면 깨어나 실행 큐에 들어갑니다.','스케줄러가 고르면 실행되고 다시 I/O를 시작하면 잠듭니다.','계산만 계속하는 스레드는 시간이 끝날 때마다 큐 뒤로 갑니다.']},
+   {title:'CFS가 다음 스레드를 고르는 방법',body:'CFS는 실행 큐의 스레드를 가상 실행 시간 순으로 레드-블랙 트리에 넣고 가장 왼쪽(가장 작은 값)을 실행합니다. 실행한 만큼 가상 실행 시간이 늘어나 트리의 오른쪽으로 이동합니다. nice 값이 작아 가중치가 큰 스레드는 같은 시간을 실행해도 가상 시간이 천천히 늘어 더 자주 선택됩니다. 오래 잠들었다 깨어난 스레드는 가상 시간이 작아 금방 실행되므로 입력을 기다리는 대화형 작업이 자연스럽게 빨리 반응합니다.'},
+   {title:'로드 애버리지 읽기',body:'uptime이나 top의 load average는 1분, 5분, 15분 동안 실행 중이거나 실행을 기다리는 작업 수의 평균입니다. Linux는 디스크 I/O처럼 중단할 수 없는 대기 상태도 함께 셉니다. 코어가 4개인데 로드가 8이면 평균적으로 작업 4개가 줄을 서 있다는 뜻입니다. CPU 사용률이 낮은데 로드가 높으면 I/O 대기를 의심합니다.'},
+   {title:'컨테이너 CPU 제한의 실제 동작',body:'Kubernetes의 CPU limit 500m은 cgroup v2의 cpu.max에 "50000 100000"으로 적힙니다. 100ms 주기마다 50ms까지 쓸 수 있다는 뜻입니다.',list:['스레드 4개가 동시에 일하면 실제 시간 12.5ms 만에 50ms어치를 다 씁니다.','남은 87.5ms 동안 컨테이너 전체가 실행되지 않습니다. 그 사이 도착한 요청도 기다립니다.','평균 사용률은 50%로 보이지만 요청 지연에는 수십 ms의 정지가 끼어듭니다.','cpu.stat의 nr_throttled와 throttled_usec, 또는 container_cpu_cfs_throttled_periods_total 지표로 확인합니다.']},
+   {title:'requests와 limits',body:'Kubernetes의 CPU requests는 노드에 파드를 배치할 때의 기준이고 CPU가 부족할 때 cgroup 가중치로 몫을 보장합니다. limits는 위의 할당량 상한입니다. requests만 주고 limit을 주지 않으면 남는 CPU를 빌려 쓸 수 있어 지연이 줄지만 한 파드가 노드를 독차지하지 않도록 노드 단위 관리가 필요합니다.'},
+   {title:'워커 수 정하기',body:'gunicorn 워커나 스레드 풀 크기를 노드 전체 코어 수로 정하면 CPU 제한보다 훨씬 많은 스레드가 생겨 스로틀링이 심해집니다. 컨테이너에 주어진 CPU 양을 기준으로 정하고 I/O 대기가 많은 작업이면 그보다 조금 늘립니다. Python 3.13부터 os.process_cpu_count()는 프로세스가 쓸 수 있는 CPU 수를 돌려줍니다.'}
+  ],
+  sources:[
+   ['Linux Kernel · CFS Scheduler','https://docs.kernel.org/scheduler/sched-design-CFS.html'],
+   ['Linux Kernel · EEVDF Scheduler','https://docs.kernel.org/scheduler/sched-eevdf.html'],
+   ['Linux Kernel · Control Group v2 (cpu.max)','https://docs.kernel.org/admin-guide/cgroup-v2.html'],
+   ['Kubernetes · Resource Management for Pods and Containers','https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/']
+  ]
+ },
+ tls:{
+  definition:'TLS는 TCP 위에서 암호화, 무결성, 상대 인증을 제공하는 프로토콜입니다. 핸드셰이크에서 양쪽은 키 합의로 이번 연결에만 쓸 대칭키를 만들고 서버는 인증서와 개인키 서명으로 자기가 그 도메인의 주인임을 증명합니다. 인증서는 X.509 형식으로 도메인 이름, 공개키, 유효 기간, 발급자, 발급자의 서명을 담습니다. 클라이언트는 서버 인증서에서 출발해 발급자의 서명을 따라 신뢰 저장소에 있는 루트 CA까지 이어지는지 확인합니다. 이 연결 고리를 인증서 체인이라고 합니다.',
+  terms:[
+   ['CA','인증서에 서명할 권한을 가진 기관입니다. 루트 CA와 그 아래 중간 CA가 있습니다.'],
+   ['신뢰 저장소','운영체제, 브라우저, 런타임이 미리 믿기로 한 루트 인증서 목록입니다.'],
+   ['SAN','인증서가 유효한 도메인 이름 목록입니다. 이름 검사는 CN이 아니라 이 목록으로 합니다.'],
+   ['SNI','클라이언트가 핸드셰이크 첫 메시지에 접속할 도메인을 적어 보내는 확장입니다.'],
+   ['mTLS','서버뿐 아니라 클라이언트도 인증서를 내서 양쪽이 서로를 확인하는 방식입니다.'],
+   ['HSTS','브라우저에게 이 도메인은 앞으로 HTTPS로만 접속하라고 알리는 응답 헤더입니다.']
+  ],
+  sections:[
+   {title:'클라이언트가 인증서를 검증하는 순서',body:'라이브러리는 대략 이런 순서로 확인합니다. 하나라도 실패하면 연결을 끊습니다.',list:['서버가 보낸 인증서와 중간 인증서로 체인을 만들고 끝이 신뢰 저장소의 루트에 닿는지 봅니다.','각 인증서의 서명을 위쪽 인증서의 공개키로 확인합니다.','지금 시각이 각 인증서의 유효 기간 안인지 봅니다.','접속한 도메인이 서버 인증서의 SAN 목록에 있는지 봅니다. *.example.com은 한 단계 하위 도메인만 맞습니다.','서버가 핸드셰이크 내용에 개인키로 서명한 값이 인증서의 공개키로 검증되는지 봅니다.']},
+   {title:'자주 만나는 오류와 원인',body:'인증서 오류 메시지는 원인을 꽤 정확히 알려 줍니다.',list:['unable to get local issuer certificate: 체인이 끊겼습니다. 대개 서버가 중간 인증서를 보내지 않았습니다.','certificate has expired: 만료됐습니다. 갱신 자동화가 실패했는지 확인합니다.','hostname mismatch: 접속한 이름이 SAN에 없습니다. IP로 접속했거나 다른 도메인의 인증서가 걸렸습니다.','self-signed certificate: 신뢰 저장소에 없는 자체 서명 인증서입니다. 사내 CA라면 그 루트를 클라이언트에 추가합니다.']},
+   {title:'SNI로 한 IP에 여러 도메인',body:'서버 하나가 여러 도메인을 서비스하면 어떤 인증서를 보낼지 알아야 합니다. 그런데 HTTP의 Host 헤더는 암호화된 뒤에야 보입니다. 그래서 클라이언트는 첫 메시지 ClientHello에 도메인을 SNI로 평문으로 적어 보냅니다. 로드 밸런서는 SNI를 보고 맞는 인증서를 고릅니다. curl이나 openssl로 테스트할 때 IP로 접속하면 SNI가 빠져 엉뚱한 인증서를 받을 수 있으니 -servername이나 --resolve를 씁니다.'},
+   {title:'갱신과 키 교체',body:'Let’s Encrypt 인증서는 90일, 상용 CA의 공개 인증서도 최대 수명이 점점 줄고 있습니다. certbot이나 Kubernetes의 cert-manager는 ACME로 만료 전에 자동으로 다시 받습니다. ACM처럼 관리형 서비스에 맡기면 갱신과 배포가 함께 됩니다. 자동화가 있어도 DNS 검증 레코드가 지워지거나 방화벽이 바뀌면 조용히 실패하므로 만료 일수를 별도로 감시합니다.'},
+   {title:'TLS를 어디서 끝낼까',body:'로드 밸런서에서 TLS를 풀고 뒤쪽은 HTTP로 보내면 인증서 관리가 한 곳에 모입니다. 하지만 VPC 안의 트래픽도 평문이 됩니다. 규제나 내부 위협 모델에 따라 로드 밸런서와 앱 사이도 TLS로 다시 암호화하거나, 서비스 메시로 파드 사이를 mTLS로 묶습니다. TLS를 로드 밸런서에서 끝내면 앱은 X-Forwarded-Proto로 원래 요청이 HTTPS였는지 확인합니다.'}
+  ],
+  sources:[
+   ['RFC 8446 · TLS 1.3','https://www.rfc-editor.org/rfc/rfc8446'],
+   ['RFC 5280 · X.509 Certificate Profile','https://www.rfc-editor.org/rfc/rfc5280'],
+   ['Python · ssl','https://docs.python.org/3/library/ssl.html'],
+   ['Let’s Encrypt · How It Works','https://letsencrypt.org/how-it-works/'],
+   ['AWS · ACM managed renewal','https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html']
+  ]
+ },
+ websocket:{
+  definition:'WebSocket은 브라우저와 서버가 하나의 TCP 연결을 계속 열어 두고 양쪽이 언제든 메시지를 보내는 프로토콜입니다. 연결은 HTTP/1.1 GET 요청에 Upgrade: websocket과 Sec-WebSocket-Key 헤더를 담아 시작하고 서버가 101 Switching Protocols와 Sec-WebSocket-Accept로 답하면 그때부터 HTTP가 아닌 WebSocket 프레임이 오갑니다. 프레임에는 텍스트, 바이너리 같은 데이터 프레임과 ping, pong, close 같은 제어 프레임이 있습니다. ws://는 평문, wss://는 TLS 위의 WebSocket입니다.',
+  terms:[
+   ['Upgrade','HTTP 연결을 다른 프로토콜로 바꾸자는 요청 헤더입니다.'],
+   ['101 Switching Protocols','서버가 프로토콜 변경을 수락했다는 응답 코드입니다.'],
+   ['프레임','WebSocket 메시지의 전송 단위입니다. 큰 메시지는 여러 프레임으로 나뉠 수 있습니다.'],
+   ['ping과 pong','연결이 살아 있는지 확인하는 제어 프레임입니다. ping을 받으면 pong으로 답합니다.'],
+   ['close 코드','연결을 닫는 이유입니다. 1000은 정상 종료, 1006은 close 프레임 없이 끊김을 뜻합니다.'],
+   ['SSE','서버에서 클라이언트로 한 방향 이벤트를 보내는 HTTP 기반 방식입니다.']
+  ],
+  sections:[
+   {title:'핸드셰이크에서 일어나는 일',body:'연결 하나가 열리기까지 이렇게 진행됩니다.',list:['클라이언트가 GET /chat에 Upgrade: websocket, Connection: Upgrade, 무작위 16바이트를 base64로 만든 Sec-WebSocket-Key를 담아 보냅니다.','서버는 키 뒤에 RFC에 고정된 GUID를 붙여 SHA-1 해시를 base64로 만든 값을 Sec-WebSocket-Accept에 담아 101로 답합니다.','클라이언트는 그 값을 직접 계산해 맞는지 확인합니다. 상대가 WebSocket을 이해하는 서버라는 확인이지 보안 인증은 아닙니다.','이후 같은 TCP 연결에서 프레임이 오갑니다. 브라우저가 보내는 프레임은 매번 다른 마스킹 키로 뒤섞습니다.']},
+   {title:'프록시와 로드 밸런서 설정',body:'WebSocket 문제의 대부분은 중간 장비에서 생깁니다.',list:['nginx는 기본으로 Upgrade 헤더를 앱에 넘기지 않습니다. proxy_http_version 1.1, proxy_set_header Upgrade $http_upgrade, Connection 헤더 설정이 필요합니다.','nginx는 proxy_read_timeout(기본 60초) 동안 업스트림에서 데이터가 없으면 연결을 닫습니다.','로드 밸런서에도 유휴 제한 시간이 있습니다. ping 주기를 모든 중간 장비의 제한보다 짧게 잡습니다.','연결이 오래 유지되므로 로드 밸런서의 연결 분산은 새 연결이 생길 때만 일어납니다. 서버를 추가해도 기존 연결은 옮겨 가지 않습니다.']},
+   {title:'재연결과 빠진 메시지',body:'모바일 네트워크 전환, 서버 재배포, 중간 장비 재시작으로 연결은 언젠가 끊깁니다. 클라이언트는 1초, 2초, 4초처럼 간격을 늘리고 무작위 지연을 섞어 다시 연결합니다. 모든 사용자가 같은 순간 재연결하면 서버가 몰리기 때문입니다. 끊긴 동안 보낸 메시지는 사라지므로 메시지마다 순번을 붙이고 재연결할 때 마지막으로 받은 순번을 보내 그 뒤의 메시지를 다시 받습니다.'},
+   {title:'서버가 여러 대일 때',body:'연결은 특정 서버에 붙어 있습니다. 채팅방의 사용자들이 서로 다른 서버에 연결되어 있으면 한 서버가 받은 메시지를 다른 서버의 연결로 보내야 합니다. 서버들이 Redis Pub/Sub이나 메시지 브로커의 채널을 구독하고 메시지를 받으면 자기에게 연결된 사용자에게 전달합니다. 연결 수, 메시지 처리량, 중계 지연을 지표로 봅니다.'},
+   {title:'WebSocket, SSE, 폴링 고르기',body:'양방향으로 자주, 빠르게 주고받아야 하면 WebSocket이 맞습니다(채팅, 협업 편집, 게임). 서버에서 클라이언트로만 보내면 SSE가 더 단순합니다. 평범한 HTTP라 인증과 프록시를 그대로 쓰고 브라우저가 자동 재연결과 마지막 이벤트 ID 전송을 해 줍니다. 몇십 초에 한 번 바뀌는 정보라면 폴링이 가장 운영하기 쉽습니다.'}
+  ],
+  sources:[
+   ['RFC 6455 · The WebSocket Protocol','https://www.rfc-editor.org/rfc/rfc6455'],
+   ['nginx · WebSocket proxying','https://nginx.org/en/docs/http/websocket.html'],
+   ['MDN · WebSocket API','https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API'],
+   ['HTML Standard · Server-sent events','https://html.spec.whatwg.org/multipage/server-sent-events.html'],
+   ['AWS · Application Load Balancer listeners (WebSocket)','https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html']
+  ]
+ },
+ ratelimit:{
+  definition:'속도 제한은 대상(API 키, 사용자, IP)별로 일정 시간 동안 허용하는 요청 수를 정하고 넘는 요청을 거절하거나 늦추는 장치입니다. 토큰 버킷은 버킷 크기 B와 채우는 속도 R 두 값으로 정합니다. 요청마다 지난 시간 × R만큼 토큰을 채우되 B를 넘지 않게 하고 토큰이 1개 이상이면 하나를 꺼내 통과시킵니다. 그래서 길게 보면 초당 R개를 넘지 못하고 짧게는 B개까지 몰려도 됩니다. 클라이언트 쪽의 백오프는 실패한 뒤 다음 시도까지의 간격을 1, 2, 4, 8초처럼 늘리는 것이고 지터는 그 간격에 무작위 값을 섞는 것입니다.',
+  terms:[
+   ['토큰 버킷','일정 속도로 채워지는 허용량을 요청마다 하나씩 꺼내 쓰는 방식입니다.'],
+   ['버스트','짧은 순간에 몰리는 요청입니다. 버킷 크기만큼 허용합니다.'],
+   ['고정 윈도','1분 같은 고정 구간마다 카운터를 초기화하는 방식입니다. 경계에서 두 배가 통과할 수 있습니다.'],
+   ['슬라이딩 윈도','지금부터 직전 1분처럼 움직이는 구간의 요청 수를 세는 방식입니다.'],
+   ['429와 Retry-After','한도 초과 응답 코드와 다시 시도해도 되는 시점을 알려 주는 헤더입니다.'],
+   ['지터','재시도 간격에 섞는 무작위 값입니다. 재시도가 같은 순간에 몰리지 않게 합니다.']
+  ],
+  sections:[
+   {title:'알고리즘 비교',body:'같은 "분당 100회"도 방식에 따라 동작이 다릅니다.',list:['고정 윈도: 분마다 INCR과 EXPIRE로 간단히 구현합니다. 12:00:59에 100회, 12:01:00에 100회가 모두 통과합니다.','슬라이딩 로그: 요청 시각을 모두 저장하고 1분 이전 것을 지웁니다. 정확하지만 요청 수만큼 메모리를 씁니다.','슬라이딩 윈도 카운터: 이번 분과 지난 분의 카운터를 지난 분이 겹치는 비율만큼 섞어 근사합니다. 메모리가 적고 꽤 정확합니다.','토큰 버킷: 토큰 수와 마지막 시각만 저장합니다. 버스트 허용량을 따로 정할 수 있어 API에 가장 널리 씁니다.']},
+   {title:'여러 서버에서 함께 세기',body:'서버 4대가 각자 분당 100회로 세면 사용자는 실제로 분당 400회까지 보낼 수 있습니다. 정확한 전체 한도가 필요하면 Redis 같은 공유 저장소에 상태를 둡니다. 토큰을 채우고 꺼내는 과정을 여러 명령으로 나누면 그 사이에 다른 서버가 끼어들어 한도를 넘으므로 Lua 스크립트나 원자 명령으로 한 번에 처리합니다. Redis가 죽었을 때 모두 통과시킬지(fail open) 모두 막을지(fail closed)도 정해 둡니다.'},
+   {title:'무엇을 기준으로 제한할까',body:'로그인한 사용자나 API 키 기준이 가장 공정합니다. IP 기준은 회사나 통신사의 공용 IP 뒤에 많은 사용자가 있으면 무고한 사용자까지 막습니다. 비싼 작업(검색, 파일 생성)은 일반 조회보다 낮은 한도를 따로 둡니다. 로그인과 비밀번호 재설정처럼 공격 대상이 되는 경로는 계정 기준과 IP 기준을 함께 겁니다.'},
+   {title:'좋은 재시도의 조건',body:'재시도는 일시적인 실패를 숨겨 주지만 잘못하면 장애를 키웁니다.',list:['멱등한 요청만 재시도합니다. POST 결제를 재시도하려면 멱등 키가 필요합니다.','4xx 중 400, 401, 403, 404는 다시 보내도 결과가 같으므로 재시도하지 않습니다. 429, 503, 연결 오류, 타임아웃이 재시도 대상입니다.','지연 = random(0, min(최대, 기본 × 2^시도 횟수))처럼 전체 지터를 씁니다.','최대 횟수와 전체 제한 시간을 둡니다. 앱, SDK, 프록시가 각자 3번씩 재시도하면 실제로는 27번이 될 수 있습니다.']},
+   {title:'429를 받은 클라이언트가 할 일',body:'Retry-After가 있으면 그 시간만큼 기다립니다. 초 단위 숫자나 HTTP 날짜로 옵니다. 없으면 지수 백오프와 지터로 기다립니다. 계속 한도에 닿는다면 요청을 묶어 보내거나(배치) 캐시를 써서 호출 자체를 줄여야 합니다.'}
+  ],
+  sources:[
+   ['RFC 6585 · 429 Too Many Requests','https://www.rfc-editor.org/rfc/rfc6585'],
+   ['RFC 9110 · Retry-After','https://www.rfc-editor.org/rfc/rfc9110'],
+   ['AWS · API Gateway request throttling','https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html'],
+   ['Redis · INCR (rate limiter pattern)','https://redis.io/docs/latest/commands/incr/'],
+   ['AWS Builders’ Library · Timeouts, retries, and backoff with jitter','https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/']
+  ]
+ },
+ replication:{
+  definition:'복제는 주 DB의 변경 기록을 복제본에 보내 같은 데이터를 여러 서버에 유지하는 것입니다. PostgreSQL은 WAL을, MySQL은 binlog를 보내고 복제본은 같은 순서로 적용합니다. 주 DB가 복제본의 확인을 기다린 뒤 커밋을 완료하면 동기 복제, 기다리지 않으면 비동기 복제입니다. 복제 지연은 주 DB에서 커밋된 변경이 복제본에 반영되기까지의 시간입니다. 샤딩은 샤드 키를 기준으로 행들을 서로 다른 DB 서버에 나눠 저장하는 것이며 각 샤드도 보통 자기 복제본을 가집니다.',
+  terms:[
+   ['주 DB와 복제본','쓰기를 받는 서버와 그 변경을 따라 적용하는 서버입니다.'],
+   ['WAL·binlog','DB가 변경을 순서대로 적어 두는 기록입니다. 복제와 복구에 씁니다.'],
+   ['복제 지연','주 DB의 커밋이 복제본에 반영되기까지 걸리는 시간입니다.'],
+   ['장애 조치','주 DB가 죽었을 때 복제본을 새 주 DB로 승격하는 일입니다.'],
+   ['샤드 키','어느 샤드에 저장할지 정하는 기준 컬럼입니다.'],
+   ['일관 해싱','서버 수가 바뀌어도 일부 키만 자리를 옮기게 하는 분배 방식입니다.']
+  ],
+  sections:[
+   {title:'복제가 동작하는 순서',body:'PostgreSQL 스트리밍 복제를 예로 들면 이렇게 진행됩니다.',list:['주 DB가 트랜잭션의 변경을 WAL에 쓰고 디스크에 저장한 뒤 커밋을 완료합니다.','WAL 송신 프로세스가 연결된 복제본에 WAL을 흘려보냅니다.','복제본이 받은 WAL을 디스크에 쓰고 데이터 파일에 다시 적용합니다.','동기 복제로 설정하면 1단계의 커밋 완료가 복제본의 확인을 기다립니다. synchronous_commit 설정으로 기다리는 수준을 고릅니다.']},
+   {title:'복제 지연이 만드는 문제와 대처',body:'비동기 복제본은 언제나 조금 늦을 수 있습니다.',list:['자기 쓰기 읽기: 방금 쓴 사람이 자기 글을 못 봅니다. 쓰기 후 몇 초 동안 그 사용자의 읽기를 주 DB로 보냅니다.','단조 읽기: 새로고침할 때마다 다른 복제본에 가면 글이 보였다 사라집니다. 사용자를 한 복제본에 고정합니다.','지연이 큰 복제본: 대량 쓰기나 긴 쿼리로 지연이 수십 초가 되면 그 복제본을 읽기에서 빼는 장치를 둡니다.']},
+   {title:'장애 조치에서 조심할 점',body:'자동 장애 조치는 빠르지만 판단이 틀릴 수 있습니다. 네트워크가 잠깐 끊긴 것을 주 DB 장애로 보고 복제본을 승격하면 옛 주 DB와 새 주 DB가 동시에 쓰기를 받는 상황(스플릿 브레인)이 생길 수 있습니다. 승격 전에 옛 주 DB의 쓰기를 확실히 막고(펜싱) 비동기 복제라면 마지막 몇 초의 쓰기가 사라질 수 있음을 받아들이거나 따로 맞추는 절차를 준비합니다. 관리형 DB는 이 과정을 대신해 주지만 앱은 연결이 끊겼다 다시 맺어지는 것을 견뎌야 합니다.'},
+   {title:'샤딩 방식',body:'키를 샤드에 나누는 방법은 크게 세 가지입니다.',list:['범위 샤딩: 사용자 ID 1~100만은 샤드 1처럼 범위로 나눕니다. 범위 조회가 쉽지만 새 데이터가 한 샤드에 몰릴 수 있습니다.','해시 샤딩: 키의 해시로 나눠 고르게 퍼집니다. 범위 조회는 모든 샤드에 물어야 합니다.','디렉터리 샤딩: 키와 샤드의 대응을 별도 표에 적어 둡니다. 유연하지만 그 표가 새 의존성이 됩니다.']},
+   {title:'샤딩 뒤에 어려워지는 일',body:'샤드를 넘는 조인은 앱이 각 샤드에서 가져와 합쳐야 합니다. 두 샤드에 걸친 트랜잭션은 DB가 보장하지 않아 사가나 아웃박스 같은 패턴이 필요합니다. 전역 고유 ID는 자동 증가 대신 샤드 번호를 섞은 ID나 UUID로 만듭니다. 샤드를 늘릴 때는 데이터를 옮기는 동안에도 읽기와 쓰기가 올바른 샤드로 가도록 이중 쓰기나 단계적 이동이 필요합니다.'}
+  ],
+  sources:[
+   ['PostgreSQL · Log-Shipping Standby Servers','https://www.postgresql.org/docs/current/warm-standby.html'],
+   ['PostgreSQL · synchronous_commit','https://www.postgresql.org/docs/current/runtime-config-wal.html'],
+   ['AWS · RDS read replicas','https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html'],
+   ['AWS · Aurora replication','https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Replication.html'],
+   ['GitHub · October 21 post-incident analysis (2018)','https://github.blog/news-insights/company-news/oct21-post-incident-analysis/']
+  ]
+ },
+ raft:{
+  definition:'Raft는 여러 서버가 같은 순서의 명령 기록(로그)을 갖도록 하는 합의 알고리즘입니다. 각 서버는 팔로워, 후보, 리더 중 한 상태에 있습니다. 시간은 임기(term)로 나뉘고 한 임기에는 리더가 최대 한 명입니다. 리더는 클라이언트의 명령을 자기 로그 끝에 붙이고 AppendEntries 메시지로 팔로워에게 복제합니다. 과반수의 서버가 저장한 항목은 커밋되고 각 서버는 커밋된 항목을 순서대로 상태 기계(예: 키값 저장소)에 적용합니다. 같은 순서로 같은 명령을 적용하므로 모든 서버의 상태가 같아집니다.',
+  terms:[
+   ['임기','선거 한 번으로 시작하는 기간입니다. 번호가 커질수록 최신입니다.'],
+   ['하트비트','리더가 살아 있음을 알리려고 주기적으로 보내는 빈 AppendEntries입니다.'],
+   ['선거 타임아웃','하트비트가 없을 때 후보로 나서기까지 기다리는 무작위 시간입니다.'],
+   ['RequestVote','후보가 표를 요청하는 메시지입니다. 자기 로그의 마지막 위치와 임기를 함께 보냅니다.'],
+   ['커밋','과반수가 저장해 다시는 사라지지 않는 상태가 된 로그 항목입니다.'],
+   ['쿼럼','결정에 필요한 최소 서버 수입니다. N대면 N/2 + 1대입니다.']
+  ],
+  sections:[
+   {title:'리더 선출',body:'리더가 사라졌을 때 새 리더는 이렇게 뽑힙니다.',list:['팔로워는 선거 타임아웃 동안 하트비트를 받지 못하면 임기를 1 올리고 후보가 되어 자기에게 투표합니다.','다른 서버에 RequestVote를 보냅니다. 각 서버는 한 임기에 한 번만 투표하고 후보의 로그가 자기보다 뒤처져 있으면 투표하지 않습니다.','과반수 표를 받으면 리더가 되어 즉시 하트비트를 보냅니다.','더 높은 임기의 리더를 만나면 바로 팔로워로 돌아갑니다. 표가 갈려 아무도 이기지 못하면 다시 무작위로 기다렸다가 새 선거를 합니다.']},
+   {title:'로그 복제와 커밋',body:'리더는 명령을 받으면 로그에 붙이고 AppendEntries로 팔로워에게 보냅니다. 이 메시지에는 새 항목 바로 앞 항목의 위치와 임기가 들어 있어서 팔로워는 자기 로그가 그 지점까지 리더와 같을 때만 받아 적습니다. 다르면 거절하고 리더는 한 칸씩 앞으로 가며 일치하는 지점을 찾아 그 뒤를 덮어씁니다. 과반수가 저장하면 리더는 커밋 위치를 올리고 다음 메시지에 실어 팔로워들도 적용하게 합니다.'},
+   {title:'안전성이 지켜지는 이유',body:'커밋된 항목은 과반수에 있습니다. 새 리더가 되려면 과반수의 표가 필요하고 두 과반수는 적어도 한 서버가 겹칩니다. 그 서버는 커밋된 항목을 가진 자기보다 로그가 뒤처진 후보에게 투표하지 않으므로 새 리더는 반드시 커밋된 항목을 모두 가집니다. 그래서 리더가 바뀌어도 커밋된 기록은 사라지거나 순서가 바뀌지 않습니다.'},
+   {title:'읽기를 어떻게 처리할까',body:'리더가 자기 상태를 그대로 읽어 주면 빠르지만 네트워크가 갈라져 이미 새 리더가 뽑힌 줄 모르는 옛 리더가 낡은 값을 줄 수 있습니다. 그래서 etcd는 기본으로 리더가 과반수와 한 번 확인한 뒤 읽어 주는 방식(선형 읽기)을 쓰고 최신이 아니어도 되면 직렬 읽기로 빠르게 읽을 수 있게 합니다.'},
+   {title:'운영에서 보는 것',body:'Raft 클러스터는 디스크와 네트워크 지연에 민감합니다. 로그를 디스크에 안전하게 쓰는(fsync) 시간이 길어지면 하트비트가 늦어져 불필요한 선거가 일어납니다. etcd는 리더 변경 횟수, WAL fsync 지연, 제안 실패 수를 지표로 내보냅니다. 멤버를 바꿀 때는 한 번에 하나씩 추가하거나 제거하고 고장 난 멤버는 새 멤버를 추가하기 전에 먼저 제거합니다.'}
+  ],
+  sources:[
+   ['Ongaro & Ousterhout, In Search of an Understandable Consensus Algorithm (2014)','https://raft.github.io/raft.pdf'],
+   ['Raft 공식 사이트 (시각화 포함)','https://raft.github.io/'],
+   ['etcd · FAQ','https://etcd.io/docs/v3.5/faq/'],
+   ['Kubernetes · Cluster components (etcd)','https://kubernetes.io/docs/concepts/overview/components/']
+  ]
+ },
+ pytest:{
+  definition:'단위 테스트는 함수나 클래스 하나를 다른 부분과 떼어 놓고 입력에 대한 결과를 확인하는 코드입니다. pytest는 test_로 시작하는 파일과 함수를 찾아 실행하고 assert가 실패하면 그 식의 각 값을 보여 줍니다. 픽스처는 @pytest.fixture를 붙인 함수로, 테스트 함수가 같은 이름의 매개변수를 선언하면 pytest가 실행해 결과를 넣어 줍니다. yield 뒤에 정리 코드를 두면 테스트가 끝난 뒤 실행됩니다. parametrize는 같은 테스트를 여러 입력 묶음으로 반복하고 monkeypatch는 테스트 동안만 함수, 환경 변수, 속성을 바꿔 끼웁니다.',
+  terms:[
+   ['단위 테스트','함수 하나처럼 작은 단위를 외부와 떼어 놓고 확인하는 테스트입니다.'],
+   ['통합 테스트','DB, 다른 서비스처럼 실제 부품을 연결한 상태로 확인하는 테스트입니다.'],
+   ['픽스처','테스트에 필요한 준비물을 만들고 끝나면 정리하는 함수입니다.'],
+   ['parametrize','하나의 테스트를 여러 입력과 기대값으로 반복하는 기능입니다.'],
+   ['monkeypatch','테스트 동안만 함수나 환경 변수를 다른 것으로 바꾸는 픽스처입니다.'],
+   ['테스트 더블','실제 의존성 대신 쓰는 가짜 객체입니다. stub, mock, fake가 있습니다.']
+  ],
+  sections:[
+   {title:'pytest가 테스트를 실행하는 순서',body:'pytest를 실행하면 이렇게 진행됩니다.',list:['현재 폴더 아래에서 test_*.py나 *_test.py 파일을 찾고 그 안의 test_ 함수와 Test 클래스를 모읍니다(수집).','각 테스트가 요청한 픽스처를 의존 순서대로 실행해 준비합니다. conftest.py의 픽스처는 같은 폴더 아래 모든 테스트가 씁니다.','테스트 함수를 실행합니다. 예외가 나거나 assert가 실패하면 실패로 기록합니다.','yield 픽스처의 정리 코드를 거꾸로 실행하고 결과를 요약합니다. -x는 첫 실패에서 멈추고 -k는 이름으로 골라 실행합니다.']},
+   {title:'좋은 테스트의 모양',body:'테스트는 준비, 실행, 확인 세 부분으로 나누면 읽기 쉽습니다. 한 테스트는 한 가지 동작만 확인하고 이름에 무엇을 확인하는지 적습니다(test_coupon_larger_than_price_returns_zero). 테스트끼리 순서나 공유 상태에 의존하면 하나만 실행할 때와 전체를 실행할 때 결과가 달라지므로 각 테스트가 자기 준비물을 만들게 합니다. 시간, 무작위, 네트워크처럼 매번 달라지는 것은 고정하거나 바꿔 끼워 결과가 항상 같게 합니다.'},
+   {title:'픽스처 범위와 정리',body:'픽스처의 scope로 얼마나 자주 다시 만들지 정합니다.',list:['function(기본): 테스트마다 새로 만듭니다. 가장 안전합니다.','module: 파일 하나에서 한 번 만들어 공유합니다.','session: 전체 실행에서 한 번 만듭니다. 테스트용 DB 컨테이너처럼 비싼 준비물에 씁니다.','넓은 범위의 픽스처를 공유하면 테스트끼리 데이터가 섞이므로 테스트마다 트랜잭션을 열고 끝에 롤백하는 방식을 함께 씁니다.']},
+   {title:'외부 의존성 바꿔 끼우기',body:'결제 API를 부르는 함수를 테스트할 때 실제로 부르면 느리고 결과가 매번 다를 수 있습니다. monkeypatch.setattr로 API 호출 함수를 가짜 함수로 바꾸고 가짜가 받은 인자를 확인합니다. HTTP 클라이언트는 responses나 respx 같은 라이브러리로 특정 URL에 정해진 응답을 돌려줄 수 있습니다. 바꿔 끼우는 지점은 "우리 코드가 그 이름을 찾는 곳"입니다. from a import f로 가져왔다면 a.f가 아니라 우리 모듈의 f를 바꿔야 합니다.'},
+   {title:'CI에서 테스트 돌리기',body:'풀 리퀘스트마다 같은 Python 버전과 의존성으로 pytest를 돌리고 실패하면 병합을 막습니다. 느린 통합 테스트에는 @pytest.mark.integration 같은 마커를 붙여 빠른 테스트와 따로 돌릴 수 있게 하고 pytest --junitxml로 결과 파일을 남겨 어떤 테스트가 실패했는지 화면에서 봅니다. 가끔 실패하는 불안정한 테스트는 다시 돌려 넘기지 말고 원인(시간, 순서, 공유 상태)을 찾아 고칩니다.'}
+  ],
+  sources:[
+   ['pytest · How to use fixtures','https://docs.pytest.org/en/stable/how-to/fixtures.html'],
+   ['pytest · Parametrizing tests','https://docs.pytest.org/en/stable/how-to/parametrize.html'],
+   ['pytest · monkeypatch','https://docs.pytest.org/en/stable/how-to/monkeypatch.html'],
+   ['Python · unittest.mock','https://docs.python.org/3/library/unittest.mock.html']
+  ]
+ },
+ git:{
+  definition:'Git은 .git 폴더 안의 객체 저장소에 네 종류의 객체를 저장합니다. blob은 파일 내용, tree는 폴더(이름과 blob·tree의 목록), commit은 최상위 tree와 부모 커밋, 작성자, 메시지, tag는 이름 붙은 표시입니다. 모든 객체는 내용의 SHA-1 해시로 이름이 붙습니다. 브랜치는 .git/refs/heads 아래에 커밋 해시 하나를 적은 파일이고 HEAD는 지금 작업 중인 브랜치를 가리킵니다. 커밋하면 새 커밋 객체가 만들어지고 현재 브랜치가 그 커밋을 가리키도록 앞으로 움직입니다.',
+  terms:[
+   ['작업 폴더·스테이징·저장소','파일을 고치는 곳, 다음 커밋에 넣을 변경을 모아 두는 곳, 커밋이 저장되는 곳입니다.'],
+   ['HEAD','지금 체크아웃한 브랜치나 커밋을 가리키는 표시입니다.'],
+   ['fast-forward','대상 브랜치가 내 브랜치의 조상이라 이름표만 앞으로 옮기면 되는 병합입니다.'],
+   ['3-way merge','두 브랜치와 공통 조상을 비교해 변경을 합치는 병합입니다.'],
+   ['rebase','내 커밋들을 다른 커밋 위에 하나씩 다시 적용해 새 커밋으로 만드는 일입니다.'],
+   ['reflog','HEAD와 브랜치가 지나온 위치의 기록입니다. 잃어버린 커밋을 찾을 때 씁니다.']
+  ],
+  sections:[
+   {title:'커밋 하나가 만들어지는 과정',body:'git add와 git commit 사이에 일어나는 일입니다.',list:['git add는 파일 내용을 blob 객체로 저장하고 스테이징 영역(index)에 파일 이름과 blob 해시를 적습니다.','git commit은 index를 바탕으로 폴더마다 tree 객체를 만듭니다.','최상위 tree, 부모 커밋, 작성자, 시각, 메시지로 commit 객체를 만듭니다.','현재 브랜치 파일의 해시를 새 커밋으로 바꿉니다. 원격에 보내기 전까지는 모두 내 컴퓨터에서만 일어납니다.']},
+   {title:'병합은 어떻게 합칠 줄을 고를까',body:'3-way merge는 두 브랜치의 끝과 둘의 공통 조상, 세 버전을 비교합니다. 한쪽만 바꾼 줄은 바꾼 쪽을 따르고 양쪽이 같은 줄을 서로 다르게 바꿨을 때만 충돌로 표시합니다. 충돌 난 파일에는 <<<<<<< 현재 브랜치 내용, =======, >>>>>>> 들어오는 브랜치 내용이 표시됩니다. 표시를 지우고 올바른 내용으로 고친 뒤 git add, git commit으로 병합을 마칩니다. 충돌이 없어도 의미가 어긋날 수 있으므로(한쪽은 함수 이름을 바꾸고 다른 쪽은 옛 이름을 새로 호출) 병합 뒤 테스트를 꼭 돌립니다.'},
+   {title:'merge와 rebase 고르기',body:'둘 다 다른 브랜치의 변경을 가져오지만 이력이 다르게 남습니다.',list:['merge: 두 갈래를 그대로 두고 병합 커밋을 만듭니다. 실제로 일어난 순서가 남고 기존 커밋 해시가 바뀌지 않습니다.','rebase: 내 커밋을 상대 브랜치 끝에 다시 쌓아 한 줄 이력을 만듭니다. 커밋 해시가 모두 바뀝니다.','혼자 쓰는 작업 브랜치를 main 최신 상태에 맞출 때는 rebase가 깔끔합니다.','다른 사람과 공유한 브랜치는 rebase하지 않습니다. 동료의 로컬 이력과 엇갈립니다.']},
+   {title:'실수를 되돌리는 방법',body:'상황에 따라 다른 명령을 씁니다. 아직 커밋하지 않은 파일 변경은 git restore 파일로 되돌립니다. 마지막 커밋 메시지를 고치려면 push 전에 git commit --amend를 씁니다. 이미 push한 커밋을 취소하려면 git revert로 되돌리는 새 커밋을 만듭니다. reset --hard로 커밋을 잃어버렸다면 git reflog에서 이전 위치를 찾아 다시 돌아갈 수 있습니다. 커밋은 한동안 객체 저장소에 남아 있기 때문입니다.'},
+   {title:'팀이 정하는 브랜치 규칙',body:'main에 직접 push하지 못하게 브랜치 보호를 걸고 리뷰 승인과 CI 통과를 병합 조건으로 둡니다. 작업 브랜치는 하루에서 며칠 안에 병합할 크기로 나눕니다. 병합 방식(병합 커밋, squash, rebase)을 팀이 하나로 정하면 이력이 일관됩니다. 비밀 키나 비밀번호는 .gitignore와 비밀 검사 도구로 처음부터 막고 이미 커밋했다면 이력을 지우기 전에 키부터 폐기합니다.'}
+  ],
+  sources:[
+   ['Pro Git · Git Objects','https://git-scm.com/book/en/v2/Git-Internals-Git-Objects'],
+   ['Pro Git · Basic Branching and Merging','https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging'],
+   ['Pro Git · Rebasing','https://git-scm.com/book/en/v2/Git-Branching-Rebasing'],
+   ['Git · git-push (--force-with-lease)','https://git-scm.com/docs/git-push']
+  ]
+ },
+ kubernetes:{
+  definition:'Kubernetes 클러스터는 컨트롤 플레인과 워커 노드로 이뤄집니다. 컨트롤 플레인의 API 서버는 모든 요청의 입구이고 클러스터 상태를 etcd에 저장합니다. 컨트롤러 매니저 안의 여러 컨트롤러는 각자 맡은 리소스의 원하는 상태(spec)와 실제 상태(status)를 비교해 차이를 줄이는 조정 루프를 돕니다. 스케줄러는 아직 노드가 정해지지 않은 파드를 자원 요청과 제약에 맞는 노드에 배정합니다. 각 노드의 kubelet은 배정된 파드의 컨테이너를 실행하고 프로브로 상태를 확인해 API 서버에 보고합니다.',
+  terms:[
+   ['파드','함께 배치되고 네트워크와 볼륨을 공유하는 컨테이너 묶음입니다. 가장 작은 배포 단위입니다.'],
+   ['Deployment','ReplicaSet을 통해 파드 수를 유지하고 롤링 업데이트와 롤백을 관리합니다.'],
+   ['Service','라벨로 고른 파드들 앞에 고정된 가상 IP와 DNS 이름을 줍니다.'],
+   ['readiness probe','파드가 트래픽을 받을 준비가 됐는지 확인합니다. 실패하면 Service에서 빠집니다.'],
+   ['liveness probe','컨테이너가 살아 있는지 확인합니다. 실패하면 재시작합니다.'],
+   ['requests와 limits','배치와 보장의 기준이 되는 자원량과 넘을 수 없는 상한입니다.']
+  ],
+  sections:[
+   {title:'kubectl apply 뒤에 일어나는 일',body:'Deployment를 적용하면 여러 구성 요소가 차례로 움직입니다.',list:['API 서버가 요청을 인증·검증하고 Deployment 객체를 etcd에 저장합니다.','Deployment 컨트롤러가 이를 보고 ReplicaSet을 만들고 ReplicaSet 컨트롤러가 replicas 수만큼 파드 객체를 만듭니다.','스케줄러가 노드가 비어 있는 파드마다 requests를 감당할 수 있는 노드를 골라 기록합니다.','그 노드의 kubelet이 이미지를 받아 컨테이너를 실행하고 프로브 결과를 보고합니다. readiness를 통과하면 Service의 엔드포인트에 추가됩니다.']},
+   {title:'롤링 업데이트',body:'이미지 태그를 바꾸면 Deployment는 새 ReplicaSet을 만들고 maxSurge(추가로 띄울 수 있는 수)와 maxUnavailable(동시에 빠져도 되는 수)에 맞춰 새 파드를 늘리고 옛 파드를 줄입니다. 새 파드가 readiness를 통과해야 다음 단계로 넘어가므로 새 버전이 시작조차 못 하면 업데이트가 멈추고 옛 버전이 계속 트래픽을 받습니다. kubectl rollout undo로 이전 ReplicaSet으로 돌아갈 수 있습니다.'},
+   {title:'세 가지 프로브',body:'프로브는 목적이 다르므로 따로 설계합니다.',list:['startupProbe: 시작이 느린 앱이 준비될 때까지 다른 프로브를 미룹니다.','readinessProbe: DB 연결, 캐시 준비처럼 요청을 처리할 수 있는지 확인합니다. 실패하면 트래픽만 끊습니다.','livenessProbe: 프로세스가 멈췄는지(교착, 무한 루프)만 확인합니다. 외부 의존성을 넣으면 의존성 장애가 전체 재시작으로 번집니다.']},
+   {title:'파드가 종료될 때',body:'파드를 지우거나 롤링 업데이트로 줄일 때 Kubernetes는 파드를 Service 엔드포인트에서 빼는 일과 컨테이너에 SIGTERM을 보내는 일을 거의 동시에 시작합니다. 엔드포인트 변경이 모든 노드에 퍼지기 전에 요청이 들어올 수 있으므로 preStop에서 몇 초 기다리거나 앱이 SIGTERM 뒤에도 잠시 요청을 받게 합니다. terminationGracePeriodSeconds(기본 30초)가 지나면 SIGKILL로 강제 종료합니다.'},
+   {title:'자주 보는 파드 상태',body:'kubectl get pods와 kubectl describe pod로 원인을 찾습니다. Pending은 자원이 맞는 노드가 없거나 볼륨을 붙이지 못한 경우입니다. ImagePullBackOff는 이미지 이름, 태그, 레지스트리 권한 문제입니다. CrashLoopBackOff는 컨테이너가 시작 후 계속 종료되는 것으로 kubectl logs --previous로 직전 로그를 봅니다. OOMKilled는 메모리 limit을 넘은 것입니다.'}
+  ],
+  sources:[
+   ['Kubernetes · Pods','https://kubernetes.io/docs/concepts/workloads/pods/'],
+   ['Kubernetes · Deployments','https://kubernetes.io/docs/concepts/workloads/controllers/deployment/'],
+   ['Kubernetes · Liveness, Readiness, and Startup Probes','https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/'],
+   ['Kubernetes · Controllers','https://kubernetes.io/docs/concepts/architecture/controller/'],
+   ['Kubernetes · Pod Lifecycle (termination)','https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/']
+  ]
  }
 };

@@ -33,7 +33,18 @@ export const sources = {
  cors: { name: 'MDN · CORS', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS' },
  iam: { name: 'AWS · IAM Best Practices', url: 'https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html' },
  sg: { name: 'AWS · Security Group Rules', url: 'https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html' },
- sre: { name: 'Google SRE · Monitoring', url: 'https://sre.google/sre-book/monitoring-distributed-systems/' }
+ sre: { name: 'Google SRE · Monitoring', url: 'https://sre.google/sre-book/monitoring-distributed-systems/' },
+ kernelSched: { name: 'Linux Kernel · EEVDF Scheduler', url: 'https://docs.kernel.org/scheduler/sched-eevdf.html' },
+ tls13: { name: 'RFC 8446 · TLS 1.3', url: 'https://www.rfc-editor.org/rfc/rfc8446' },
+ websocket: { name: 'RFC 6455 · WebSocket', url: 'https://www.rfc-editor.org/rfc/rfc6455' },
+ rfc6585: { name: 'RFC 6585 · 429 Too Many Requests', url: 'https://www.rfc-editor.org/rfc/rfc6585' },
+ backoff: { name: 'AWS · Timeouts, retries and backoff with jitter', url: 'https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/' },
+ pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
+ raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
+ etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ pytestDocs: { name: 'pytest · Fixtures', url: 'https://docs.pytest.org/en/stable/how-to/fixtures.html' },
+ gitBook: { name: 'Pro Git · Branching', url: 'https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging' },
+ k8sDeployment: { name: 'Kubernetes · Deployments', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/' }
 };
 export type SourceKey = keyof typeof sources;
 export type Lesson = {
@@ -296,5 +307,166 @@ ip address
 ip route
 # 설치된 배포판의 명령 지원 여부를 확인합니다.`,answer:'접속 실패는 DNS, 경로·정책, 리스닝 IP·포트, TLS, HTTP와 앱 처리 단계로 나눠 조사하겠습니다. 서버 내부 요청과 외부 요청을 비교하고 ss로 실제 바인딩을 확인합니다. 한 번에 모든 포트를 열지 않고 원인을 좁힌 뒤 필요한 설정만 변경하겠습니다.',follow:[['ping이 되면 웹 서비스도 정상인가요?','ICMP 응답과 HTTP 포트·TLS·업무 처리는 별개입니다. 반대로 ICMP가 차단되어도 웹은 정상일 수 있습니다.'],['0.0.0.0으로 바인딩하면 안전한가요?','수신 인터페이스 범위를 넓히는 것입니다. 보안 정책·인증·배포 네트워크와 함께 결정해야 합니다.']],memory:'이름 → 길·문 → 대기 중인 앱 → TLS·HTTP → 업무.',mistake:'ping 실패만 보고 웹 서버 장애를 확정하지 마세요.',quiz:{question:'서버 내부 요청만 성공하고 외부가 실패할 때 확인할 사항은?',options:['localhost 바인딩과 네트워크 정책','HTML 글자 크기만','SQL 인덱스 이름만'],correct:0,explanation:'수신 인터페이스와 외부 접근 경로가 내부 요청과 다를 수 있습니다.'},refs:['socket','sg']})
 ];
-export const lessons = [...core, ...operatingSystem, ...expansion].sort((a,b) => a.category-b.category);
+const additions: Lesson[] = [
+l({id:'sync',category:1,title:'락과 동기화 도구',english:'Mutex / Semaphore / Condition Variable',hook:'스레드 두 개가 같은 숫자를 1씩 올렸는데 왜 합이 모자랄까?',definition:'여러 스레드가 같은 데이터를 동시에 바꾸면 실행 순서에 따라 결과가 달라지는 경쟁 상태가 생깁니다. counter += 1처럼 한 줄로 보이는 코드도 읽기·계산·쓰기 세 단계라 중간에 다른 스레드가 끼어들 수 있습니다. 동기화 도구는 이 끼어들기를 통제합니다. 뮤텍스(락)는 한 번에 한 스레드만 임계 구역에 들어가게 하고 세마포어는 동시에 들어갈 수 있는 수를 N개로 제한합니다. 조건 변수는 "재고가 생길 때까지"처럼 어떤 조건이 참이 될 때까지 잠들어 기다리게 합니다.',analogy:'화장실 열쇠가 하나뿐인 카페를 떠올리세요. 열쇠를 가진 사람만 들어갈 수 있으니 뮤텍스입니다. 주차장 입구의 "남은 자리 3"은 세마포어입니다. 자리가 0이면 차는 차단기 앞에서 기다립니다. 진동벨을 받고 음식이 나올 때까지 앉아서 기다리는 것은 조건 변수입니다. 계속 카운터를 들여다보지 않아도 준비되면 깨워 줍니다.',steps:['여러 스레드가 함께 읽고 쓰는 데이터(공유 상태)를 찾습니다.','그 데이터를 바꾸는 코드 구간을 임계 구역으로 정하고 하나의 락으로 감쌉니다.','동시 접근 수만 제한하면 될 때는 세마포어, 조건을 기다려야 할 때는 조건 변수를 씁니다.','락을 여러 개 잡아야 하면 항상 같은 순서로 잡아 교착 상태를 막고 락 안에서는 느린 I/O를 하지 않습니다.'],scenario:'주문 서버가 메모리에 쿠폰 잔여 수량을 들고 있습니다. 요청이 몰리자 잔여 1개인 쿠폰이 두 명에게 발급됐습니다. 두 스레드가 거의 동시에 잔여 수량 1을 읽고 각자 0으로 바꿨기 때문입니다. 확인과 차감을 하나의 락 안에 넣어 해결했습니다. 서버를 여러 대로 늘린 뒤에는 프로세스 안의 락이 다른 서버를 막지 못하므로 DB의 조건부 UPDATE로 옮겼습니다.',aws:'EC2나 ECS에서 인스턴스를 여러 개 띄우면 각 프로세스의 락은 서로를 모릅니다. 여러 서버가 함께 지켜야 하는 규칙은 RDS의 행 잠금과 조건부 UPDATE, DynamoDB의 조건부 쓰기처럼 공유 저장소의 원자적 연산으로 옮깁니다.',ncloud:'Server나 Kubernetes Service에서 파드를 여러 개 띄울 때도 마찬가지입니다. Cloud DB의 트랜잭션과 잠금, Redis의 원자 명령으로 여러 인스턴스 사이의 동시성을 다룹니다.',tradeoff:'락은 정확성을 주지만 그만큼 스레드가 줄을 서므로 처리량이 줄어듭니다. 락 범위를 너무 넓히면 병렬성이 사라지고 너무 잘게 나누면 락을 여러 개 잡다가 교착 상태가 생깁니다. 공유 상태 자체를 줄이는 설계(큐로 한 스레드에게 넘기기, 불변 데이터)가 가장 확실한 방법일 때가 많습니다.',language:'Python · 락 없는 증가와 락 있는 증가',code:`from threading import Thread, Lock
+import time
+
+stock = {"coupon": 1}
+lock = Lock()
+issued = []
+
+def issue(name):
+    with lock:  # 확인과 차감을 한 덩어리로 묶습니다
+        if stock["coupon"] > 0:
+            time.sleep(0.01)  # 다른 스레드가 끼어들 틈을 일부러 만듭니다
+            stock["coupon"] -= 1
+            issued.append(name)
+
+threads = [Thread(target=issue, args=(n,)) for n in ("A", "B", "C")]
+for t in threads: t.start()
+for t in threads: t.join()
+print(issued, stock)  # 발급은 한 명뿐이고 재고는 0입니다`,codeNotes:['with lock: 줄을 지우고 실행하면 세 스레드가 모두 잔여 1을 보고 발급해 재고가 음수가 됩니다.','time.sleep은 실제 서버의 DB 조회나 계산처럼 확인과 차감 사이에 걸리는 시간을 흉내 냅니다.','이 락은 한 프로세스 안에서만 유효합니다. 서버가 여러 대면 DB나 Redis의 원자적 연산이 필요합니다.'],answer:'경쟁 상태는 공유 데이터를 읽고 바꾸는 사이에 다른 스레드가 끼어들어 생깁니다. 공유 상태를 찾아 확인과 변경을 하나의 락으로 묶고 동시 접근 수 제한에는 세마포어, 조건 대기에는 조건 변수를 씁니다. 여러 락은 정해진 순서로 잡아 교착을 막고 서버가 여러 대라면 DB나 Redis의 원자적 연산으로 옮깁니다.',follow:[['Python에는 GIL이 있는데 락이 왜 필요한가요?','GIL은 바이트코드 하나하나의 실행을 직렬화할 뿐 counter += 1 같은 여러 단계의 연산 전체를 보호하지 않습니다. 스레드 전환이 읽기와 쓰기 사이에 일어날 수 있으므로 여전히 락이 필요합니다.'],['뮤텍스와 이진 세마포어는 같은가요?','값의 범위는 비슷하지만 뮤텍스는 잡은 스레드만 풀 수 있는 소유권 개념이 있고 우선순위 상속 같은 기능이 붙기도 합니다. 세마포어는 다른 스레드가 신호를 보내 풀 수 있어 생산자·소비자 신호에 씁니다.']],memory:'읽고 판단하고 쓰는 사이에는 틈이 있다. 그 틈을 하나의 락으로 닫는다.',mistake:'락을 잡은 채 네트워크 호출이나 sleep을 하면 다른 스레드가 모두 그 시간만큼 기다립니다.',quiz:{question:'counter += 1을 두 스레드가 각각 1000번 실행했는데 합이 2000보다 작을 수 있는 이유는?',options:['정수가 넘쳐서','읽기와 쓰기 사이에 다른 스레드가 끼어들어서','스레드가 하나만 실행돼서'],correct:1,explanation:'읽기·더하기·쓰기 사이에 전환이 일어나면 한쪽의 증가가 덮어써져 사라집니다.'},refs:['pyThreads','threads']}),
+l({id:'scheduling',category:1,title:'CPU 스케줄링',english:'Time Slice / Run Queue / CFS · EEVDF / cgroup',hook:'CPU 사용률이 40%인데 왜 요청이 느릴까?',definition:'CPU 코어 하나는 한순간에 스레드 하나만 실행합니다. 스케줄러는 실행할 준비가 된 스레드들(실행 큐) 중 다음에 실행할 것을 고르고 정해진 시간이 지나면 다른 스레드로 바꿉니다. 이것을 선점이라고 합니다. Linux는 2.6.23부터 각 스레드가 실제로 쓴 CPU 시간을 가중치로 나눈 가상 실행 시간(vruntime)이 가장 적은 스레드를 고르는 CFS를 썼고 6.6부터는 같은 생각에 마감 시간 개념을 더한 EEVDF로 옮겨 가고 있습니다. 컨테이너의 CPU 제한은 cgroup이 일정 주기마다 쓸 수 있는 시간을 잘라 주는 방식이라 평균 사용률이 낮아도 순간적으로 멈출 수 있습니다.',analogy:'놀이터 그네 하나를 아이 여럿이 나눠 탄다고 해 봅시다. 공정하게 하려면 지금까지 가장 적게 탄 아이에게 다음 차례를 줍니다. 형이나 동생에게 가중치를 다르게 주면 누군가는 조금 더 오래 탑니다. 컨테이너의 CPU 제한은 "1분마다 20초만 탈 수 있다"는 규칙과 같습니다. 처음 20초를 몰아서 타면 남은 40초는 그네가 비어 있어도 기다려야 합니다.',steps:['실행할 준비가 된 스레드가 실행 큐에 들어갑니다. I/O를 기다리는 스레드는 큐에 없습니다.','스케줄러가 가장 적게 실행된(가상 실행 시간이 가장 작은) 스레드를 고릅니다.','스레드가 잠들거나 할당된 시간이 끝나면 문맥 교환으로 다음 스레드를 실행합니다.','cgroup의 CPU 제한이 있으면 주기 안에서 쓸 시간을 다 쓴 그룹은 다음 주기까지 멈춥니다(스로틀링).'],scenario:'Kubernetes에서 CPU limit을 1코어로 준 API 파드가 평균 CPU 40%인데도 응답 p99가 튀었습니다. 요청이 몰릴 때 여러 스레드가 동시에 CPU를 쓰면 100ms 주기의 할당량을 30ms 만에 다 써 버리고 나머지 70ms 동안 멈췄기 때문입니다. container_cpu_cfs_throttled_periods_total 지표로 스로틀링을 확인하고 limit을 올리거나 워커 수를 코어 수에 맞췄습니다.',aws:'ECS와 EKS의 CPU 단위는 cgroup 제한으로 바뀝니다. 버스트 가능 인스턴스(T 계열)는 크레딧이 떨어지면 기준 성능으로 묶이므로 CPU 사용률과 함께 크레딧 잔량을 봅니다.',ncloud:'Ncloud Kubernetes Service도 파드의 requests와 limits가 cgroup으로 적용됩니다. 노드의 CPU 사용률만 보지 말고 컨테이너별 스로틀링 지표를 함께 확인합니다.',tradeoff:'타임 슬라이스를 짧게 하면 반응성이 좋아지지만 문맥 교환이 늘어 처리량이 떨어집니다. CPU limit은 이웃 파드를 보호하지만 지연에 민감한 서비스에는 짧은 정지를 만듭니다. 그래서 requests는 꼭 주되 limit은 신중하게 정하는 팀이 많습니다.',language:'Python · 가상 실행 시간으로 다음 작업 고르기',code:`import heapq
+
+# (가상 실행 시간, 이름, 가중치). 가중치가 클수록 vruntime이 천천히 늘어 더 자주 실행됩니다.
+queue = [(0.0, "api", 2.0), (0.0, "batch", 1.0)]
+heapq.heapify(queue)
+timeline = []
+for _ in range(6):
+    vruntime, name, weight = heapq.heappop(queue)
+    timeline.append(name)
+    ran_ms = 4
+    heapq.heappush(queue, (vruntime + ran_ms / weight, name, weight))
+print(timeline)  # api가 batch보다 두 배 자주 실행됩니다`,codeNotes:['heapq로 가상 실행 시간이 가장 작은 작업을 꺼냅니다. CFS가 레드-블랙 트리로 하는 일을 단순하게 흉내 냈습니다.','가중치를 바꿔 실행 비율이 어떻게 달라지는지 확인하세요. nice 값이 실제 가중치를 정합니다.','실제 스케줄러는 여러 코어, 잠든 스레드, 캐시 위치까지 고려합니다. 이 코드는 원리만 보여 줍니다.'],answer:'스케줄러는 실행 큐에서 다음 스레드를 골라 시간을 나눠 줍니다. Linux는 가중치를 반영한 가상 실행 시간이 가장 작은 스레드를 고르는 CFS를 썼고 지금은 EEVDF로 옮겨 가고 있습니다. 컨테이너에서는 CPU 사용률 평균만 보지 않고 cgroup 스로틀링과 실행 큐 대기 시간을 함께 봐서 지연 원인을 찾겠습니다.',follow:[['로드 애버리지와 CPU 사용률은 어떻게 다른가요?','로드 애버리지는 실행 중이거나 실행을 기다리는 작업 수의 평균이고 Linux는 디스크 대기 같은 중단 불가 상태도 셉니다. 코어 수보다 크게 높으면 줄을 서는 작업이 많다는 뜻입니다.'],['CPU limit을 아예 안 주면 안 되나요?','지연은 줄지만 한 파드가 노드의 CPU를 독차지해 이웃을 느리게 할 수 있습니다. requests로 보장 몫을 정하고 limit은 서비스 특성에 따라 정합니다.']],memory:'평균 CPU가 낮아도 줄을 서거나 할당량에 걸리면 느리다.',mistake:'CPU 사용률 그래프만 보고 "CPU는 여유 있다"고 단정하지 마세요. 스로틀링과 실행 큐 대기는 따로 봐야 합니다.',quiz:{question:'CPU limit 1코어인 컨테이너가 평균 40%만 쓰는데 가끔 멈추는 가장 흔한 이유는?',options:['메모리 부족','짧은 순간 할당량을 다 써서 스로틀링됨','DNS 지연'],correct:1,explanation:'cgroup은 주기마다 할당량을 주므로 몰아서 쓰면 남은 주기 동안 멈춥니다.'},refs:['kernelSched','threads']}),
+l({id:'tls',category:0,title:'TLS와 인증서',english:'Certificate Chain / CA / SNI / mTLS',hook:'자물쇠 아이콘은 무엇을 확인했다는 뜻일까?',definition:'TLS는 두 프로그램 사이의 통신을 암호화하고 상대가 누구인지 확인하는 프로토콜입니다. 상대 확인은 인증서로 합니다. 인증서는 "이 공개키의 주인은 example.com이다"라는 문장에 인증 기관(CA)이 서명한 문서입니다. 브라우저는 서버 인증서에서 중간 CA, 루트 CA까지 서명이 이어지는지 확인하고 루트가 운영체제나 브라우저의 신뢰 저장소에 있으면 믿습니다. 그다음 도메인 이름, 유효 기간, 서버가 그 개인키를 실제로 가졌는지를 확인합니다. 자물쇠는 "이 도메인의 주인과 암호화된 통신을 한다"는 뜻이지 그 사이트가 믿을 만하다는 뜻은 아닙니다.',analogy:'인증서는 신분증과 같습니다. 신분증 자체는 누구나 위조해서 만들 수 있지만 정부(루트 CA)의 도장과 그 도장을 위임받은 구청(중간 CA)의 도장이 진짜인지 확인하면 믿을 수 있습니다. 사진과 얼굴이 같은지(개인키 소유 증명)와 유효 기간도 봅니다. 하지만 신분증이 진짜라고 그 사람이 정직하다는 보장은 없습니다.',steps:['클라이언트가 접속할 도메인 이름을 SNI에 담아 보냅니다. 서버는 그 이름에 맞는 인증서를 고릅니다.','서버가 자기 인증서와 중간 CA 인증서를 보냅니다.','클라이언트는 신뢰 저장소의 루트까지 서명을 따라가고 이름·기간·용도를 확인합니다.','서버가 개인키로 핸드셰이크 내용에 서명해 그 인증서의 주인임을 증명하고 이후 대칭키로 암호화합니다.'],scenario:'새 서버로 옮긴 뒤 브라우저는 잘 열리는데 Python 배치 작업만 CERTIFICATE_VERIFY_FAILED를 냈습니다. 서버 설정에 중간 CA 인증서를 빠뜨렸기 때문입니다. 브라우저는 예전에 받은 중간 인증서를 캐시해 두거나 인증서의 주소에서 내려받아 채우지만 많은 라이브러리는 그렇게 하지 않습니다. openssl s_client -connect host:443 -servername host -showcerts로 서버가 보내는 체인을 확인하고 fullchain 파일로 바꿨습니다.',aws:'ACM은 공개 인증서를 무료로 발급하고 ALB, CloudFront에 붙이면 자동으로 갱신합니다. 인증서는 리전 단위이고 CloudFront용은 us-east-1에서 발급합니다. 서비스 사이의 mTLS가 필요하면 Private CA를 검토합니다.',ncloud:'Certificate Manager에서 인증서를 등록하거나 발급해 Load Balancer와 CDN에 연결합니다. 외부에서 받은 인증서를 올릴 때는 중간 인증서를 포함한 체인을 함께 등록합니다.',tradeoff:'인증서 수명이 짧을수록 키가 유출됐을 때의 피해 기간이 줄지만 갱신을 자동화하지 않으면 만료 사고가 잦아집니다. 폐기 확인(OCSP)을 엄격하게 하면 CA 서버 장애가 곧 우리 서비스 장애가 되므로 대부분의 브라우저는 실패해도 통과시키거나 다른 방식을 씁니다.',language:'Python · 인증서 정보와 남은 기간 확인',code:`import socket, ssl
+from datetime import datetime, timezone
+
+def cert_days_left(host, port=443):
+    context = ssl.create_default_context()  # 시스템 신뢰 저장소와 이름 검사를 사용합니다
+    with socket.create_connection((host, port), timeout=5) as sock:
+        with context.wrap_socket(sock, server_hostname=host) as tls:  # SNI와 이름 검사
+            cert = tls.getpeercert()
+    expires = datetime.fromtimestamp(ssl.cert_time_to_seconds(cert["notAfter"]), timezone.utc)
+    subject = dict(item[0] for item in cert["subject"])
+    return subject.get("commonName"), tls.version(), (expires - datetime.now(timezone.utc)).days
+
+# print(cert_days_left("example.com"))  # 네트워크가 되는 PC에서 실행하세요`,codeNotes:['create_default_context는 체인 검증과 호스트 이름 검사를 켠 상태로 시작합니다. verify_mode를 끄는 코드는 쓰지 않습니다.','server_hostname이 SNI로 전달되고 인증서 이름 검사에도 쓰입니다.','이 함수를 매일 실행해 남은 일수가 30일 아래로 떨어지면 알림을 보내는 것이 간단한 만료 감시입니다.'],answer:'TLS는 암호화와 상대 확인을 함께 제공합니다. 상대 확인은 서버 인증서에서 루트 CA까지 서명이 이어지는지, 이름과 기간이 맞는지, 서버가 개인키를 가졌는지로 합니다. 운영에서는 중간 인증서를 포함한 체인을 배포하고 갱신을 자동화하며 만료 일수를 감시하겠습니다. 내부 서비스 사이에는 필요하면 양쪽이 인증서를 내는 mTLS를 씁니다.',follow:[['HTTPS면 피싱 사이트가 아닌가요?','아닙니다. 피싱 도메인도 그 도메인의 소유를 증명하면 인증서를 받을 수 있습니다. 자물쇠는 도메인과의 암호화된 연결만 보장합니다.'],['인증서 검증을 끄면 왜 위험한가요?','중간에서 가짜 인증서를 내미는 공격자를 구별할 수 없게 됩니다. 암호화는 되지만 공격자와 암호화된 대화를 하는 셈입니다.']],memory:'암호화는 비밀을, 인증서 체인은 상대가 누구인지를 지킨다.',mistake:'인증서 오류를 verify=False로 넘기지 마세요. 원인은 대개 빠진 중간 인증서, 이름 불일치, 만료입니다.',quiz:{question:'브라우저는 되는데 Python 클라이언트만 인증서 검증에 실패할 때 가장 먼저 의심할 것은?',options:['서버가 중간 CA 인증서를 보내지 않음','TCP 포트 차단','DNS TTL'],correct:0,explanation:'브라우저는 빠진 중간 인증서를 채우는 경우가 있지만 많은 라이브러리는 서버가 보낸 체인만 씁니다.'},refs:['tls13','http']}),
+l({id:'websocket',category:0,title:'WebSocket과 실시간 통신',english:'Upgrade / Frame / Ping-Pong / SSE',hook:'채팅 메시지를 받으려고 1초마다 서버에 물어봐야 할까?',definition:'HTTP는 클라이언트가 물어야 서버가 답하는 구조라 서버가 먼저 소식을 보내기 어렵습니다. WebSocket은 HTTP 요청으로 시작해 "이 연결을 WebSocket으로 바꾸자"는 Upgrade를 주고받은 뒤 같은 TCP 연결 위에서 양쪽이 언제든 메시지(프레임)를 보내는 프로토콜입니다. 2011년 RFC 6455로 표준이 되었습니다. 서버에서 클라이언트로 한 방향만 보내면 되는 알림이나 진행률은 평범한 HTTP 응답을 길게 열어 두는 Server-Sent Events(SSE)가 더 간단할 수 있습니다.',analogy:'HTTP는 편지입니다. 답장을 받으려면 먼저 보내야 하고 새 소식이 있는지 알려면 계속 편지를 보내 물어야 합니다. WebSocket은 전화입니다. 처음에 "전화로 바꿀까요?"라고 묻고 상대가 "네"라고 하면 그다음부터는 누구든 먼저 말할 수 있습니다. 대신 전화를 오래 붙들고 있으면 회선을 계속 차지하고 중간에 끊기면 다시 걸어야 합니다.',steps:['브라우저가 Upgrade: websocket과 무작위 키를 담은 HTTP GET을 보냅니다.','서버가 키로 계산한 값을 담아 101 Switching Protocols로 답하면 연결이 WebSocket으로 바뀝니다.','양쪽이 텍스트나 바이너리 프레임을 자유롭게 주고받고 ping과 pong으로 연결이 살아 있는지 확인합니다.','어느 한쪽이 close 프레임을 보내 정상 종료하거나 네트워크가 끊기면 클라이언트가 간격을 늘려 가며 다시 연결합니다.'],scenario:'nginx 뒤에 둔 채팅 서버가 로컬에서는 되는데 배포하면 연결 직후 끊겼습니다. nginx가 Upgrade 헤더를 앱으로 넘기지 않았기 때문입니다. proxy_http_version 1.1과 Upgrade, Connection 헤더를 설정해 해결했습니다. 그다음에는 조용한 방에서 정확히 60초마다 연결이 끊겼습니다. nginx의 proxy_read_timeout 기본값이 60초라 그동안 데이터가 없으면 닫았기 때문입니다. 서버가 30초마다 ping을 보내게 바꿨습니다.',aws:'ALB는 WebSocket을 지원하며 유휴 제한 시간이 지나면 연결을 닫으므로 heartbeat 주기를 그보다 짧게 합니다. 연결 상태를 서버가 관리하기 어렵다면 API Gateway의 WebSocket API로 연결을 맡기고 메시지만 Lambda나 백엔드로 받는 방식도 있습니다.',ncloud:'Load Balancer에서 WebSocket을 통과시킬 때 리스너 프로토콜과 유휴 시간 설정을 확인합니다. 서버를 여러 대 두면 한 서버에 연결된 사용자에게 다른 서버가 메시지를 보낼 수 있도록 Redis Pub/Sub 같은 중계가 필요합니다.',tradeoff:'WebSocket은 지연이 낮지만 연결마다 서버 메모리와 파일 디스크립터를 계속 쓰고 서버 재배포 때 모든 연결이 끊깁니다. 수평 확장 시 메시지를 다른 서버의 연결로 전달하는 계층이 필요합니다. 업데이트가 몇 초에 한 번이면 짧은 폴링이나 SSE가 운영이 더 쉽습니다.',language:'Python · Upgrade 응답의 Sec-WebSocket-Accept 계산',code:`import base64, hashlib
+
+GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"  # RFC 6455에 고정된 값
+
+def accept_value(client_key):
+    digest = hashlib.sha1((client_key + GUID).encode()).digest()
+    return base64.b64encode(digest).decode()
+
+# RFC 6455 본문의 예시 키와 결과입니다
+print(accept_value("dGhlIHNhbXBsZSBub25jZQ=="))  # s3pPLMBiTxaQ9kYGzzhZRbK+xOo=`,codeNotes:['서버가 클라이언트의 키에 고정 GUID를 붙여 해시해 돌려주면 클라이언트는 상대가 WebSocket을 이해하는 서버임을 확인합니다.','이 값은 보안 인증이 아닙니다. 사용자 인증은 연결 시 쿠키나 토큰으로 따로 하고 Origin 헤더도 검사합니다.','실제 서버는 websockets 같은 라이브러리나 프레임워크 기능을 쓰고 이 계산을 직접 하지 않습니다.'],answer:'WebSocket은 HTTP Upgrade로 시작해 하나의 TCP 연결 위에서 양방향 메시지를 주고받는 프로토콜입니다. 프록시가 Upgrade 헤더를 넘기도록 설정하고 유휴 제한보다 짧은 ping으로 연결을 유지하며 끊기면 지수 백오프로 재연결하겠습니다. 서버가 여러 대면 Pub/Sub으로 메시지를 중계하고 한 방향 알림이면 SSE를 먼저 검토합니다.',follow:[['WebSocket 연결에서 인증은 어떻게 하나요?','연결을 여는 HTTP 요청에서 쿠키나 토큰으로 인증하고 Origin을 확인합니다. 연결이 오래가므로 토큰 만료와 권한 변경 시 연결을 끊는 정책도 정합니다.'],['서버를 재배포하면 연결은 어떻게 되나요?','모두 끊깁니다. 서버는 종료 전에 close 프레임을 보내고 클라이언트는 무작위 지연을 섞어 재연결해야 모든 사용자가 동시에 몰리지 않습니다.']],memory:'HTTP로 악수하고 전화로 바꾼다. 조용하면 ping으로 살아 있음을 알린다.',mistake:'WebSocket을 쓰면 메시지 전달이 보장된다고 생각하지 마세요. 끊긴 동안의 메시지는 재연결 후 다시 받아 오는 설계가 필요합니다.',quiz:{question:'nginx 뒤의 WebSocket이 조용할 때 정확히 60초마다 끊기는 이유로 가장 알맞은 것은?',options:['proxy_read_timeout 기본값','TLS 인증서 만료','DNS 캐시 만료'],correct:0,explanation:'nginx는 기본 60초 동안 업스트림에서 데이터가 없으면 연결을 닫습니다. ping으로 데이터를 흘려보냅니다.'},refs:['websocket','http']}),
+l({id:'ratelimit',category:2,title:'속도 제한과 백오프',english:'Token Bucket / 429 / Retry-After / Jitter',hook:'한 사용자가 1초에 1000번 호출하면 다른 사용자는 어떻게 될까?',definition:'속도 제한은 한 사용자나 키가 정해진 시간에 보낼 수 있는 요청 수를 제한해 서버와 다른 사용자를 보호하는 장치입니다. 가장 널리 쓰는 토큰 버킷은 버킷에 일정 속도로 토큰을 채우고 요청마다 하나씩 꺼냅니다. 토큰이 있으면 통과, 없으면 HTTP 429 Too Many Requests로 거절하고 Retry-After 헤더로 언제 다시 오라고 알려 줍니다. 버킷 크기만큼 순간적인 몰림(버스트)은 허용하면서 평균 속도는 지킵니다. 반대편의 클라이언트는 거절이나 실패를 받으면 간격을 지수적으로 늘리고 무작위 값을 섞어(지터) 다시 시도합니다.',analogy:'놀이공원의 패스권을 떠올리세요. 매 10분마다 패스가 한 장씩 생기고 지갑에는 최대 5장까지 모입니다. 아침에 모아 둔 5장으로 연달아 탈 수는 있지만 다 쓰면 다음 패스가 생길 때까지 기다려야 합니다. 거절당한 사람이 모두 정확히 10분 뒤 한꺼번에 다시 오면 또 줄이 막히니 저마다 조금씩 다른 시간에 오는 것이 지터입니다.',steps:['제한할 대상(API 키, 사용자 ID, IP)과 기준(초당 10회, 버스트 20회)을 정합니다.','요청마다 대상의 버킷에서 지난 시간만큼 토큰을 채우고 하나를 꺼냅니다.','토큰이 없으면 429와 Retry-After를 돌려주고 처리하지 않습니다.','클라이언트는 Retry-After를 따르거나 지수 백오프와 지터로 재시도하고 최대 횟수를 둡니다.'],scenario:'파트너사 한 곳이 버그로 같은 주문 조회를 초당 수백 번 호출해 DB 커넥션이 바닥났고 다른 고객의 요청까지 실패했습니다. API 키별로 초당 20회, 버스트 40회의 토큰 버킷을 Redis에 두고 넘는 요청은 429로 거절했습니다. 그 뒤 장애 때 모든 모바일 앱이 1초 간격으로 재시도해 복구된 서버를 다시 쓰러뜨리는 일이 생기자 앱의 재시도를 지수 백오프와 전체 지터로 바꿨습니다.',aws:'API Gateway는 토큰 버킷 방식으로 계정, 스테이지, 사용량 계획 단위의 속도와 버스트를 제한합니다. WAF의 속도 기반 규칙으로 IP별 요청 수를 제한할 수 있고 AWS SDK는 기본으로 지수 백오프와 지터가 들어간 재시도를 합니다.',ncloud:'API Gateway의 사용량 계획(Usage Plan)으로 API 키별 호출 한도를 설정합니다. 앱 안에서 세밀하게 제한하려면 Cloud DB for Redis에 카운터를 둡니다.',tradeoff:'제한을 빡빡하게 하면 서버는 안전하지만 정상 사용자도 거절당합니다. 서버마다 따로 세면 빠르지만 전체 한도가 서버 수만큼 늘어나고 Redis에 모아 세면 정확하지만 요청마다 Redis를 한 번 더 호출합니다. 재시도는 일시적 실패를 숨겨 주지만 잘못하면 장애 때 부하를 몇 배로 키웁니다.',language:'Python · 토큰 버킷',code:`class TokenBucket:
+    def __init__(self, rate, capacity):
+        self.rate, self.capacity = rate, capacity  # 초당 채울 토큰, 최대 토큰
+        self.tokens, self.last = capacity, 0.0
+
+    def allow(self, now):
+        self.tokens = min(self.capacity, self.tokens + (now - self.last) * self.rate)
+        self.last = now
+        if self.tokens >= 1:
+            self.tokens -= 1
+            return True
+        return False
+
+bucket = TokenBucket(rate=1, capacity=5)
+burst = [bucket.allow(0.0) for _ in range(7)]  # 같은 순간 7번
+print(burst)              # 앞의 5번만 통과
+print(bucket.allow(2.0))  # 2초 뒤에는 토큰 2개가 다시 생겨 통과`,codeNotes:['now를 인자로 받게 해서 시간을 직접 넣어 시험할 수 있습니다. 실제 코드에서는 time.monotonic()을 씁니다.','토큰을 매초 채우는 타이머 없이 요청이 올 때 지난 시간만큼 한꺼번에 계산합니다.','서버가 여러 대면 이 상태를 Redis에 두고 Lua 스크립트로 채우기와 꺼내기를 원자적으로 처리합니다.'],answer:'속도 제한은 대상별로 허용 속도와 버스트를 정해 서버와 다른 사용자를 보호합니다. 토큰 버킷으로 평균 속도를 지키면서 짧은 몰림은 허용하고 넘는 요청은 429와 Retry-After로 거절하겠습니다. 서버가 여러 대면 Redis에서 원자적으로 세고 클라이언트 재시도는 지수 백오프와 지터, 최대 횟수로 제한합니다.',follow:[['고정 윈도와 토큰 버킷은 무엇이 다른가요?','고정 윈도는 1분마다 카운터를 0으로 되돌려서 59초와 61초에 몰아 보내면 짧은 시간에 한도의 두 배가 통과합니다. 토큰 버킷이나 슬라이딩 윈도는 경계에서 몰리는 문제를 줄입니다.'],['왜 재시도에 지터가 필요한가요?','모든 클라이언트가 같은 간격으로 재시도하면 같은 순간에 몰려 서버가 다시 쓰러집니다. 무작위 값을 섞으면 재시도가 시간에 흩어집니다.']],memory:'평균은 채우는 속도로, 몰림은 버킷 크기로. 거절당하면 흩어져서 다시.',mistake:'429를 받고 바로 같은 간격으로 계속 재시도하지 마세요. Retry-After를 따르고 백오프와 지터를 씁니다.',quiz:{question:'초당 1개씩 채우고 최대 5개인 토큰 버킷에 같은 순간 7개 요청이 오면?',options:['7개 모두 통과','5개 통과 2개 거절','1개 통과 6개 거절'],correct:1,explanation:'모아 둔 토큰 5개로 버스트 5개가 통과하고 나머지는 토큰이 다시 생길 때까지 거절됩니다.'},refs:['rfc6585','backoff']}),
+l({id:'replication',category:3,title:'복제와 샤딩',english:'Primary / Replica / Replication Lag / Sharding',hook:'방금 쓴 댓글이 새로고침하면 왜 사라질까?',definition:'복제는 같은 데이터를 여러 서버에 복사해 두는 것입니다. 쓰기는 주(primary) DB가 받고 변경 기록을 복제본(replica)에 보내 따라 하게 합니다. 읽기를 복제본으로 나누면 읽기 처리량이 늘고 주 DB가 죽으면 복제본을 승격해 이어 갑니다. 대부분의 복제는 기본이 비동기라 복제본이 몇 ms에서 몇 초 늦을 수 있습니다(복제 지연). 샤딩은 데이터 자체를 키 기준으로 나눠 서로 다른 서버에 저장하는 것입니다. 복제가 읽기와 가용성을 늘린다면 샤딩은 쓰기와 저장 용량을 늘립니다.',analogy:'복제는 본점의 메뉴판을 지점마다 복사해 두는 것입니다. 손님은 가까운 지점에서 메뉴를 보지만 본점이 가격을 바꾸면 지점 메뉴판이 바뀌기까지 시간이 걸립니다. 샤딩은 손님 이름의 첫 글자로 ㄱ~ㅁ은 1호점, ㅂ~ㅎ은 2호점이 장부를 맡는 것입니다. 장부가 너무 커지면 나누지만 두 지점 장부를 함께 봐야 하는 질문은 번거로워집니다.',steps:['주 DB가 쓰기를 처리하고 변경 기록(WAL, binlog)을 남깁니다.','복제본이 그 기록을 받아 같은 순서로 적용합니다. 비동기면 주 DB는 기다리지 않습니다.','읽기 요청을 복제본으로 보내되 방금 쓴 사용자의 읽기처럼 최신이어야 하는 읽기는 주 DB로 보냅니다.','데이터나 쓰기가 한 서버의 한계를 넘으면 샤드 키를 정해 데이터를 여러 주 DB로 나눕니다.'],scenario:'댓글을 쓰자마자 목록을 다시 불러오면 내 댓글이 보이지 않는다는 문의가 들어왔습니다. 쓰기는 주 DB로, 목록 조회는 복제본으로 보냈는데 복제가 0.5초쯤 늦었기 때문입니다. 쓰기 후 5초 동안 그 사용자의 읽기는 주 DB로 보내도록 바꿨습니다. 1년 뒤 쓰기량이 주 DB 하나의 한계에 닿자 사용자 ID를 샤드 키로 데이터를 나눴습니다.',aws:'RDS 읽기 전용 복제본은 비동기 복제이고 ReplicaLag 지표로 지연을 봅니다. Multi-AZ는 동기식 대기 복제본으로 장애 조치용이며 읽기를 받지 않습니다(다중 AZ DB 클러스터 제외). Aurora는 저장 계층을 공유해 복제본 지연이 보통 짧습니다. DynamoDB는 파티션 키로 자동 샤딩합니다.',ncloud:'Cloud DB for MySQL과 PostgreSQL은 Slave(읽기) 서버를 추가해 읽기를 분산하고 Master 장애 시 자동 승격을 설정할 수 있습니다. 복제 지연 지표를 모니터링에 함께 둡니다.',tradeoff:'동기 복제는 데이터 유실이 없지만 쓰기마다 복제본을 기다려 느리고 복제본 장애가 쓰기를 막을 수 있습니다. 비동기 복제는 빠르지만 장애 조치 순간 마지막 쓰기가 사라질 수 있습니다. 샤딩은 쓰기 한계를 풀지만 샤드를 넘는 조인과 트랜잭션, 재분배가 어려워져 정말 필요할 때까지 미룹니다.',language:'Python · 샤드를 늘릴 때 옮겨야 하는 키의 수',code:`import hashlib, bisect
+
+def h(text):
+    return int(hashlib.md5(text.encode()).hexdigest(), 16)
+
+keys = [f"user:{i}" for i in range(10_000)]
+
+# 1) 해시 % 샤드 수: 4대 → 5대
+moved_mod = sum(h(k) % 4 != h(k) % 5 for k in keys)
+
+# 2) 일관 해싱: 샤드마다 링 위에 점 100개
+def ring(shards):
+    points = sorted((h(f"{s}#{v}"), s) for s in shards for v in range(100))
+    return [p for p, _ in points], [s for _, s in points]
+
+def owner(r, key):
+    pos, names = r
+    return names[bisect.bisect(pos, h(key)) % len(names)]
+
+before, after = ring(["s0", "s1", "s2", "s3"]), ring(["s0", "s1", "s2", "s3", "s4"])
+moved_ring = sum(owner(before, k) != owner(after, k) for k in keys)
+print(moved_mod, moved_ring)  # 나머지 방식은 약 80%, 일관 해싱은 약 20%만 이동`,codeNotes:['나머지 방식은 샤드 수가 바뀌면 거의 모든 키의 자리가 바뀌어 대량 이동이 필요합니다.','일관 해싱은 새 샤드가 링에서 맡게 된 구간의 키만 옮깁니다. 이상적으로 1/5입니다.','샤드마다 점을 여러 개(가상 노드) 두면 데이터가 고르게 나뉩니다. 숫자를 10으로 줄여 결과를 비교해 보세요.'],answer:'복제는 같은 데이터를 여러 서버에 두어 읽기를 나누고 장애에 대비합니다. 비동기 복제의 지연을 전제로 쓰기 직후의 읽기는 주 DB로 보내고 복제 지연을 감시하겠습니다. 쓰기와 저장량이 한 서버의 한계를 넘으면 접근 패턴에 맞는 샤드 키로 나누되 샤드를 넘는 조인과 재분배 비용을 함께 설계합니다.',follow:[['장애 조치 때 데이터가 사라질 수 있나요?','비동기 복제라면 주 DB가 커밋했지만 아직 복제본에 가지 않은 쓰기가 사라질 수 있습니다. 허용할 수 없으면 동기 복제나 반동기 복제를 쓰고 그만큼 쓰기 지연을 받아들입니다.'],['샤드 키는 어떻게 고르나요?','대부분의 쿼리가 하나의 샤드에서 끝나고 데이터와 트래픽이 고르게 퍼지는 키를 고릅니다. 생성 시각처럼 한쪽으로 몰리는 키는 최신 샤드만 바빠집니다.']],memory:'복제는 읽기와 생존을, 샤딩은 쓰기와 용량을 늘린다. 복제본은 조금 늦다.',mistake:'복제본에서 읽은 값이 항상 최신이라고 가정하지 마세요. 쓰기 직후 읽기, 재고 확인처럼 최신이어야 하는 읽기는 주 DB로 보냅니다.',quiz:{question:'댓글을 쓴 직후 목록에서 내 댓글이 안 보이는 가장 흔한 원인은?',options:['복제 지연이 있는 복제본에서 읽음','인덱스가 없음','TLS 오류'],correct:0,explanation:'비동기 복제본은 주 DB보다 늦을 수 있어 방금 쓴 내용이 아직 없을 수 있습니다.'},refs:['pgReplication','tx']}),
+l({id:'raft',category:3,title:'합의와 Raft',english:'Leader Election / Log Replication / Quorum',hook:'서버 세 대가 "지금 리더는 누구인가"에 어떻게 같은 답을 낼까?',definition:'합의는 여러 서버가 일부가 죽거나 네트워크가 끊겨도 같은 값이나 같은 순서의 기록에 동의하는 문제입니다. Raft는 이를 이해하기 쉽게 만든 알고리즘입니다. 서버들은 리더 하나를 뽑고 모든 쓰기는 리더가 받아 자기 로그에 적은 뒤 다른 서버에 복제합니다. 과반수가 받아 적으면 그 항목은 커밋되어 다시는 사라지지 않습니다. 리더가 죽으면 정해진 시간 동안 소식이 없는 서버가 후보로 나서 과반수의 표를 받아 새 리더가 됩니다. 과반수가 필요하므로 3대면 1대, 5대면 2대까지 죽어도 동작합니다. etcd, Consul, Kafka의 KRaft가 Raft를 씁니다.',analogy:'반장 선거와 회의록을 떠올리세요. 반장이 결정 사항을 회의록에 적고 반 친구들에게 돌립니다. 반 이상이 자기 공책에 받아 적으면 확정입니다. 반장이 한동안 연락이 없으면 누군가 "내가 반장 할게"라며 표를 모읍니다. 표는 한 학기(임기)에 한 사람에게만 줄 수 있고 자기보다 회의록이 뒤처진 후보에게는 주지 않습니다. 반이 둘로 갈라져도 과반수를 가진 쪽만 결정할 수 있어서 결정이 두 갈래로 나뉘지 않습니다.',steps:['모든 서버는 팔로워로 시작하고 리더의 하트비트를 기다립니다.','일정 시간(무작위 150~300ms 등) 하트비트가 없으면 임기 번호를 올리고 후보가 되어 투표를 요청합니다.','과반수의 표를 받은 후보가 리더가 되어 클라이언트 쓰기를 로그에 붙이고 팔로워에게 복제합니다.','과반수가 저장하면 리더가 그 항목을 커밋하고 상태 기계에 적용한 뒤 클라이언트에 성공을 알립니다.'],scenario:'Kubernetes 클러스터의 etcd를 2대로 운영하다가 한 대가 디스크 문제로 멈추자 클러스터 전체가 새 파드를 만들지 못했습니다. 2대의 과반수는 2대라 한 대만 남으면 쓰기를 커밋할 수 없기 때문입니다. 3대로 늘리고 각각 다른 가용 영역에 뒀습니다. 그 뒤에는 한 영역이 끊겨도 나머지 두 대가 과반수를 이뤄 계속 동작했습니다.',aws:'EKS는 etcd를 AWS가 여러 가용 영역에 나눠 운영해 사용자는 직접 다루지 않습니다. Aurora와 DynamoDB도 내부적으로 쿼럼 기반 복제를 씁니다. 직접 Consul이나 etcd를 띄운다면 서로 다른 AZ에 홀수 대를 둡니다.',ncloud:'Ncloud Kubernetes Service의 컨트롤 플레인은 관리형으로 제공됩니다. 직접 합의 기반 시스템을 운영할 때는 서로 다른 존에 3대 이상 홀수로 배치하고 디스크 지연을 감시합니다.',tradeoff:'과반수 확인 덕분에 데이터가 갈라지지 않지만 쓰기마다 과반수 왕복을 기다려 단일 서버보다 느립니다. 서버를 늘리면 견딜 수 있는 장애 수는 늘지만 과반수도 커져 쓰기가 느려집니다. 짝수 대는 이득이 없습니다. 4대도 견디는 장애는 3대와 같은 1대입니다.',language:'Python · 과반수로 커밋 위치 정하기',code:`def commit_index(match_index, leader_last):
+    # 각 서버가 어디까지 받아 적었는지(리더 포함)로 과반수가 가진 위치를 구합니다
+    positions = sorted(match_index + [leader_last], reverse=True)
+    majority = len(positions) // 2 + 1
+    return positions[majority - 1]
+
+def tolerated_failures(n):
+    return (n - 1) // 2
+
+print(commit_index([7, 5], leader_last=8))        # 3대 중 2대가 7까지 → 7
+print(commit_index([8, 3, 2, 8], leader_last=9))  # 5대 중 3대가 8까지 → 8
+print([tolerated_failures(n) for n in (2, 3, 4, 5)])  # [0, 1, 1, 2]`,codeNotes:['내림차순으로 정렬해 과반수 번째 값을 고르면 "과반수가 적어도 여기까지 가졌다"는 위치가 됩니다.','실제 Raft는 현재 임기의 항목일 때만 이 방식으로 커밋합니다. 이전 임기의 항목은 현재 임기 항목과 함께 커밋됩니다.','tolerated_failures로 2대와 4대가 3대보다 나을 게 없음을 확인하세요.'],answer:'Raft는 리더를 뽑고 모든 쓰기를 리더의 로그로 받아 과반수가 저장하면 커밋하는 합의 알고리즘입니다. 리더가 죽으면 무작위 선거 시간이 지난 팔로워가 임기를 올려 과반수 표를 받아 리더가 됩니다. 과반수가 필요하므로 서로 다른 장애 영역에 3대나 5대를 두고 디스크와 네트워크 지연을 감시하겠습니다.',follow:[['네트워크가 둘로 갈라지면 어떻게 되나요?','과반수를 가진 쪽만 리더를 뽑고 쓰기를 커밋합니다. 소수 쪽의 옛 리더는 쓰기를 받아도 커밋하지 못하고 네트워크가 복구되면 새 리더의 로그로 덮어씁니다.'],['선거 시간은 왜 무작위인가요?','모든 서버가 같은 순간 후보가 되면 표가 나뉘어 아무도 과반수를 얻지 못합니다. 시간을 흩어 두면 대개 한 서버가 먼저 나서 바로 당선됩니다.']],memory:'과반수가 적어야 확정된다. 리더가 사라지면 가장 먼저 깨어난 후보가 표를 모은다.',mistake:'가용성을 높이려고 2대나 4대로 운영하지 마세요. 견딜 수 있는 장애 수는 늘지 않고 과반수만 커집니다.',quiz:{question:'5대로 운영하는 Raft 클러스터가 동시에 견딜 수 있는 서버 장애 수는?',options:['1대','2대','4대'],correct:1,explanation:'과반수 3대가 살아 있어야 하므로 2대까지 죽어도 동작합니다.'},refs:['raft','etcd']}),
+l({id:'pytest',category:6,title:'테스트와 pytest',english:'Unit Test / Fixture / Parametrize / Mock',hook:'코드를 고칠 때마다 손으로 다 눌러 봐야 할까?',definition:'자동 테스트는 코드가 기대대로 동작하는지 확인하는 코드입니다. 입력을 주고 결과를 assert로 확인하며 한 번 써 두면 코드를 고칠 때마다 몇 초 만에 다시 돌릴 수 있습니다. pytest는 Python에서 가장 널리 쓰는 테스트 도구입니다. test_로 시작하는 함수를 찾아 실행하고 평범한 assert 문이 실패하면 양쪽 값을 보여 줍니다. 픽스처는 테스트에 필요한 준비물(임시 DB, 샘플 사용자)을 만들고 정리하는 함수이고 parametrize는 같은 테스트를 여러 입력으로 반복합니다. 외부 API처럼 느리거나 통제할 수 없는 의존성은 가짜 객체로 바꿔 끼웁니다.',analogy:'요리사가 손님에게 내기 전에 맛을 보는 것과 같습니다. 매번 모든 요리를 처음부터 먹어 볼 수는 없으니 핵심 양념은 작은 숟가락으로 빠르게 확인하고(단위 테스트) 하루에 몇 번은 완성된 코스를 통째로 먹어 봅니다(통합 테스트). 재료 손질처럼 매번 반복되는 준비는 미리 정해 두면(픽스처) 맛보기에 집중할 수 있습니다.',steps:['고칠 동작을 정하고 기대하는 입력과 출력을 테스트로 먼저 적습니다.','픽스처로 필요한 준비물을 만들고 외부 의존성은 가짜로 바꿉니다.','pytest로 실행해 실패를 확인한 뒤 코드를 고쳐 통과시킵니다.','CI에서 모든 테스트를 자동으로 돌려 실패하면 병합하지 못하게 합니다.'],scenario:'할인 계산 함수를 고친 뒤 정상 주문은 잘 됐는데 쿠폰과 회원 할인을 함께 쓰면 금액이 음수가 되는 버그가 배포됐습니다. 이 조합을 재현하는 테스트를 먼저 써서 실패를 확인하고 금액을 0 아래로 내리지 않게 고쳤습니다. 이후 경계값(0원, 쿠폰이 금액보다 큰 경우)을 parametrize로 묶어 두었고 같은 버그는 다시 나오지 않았습니다.',aws:'CodeBuild나 GitHub Actions에서 pytest를 돌리고 결과를 JUnit XML로 남깁니다. AWS 서비스를 부르는 코드는 botocore의 Stubber나 moto 같은 라이브러리로 가짜 응답을 주어 실제 계정 없이 테스트합니다.',ncloud:'SourceBuild와 SourcePipeline에서 빌드 단계에 pytest를 넣어 실패하면 배포가 멈추게 합니다. 통합 테스트용 DB는 운영과 분리된 테스트 전용 자원을 씁니다.',tradeoff:'단위 테스트는 빠르고 실패 원인이 분명하지만 부품 사이의 연결 문제는 놓칩니다. 통합·E2E 테스트는 실제와 가깝지만 느리고 불안정합니다. 가짜 객체를 너무 많이 쓰면 테스트는 통과하는데 실제로는 깨지는 일이 생깁니다. 그래서 단위 테스트를 많이, 통합 테스트를 적당히, E2E를 소수로 두는 피라미드 모양이 흔합니다.',language:'Python · pytest 픽스처와 parametrize',code:`import pytest
+
+def final_price(price, coupon=0, member_rate=0.0):
+    discounted = price * (1 - member_rate) - coupon
+    return max(0, round(discounted))
+
+@pytest.fixture
+def vip():
+    return {"name": "민수", "member_rate": 0.1}
+
+def test_vip_discount(vip):
+    assert final_price(10_000, member_rate=vip["member_rate"]) == 9_000
+
+@pytest.mark.parametrize("price, coupon, expected", [
+    (10_000, 3_000, 7_000),
+    (2_000, 3_000, 0),   # 쿠폰이 더 커도 음수가 되지 않습니다
+    (0, 0, 0),
+])
+def test_coupon(price, coupon, expected):
+    assert final_price(price, coupon) == expected
+
+# 파일로 저장한 뒤 터미널에서: pytest -q test_price.py`,codeNotes:['vip 픽스처는 이름이 같은 매개변수를 가진 테스트에 자동으로 전달됩니다.','parametrize의 각 줄이 별도의 테스트로 실행되고 실패하면 어느 입력인지 함께 보입니다.','expected 값을 하나 틀리게 바꿔 실행해 보세요. pytest가 assert의 양쪽 값을 보여 줍니다.'],answer:'자동 테스트는 기대하는 입력과 출력을 코드로 적어 변경 때마다 빠르게 확인하는 장치입니다. pytest로 픽스처를 써서 준비를 재사용하고 parametrize로 경계값을 묶으며 외부 의존성은 가짜로 바꿔 빠르고 안정적인 단위 테스트를 만들겠습니다. 버그는 재현 테스트를 먼저 쓰고 고치며 CI에서 실패하면 병합을 막습니다.',follow:[['커버리지 100%면 버그가 없나요?','아닙니다. 커버리지는 코드가 실행됐는지만 보고 결과를 제대로 확인했는지는 모릅니다. assert 없이 실행만 해도 커버리지는 올라갑니다.'],['DB를 쓰는 코드는 어떻게 테스트하나요?','저장소 계층을 분리해 업무 로직은 가짜 저장소로 단위 테스트하고 실제 쿼리는 테스트용 DB를 띄운 통합 테스트로 확인합니다. 테스트마다 트랜잭션을 롤백해 서로 영향을 주지 않게 합니다.']],memory:'버그는 테스트로 먼저 재현하고 고친다. 테스트가 기억해 주니 다시 오지 않는다.',mistake:'테스트끼리 순서에 의존하게 만들지 마세요. 각 테스트는 혼자 실행해도 통과해야 합니다.',quiz:{question:'pytest에서 여러 테스트가 같은 준비물(임시 사용자)을 쓰게 하는 기능은?',options:['parametrize','fixture','skip'],correct:1,explanation:'픽스처가 준비물을 만들고 정리하며 매개변수 이름으로 테스트에 전달됩니다.'},refs:['pytestDocs','cicd']}),
+l({id:'git',category:6,title:'Git 브랜치와 병합',english:'Commit / Branch / Merge / Rebase',hook:'두 사람이 같은 파일을 고쳤을 때 Git은 어떻게 합칠까?',definition:'Git은 프로젝트의 변경 이력을 저장하는 분산 버전 관리 시스템입니다. 커밋은 그 시점의 전체 파일 상태(스냅샷)와 부모 커밋, 작성자, 메시지를 묶은 기록이고 내용의 SHA-1 해시가 이름이 됩니다. 브랜치는 특정 커밋을 가리키는 이름표일 뿐이라 만들고 지우는 비용이 거의 없습니다. 병합(merge)은 두 갈래의 변경을 합친 새 커밋을 만들고 리베이스(rebase)는 내 커밋들을 상대 브랜치 끝에 다시 쌓아 이력을 한 줄로 만듭니다. 같은 줄을 양쪽이 다르게 고쳤을 때만 충돌이 나고 사람이 골라 줘야 합니다.',analogy:'공동 문서를 쓰는 팀을 떠올리세요. 커밋은 저장 버튼을 누를 때마다 남는 전체 사본이고 브랜치는 "민수 초안", "지은 초안" 같은 책갈피입니다. 병합은 두 초안을 합쳐 새 판을 만드는 것이고 리베이스는 지은의 수정을 민수 초안의 최신판 위에서 처음부터 다시 적용하는 것입니다. 둘이 같은 문단을 다르게 고쳤다면 누군가 읽고 골라야 합니다.',steps:['main에서 작업용 브랜치를 만들고 작은 단위로 커밋합니다.','원격 저장소에 push하고 풀 리퀘스트로 리뷰와 CI를 받습니다.','main이 앞서 나갔으면 merge나 rebase로 최신 상태를 반영하고 충돌을 해결합니다.','리뷰가 끝나면 main에 병합하고 작업 브랜치는 지웁니다.'],scenario:'두 개발자가 각자 브랜치에서 config.py의 같은 타임아웃 값을 다르게 바꿨습니다. 먼저 병합된 쪽은 문제가 없었지만 두 번째 풀 리퀘스트에서 충돌이 났습니다. 충돌 표시(<<<<<<<, =======, >>>>>>>) 사이의 두 값을 보고 팀과 합의한 값으로 고친 뒤 테스트를 돌려 커밋했습니다. 리베이스로 정리한 브랜치를 다시 올릴 때는 다른 사람이 같은 브랜치에 올린 커밋을 덮어쓰지 않도록 --force-with-lease를 썼습니다.',aws:'GitHub이나 GitLab 저장소를 CodeConnections로 CodePipeline·CodeBuild와 연결하는 구성이 흔합니다. 브랜치 보호 규칙으로 main에 직접 push를 막고 리뷰와 CI 통과를 병합 조건으로 겁니다.',ncloud:'SourceCommit으로 Git 저장소를 만들고 SourcePipeline과 연결해 특정 브랜치에 병합되면 빌드와 배포가 실행되게 합니다.',tradeoff:'merge는 실제로 일어난 일을 그대로 남기지만 병합 커밋이 많아 이력이 복잡해집니다. rebase는 이력이 깔끔하지만 커밋 해시가 바뀌어 이미 공유한 브랜치에 쓰면 다른 사람의 작업과 엇갈립니다. 브랜치를 오래 살려 두면 충돌이 커지므로 작게 자주 병합하는 편이 대개 낫습니다.',language:'Python · Git이 파일 내용으로 이름을 만드는 방법',code:`import hashlib
+
+def git_blob_id(content: bytes) -> str:
+    # git hash-object와 같은 계산: "blob <크기>\\0" 머리말 + 내용의 SHA-1
+    header = f"blob {len(content)}\\0".encode()
+    return hashlib.sha1(header + content).hexdigest()
+
+print(git_blob_id(b"hello\\n"))   # ce013625030ba8dba906f756967f9e9ca394464a
+print(git_blob_id(b"hello!\\n"))  # 한 글자만 달라도 완전히 다른 이름
+# 터미널에서 확인: printf 'hello\\n' | git hash-object --stdin`,codeNotes:['같은 내용은 어느 컴퓨터에서나 같은 이름을 가집니다. 그래서 Git은 중복 저장을 피하고 변조를 알아챕니다.','커밋도 같은 방식으로 트리, 부모, 작성자, 메시지를 해시한 이름을 가집니다. 부모가 바뀌면 커밋 이름도 바뀝니다.','리베이스하면 커밋 해시가 바뀌는 이유가 여기 있습니다. 부모 커밋이 달라지기 때문입니다.'],answer:'Git은 커밋을 내용의 해시로 이름 붙인 스냅샷으로 저장하고 브랜치는 커밋을 가리키는 이름표입니다. 작은 브랜치에서 작업해 풀 리퀘스트로 리뷰와 CI를 거치고 main의 변경은 merge나 rebase로 반영하겠습니다. 이미 공유한 브랜치는 리베이스하지 않고 충돌은 양쪽 의도를 확인한 뒤 해결하고 테스트로 검증합니다.',follow:[['git reset과 git revert는 어떻게 다른가요?','reset은 브랜치가 가리키는 커밋을 뒤로 옮겨 이력에서 지웁니다. revert는 되돌리는 새 커밋을 추가해 이력을 남깁니다. 이미 공유한 브랜치에서는 revert를 씁니다.'],['force push는 왜 위험한가요?','원격 브랜치를 내 로컬 상태로 덮어써서 그사이 다른 사람이 올린 커밋이 사라질 수 있습니다. 꼭 필요하면 --force-with-lease로 원격이 내가 마지막으로 본 상태일 때만 덮어씁니다.']],memory:'커밋은 내용으로 이름 붙인 사진, 브랜치는 그 사진에 붙인 책갈피.',mistake:'다른 사람과 함께 쓰는 브랜치를 리베이스하고 강제로 push하지 마세요. 동료의 커밋이 사라질 수 있습니다.',quiz:{question:'리베이스한 뒤 커밋 해시가 바뀌는 이유는?',options:['Git이 무작위로 이름을 다시 붙여서','부모 커밋이 바뀌어 커밋 내용의 해시가 달라져서','원격 저장소가 이름을 정해서'],correct:1,explanation:'커밋 해시에는 부모 커밋이 포함되므로 다른 커밋 위에 다시 쌓으면 해시가 달라집니다.'},refs:['gitBook','cicd']}),
+l({id:'kubernetes',category:4,title:'Kubernetes 기본',english:'Pod / Deployment / Service / Probe',hook:'서버가 죽으면 누가 새로 띄워 줄까?',definition:'Kubernetes는 여러 서버(노드)에 컨테이너를 배치하고 원하는 상태를 계속 유지해 주는 시스템입니다. 사용자는 "이 이미지로 파드 3개"처럼 원하는 상태를 YAML로 선언하고 API 서버에 제출합니다. 컨트롤러들은 실제 상태를 계속 지켜보다가 원하는 상태와 다르면 맞추는 일을 반복합니다. 파드는 함께 배치되는 컨테이너 묶음이자 가장 작은 배포 단위이고 Deployment는 파드 묶음의 개수와 업데이트 방식을 관리합니다. Service는 계속 바뀌는 파드들 앞에 고정된 이름과 주소를 주고 준비된(readiness probe를 통과한) 파드에만 트래픽을 보냅니다.',analogy:'식당 매니저에게 "홀 직원 3명이 항상 있게 해 주세요"라고 부탁하는 것과 같습니다. 한 명이 아파서 빠지면 매니저가 알아서 대체 인력을 부릅니다. 손님은 직원 이름을 몰라도 "주문 받는 분"을 찾으면 되고(Service) 새 직원은 교육이 끝난 뒤에야 주문을 받습니다(readiness). 매니저는 계속 현장을 둘러보며 부탁받은 상태와 비교합니다.',steps:['Deployment YAML에 이미지, 파드 수, 자원 요청, 프로브를 적어 kubectl apply로 제출합니다.','API 서버가 원하는 상태를 etcd에 저장하고 컨트롤러가 부족한 파드를 만듭니다.','스케줄러가 자원이 맞는 노드를 고르고 그 노드의 kubelet이 컨테이너를 실행합니다.','readiness probe를 통과한 파드만 Service 뒤에 붙고 파드가 죽으면 컨트롤러가 다시 만듭니다.'],scenario:'새 버전을 배포하자 파드는 Running인데 요청의 일부가 502로 실패했습니다. 앱이 DB 연결과 캐시 준비에 20초가 걸리는데 readiness probe가 없어 컨테이너가 시작되자마자 트래픽을 받았기 때문입니다. /ready 엔드포인트를 만들고 readiness probe를 걸어 준비가 끝난 파드만 트래픽을 받게 했습니다. liveness probe는 DB 상태를 보지 않게 따로 만들어 DB가 잠깐 느려도 모든 파드가 재시작되지 않게 했습니다.',aws:'EKS는 컨트롤 플레인(API 서버, etcd)을 AWS가 운영하고 노드는 EC2 관리형 노드 그룹이나 Fargate로 둡니다. Service를 외부에 노출할 때는 AWS Load Balancer Controller로 ALB나 NLB를 만듭니다.',ncloud:'Ncloud Kubernetes Service는 관리형 컨트롤 플레인과 워커 노드 그룹을 제공합니다. Container Registry에 이미지를 올리고 Load Balancer와 연결해 외부에 노출합니다.',tradeoff:'Kubernetes는 자동 복구, 롤링 업데이트, 확장을 표준화하지만 배워야 할 개념과 운영할 구성 요소가 많습니다. 서비스가 몇 개뿐이고 팀이 작다면 ECS, Cloud Run 같은 더 단순한 관리형 컨테이너 서비스가 나을 수 있습니다.',language:'Python · 원하는 상태에 맞추는 조정 루프',code:`desired = 3
+pods = {"web-a": "Running", "web-b": "Running", "web-c": "Running"}
+created = 0
+
+def reconcile():
+    global created
+    alive = [name for name, state in pods.items() if state == "Running"]
+    for name in [n for n, s in pods.items() if s != "Running"]:
+        del pods[name]                 # 죽은 파드는 정리합니다
+    while len(alive) < desired:        # 부족하면 새로 만듭니다
+        created += 1
+        name = f"web-new{created}"
+        pods[name] = "Running"
+        alive.append(name)
+    for name in alive[desired:]:       # 많으면 줄입니다
+        del pods[name]
+
+pods["web-b"] = "Failed"   # 노드 장애로 파드 하나가 죽음
+reconcile()
+print(sorted(pods))        # 다시 3개
+desired = 2                # 원하는 상태를 바꾸면
+reconcile()
+print(len(pods))           # 2개로 줄어듭니다`,codeNotes:['컨트롤러는 "무엇이 바뀌었나"가 아니라 "지금 상태와 원하는 상태가 다른가"를 봅니다. 그래서 놓친 이벤트가 있어도 다음 확인에서 바로잡습니다.','실제 Deployment 컨트롤러는 ReplicaSet을 거쳐 파드를 만들고 롤링 업데이트 때 새 버전과 옛 버전의 개수를 함께 조절합니다.','desired 값을 바꿔 가며 reconcile을 여러 번 불러도 결과가 같은지 확인하세요. 조정 루프는 멱등해야 합니다.'],answer:'Kubernetes는 원하는 상태를 선언하면 컨트롤러가 실제 상태와 비교해 계속 맞춰 주는 시스템입니다. Deployment로 파드 수와 롤링 업데이트를 관리하고 Service로 안정된 주소를 주며 readiness probe로 준비된 파드에만 트래픽을 보내겠습니다. 자원 requests와 limits, 종료 시 SIGTERM 처리도 함께 설정합니다.',follow:[['liveness와 readiness probe는 어떻게 다른가요?','readiness가 실패하면 트래픽만 끊고 파드는 그대로 둡니다. liveness가 실패하면 컨테이너를 재시작합니다. liveness에 DB 같은 외부 의존성을 넣으면 DB 장애 때 모든 파드가 재시작되는 연쇄 장애가 생깁니다.'],['파드를 지울 때 요청이 끊기지 않게 하려면?','Kubernetes는 SIGTERM을 보내고 유예 시간(기본 30초)을 줍니다. 앱은 새 요청을 받지 않고 진행 중인 요청을 마친 뒤 종료해야 합니다. Service에서 빠지는 데 시간이 걸리므로 종료 직전 짧은 대기를 두기도 합니다.']],memory:'원하는 상태를 적어 두면 컨트롤러가 계속 맞춘다. 준비된 파드만 손님을 받는다.',mistake:'liveness probe에 DB 연결 확인을 넣지 마세요. DB가 잠깐 느려지면 모든 파드가 동시에 재시작됩니다.',quiz:{question:'파드는 Running인데 시작 직후 요청이 실패한다면 가장 먼저 확인할 것은?',options:['readiness probe 설정','노드의 디스크 크기','DNS TTL'],correct:0,explanation:'readiness probe가 없으면 앱이 준비되기 전부터 Service가 트래픽을 보냅니다.'},refs:['k8sDeployment','docker']})
+];
+export const lessons = [...core, ...operatingSystem, ...expansion, ...additions].sort((a,b) => a.category-b.category);
 

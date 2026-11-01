@@ -997,5 +997,281 @@ export const histories:Record<string,LessonHistory>={
    ['AWS · Amazon S3 Object Lock (2018)','https://aws.amazon.com/about-aws/whats-new/2018/11/s3-object-lock/'],
    ['AWS · Restoring a DB instance to a specified time (PITR)','https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIT.html']
   ]
+ },
+ sync:{
+  intro:'여러 실행 흐름이 같은 자원을 쓸 때 생기는 문제는 컴퓨터가 동시에 여러 일을 하기 시작하면서 바로 나타났습니다. 처음에는 장치를 나눠 쓰는 운영체제의 문제였고 지금은 거의 모든 서버 코드의 문제입니다. 해법도 몇 가지 생각에서 크게 벗어나지 않았습니다. 들어갈 수 있는 수를 세고, 하나만 들어가게 하고, 조건이 될 때까지 기다리게 하는 것입니다.',
+  timeline:[
+   {year:'1965',title:'다익스트라의 세마포어',body:'다익스트라는 EWD 123 「Cooperating Sequential Processes」에서 정수 하나와 두 연산 P(기다리며 1 빼기)와 V(1 더하고 깨우기)로 상호 배제와 생산자·소비자 문제를 푸는 세마포어를 제안했습니다. 철도의 신호기에서 이름을 빌렸습니다. 같은 글에서 식사하는 철학자 문제의 원형도 다뤘습니다.'},
+   {year:'1974',title:'호어의 모니터',body:'세마포어는 P와 V를 한 번만 빼먹어도 시스템 전체가 멈추는 위험한 도구였습니다. 호어는 데이터와 그 데이터를 다루는 연산을 묶고 한 번에 한 스레드만 그 안에 들어가게 하는 모니터를 제안했습니다. 조건이 맞지 않으면 모니터 안에서 기다리는 조건 변수도 함께 정리했습니다. Java의 synchronized와 wait/notify가 이 생각을 따릅니다.'},
+   {year:'1997',title:'화성의 우선순위 역전',body:'화성 탐사선 패스파인더가 착륙 후 반복해서 재부팅됐습니다. 낮은 우선순위 작업이 공유 버스의 뮤텍스를 잡은 사이 중간 우선순위 작업이 CPU를 차지해 높은 우선순위 작업이 끝없이 기다렸기 때문입니다. JPL은 지구에서 VxWorks 뮤텍스의 우선순위 상속 옵션을 켜는 패치를 보내 문제를 고쳤습니다.'},
+   {year:'2023',title:'GIL 없는 Python',body:'Python은 오랫동안 GIL 덕분에 한 번에 한 스레드만 바이트코드를 실행했습니다. PEP 703이 승인되어 Python 3.13부터 GIL을 끈 실험적 빌드가 나왔습니다. 스레드가 진짜로 동시에 실행되면 그동안 우연히 숨어 있던 경쟁 상태가 더 자주 드러나므로 락의 중요성이 오히려 커졌습니다.'}
+  ],
+  decisions:[
+   {question:'왜 하드웨어의 원자적 명령이 필요할까?',answer:'락을 잡는 동작 자체도 "비어 있는지 확인하고 차지하기" 두 단계라서 그 사이에 끼어들면 둘 다 락을 잡았다고 믿게 됩니다. 그래서 CPU는 확인과 변경을 한 번에 하는 compare-and-swap 같은 명령을 제공하고 모든 락은 이 위에 만들어집니다.',cost:'원자적 명령은 다른 코어의 캐시를 무효화하므로 많은 코어가 같은 락을 다투면 생각보다 훨씬 느려집니다.'},
+   {question:'왜 기다릴 때 계속 확인하지 않고 잠들까?',answer:'락이 풀렸는지 반복해서 확인하는 스핀 락은 대기가 아주 짧을 때 빠르지만 길어지면 아무 일도 안 하면서 CPU를 태웁니다. 그래서 대부분의 락은 잠깐 돌아 본 뒤 운영체제에 재워 달라고 하고 락이 풀리면 깨웁니다.',cost:'잠들고 깨는 데 문맥 교환 비용이 들어 아주 짧은 임계 구역에는 오히려 느릴 수 있습니다.'},
+   {question:'왜 락을 여러 개 잡을 때 순서를 정할까?',answer:'스레드 1이 A를 잡고 B를 기다리고 스레드 2가 B를 잡고 A를 기다리면 둘 다 영원히 멈춥니다. 모든 코드가 A 다음 B 순서로만 잡으면 이런 순환이 생길 수 없습니다.',cost:'코드 전체가 순서 규칙을 지켜야 해서 라이브러리끼리 섞이면 지키기 어렵습니다. 그래서 락을 잡은 채 모르는 코드를 호출하지 않는 습관이 중요합니다.'}
+  ],
+  today:[
+   '서버 코드에서는 직접 락을 잡을 일보다 공유 상태를 없애는 설계가 먼저입니다. 요청마다 독립된 데이터를 쓰고 공유가 필요하면 큐나 DB에 맡깁니다.',
+   'Python에서는 threading.Lock과 with 문을 쓰고 락을 잡은 채 네트워크 호출이나 sleep을 하지 않습니다. 동시 연결 수 제한에는 threading.Semaphore나 asyncio.Semaphore를 씁니다.',
+   '서버가 여러 대인 순간 프로세스 안의 락은 의미가 없어집니다. DB의 행 잠금과 조건부 UPDATE, Redis의 원자 명령으로 옮깁니다.'
+  ],
+  sources:[
+   ['Dijkstra, EWD 123 · Cooperating Sequential Processes','https://www.cs.utexas.edu/~EWD/transcriptions/EWD01xx/EWD123.html'],
+   ['Hoare, Monitors: An Operating System Structuring Concept (CACM, 1974)','https://doi.org/10.1145/355620.361161'],
+   ['Reeves, What Really Happened on Mars? (1997)','https://www.cs.cornell.edu/courses/cs614/1999sp/papers/pathfinder.html'],
+   ['PEP 703 · Making the Global Interpreter Lock Optional','https://peps.python.org/pep-0703/'],
+   ['Python · threading','https://docs.python.org/3/library/threading.html']
+  ]
+ },
+ scheduling:{
+  intro:'스케줄러는 사용자 눈에 보이지 않지만 컴퓨터가 빠르다고 느끼게 하는 핵심입니다. 무엇을 먼저 실행할지에 대한 답은 시대마다 달랐습니다. 한 대를 여러 사람이 나눠 쓰던 시절에는 공정성이, 대화형 컴퓨터에서는 반응성이, 지금 클라우드에서는 컨테이너 사이의 격리가 중요해졌습니다.',
+  timeline:[
+   {year:'1962',title:'CTSS와 시분할',body:'MIT의 코르바토 팀은 CTSS에서 CPU 시간을 짧게 나눠 여러 사용자가 동시에 쓰는 것처럼 보이게 했습니다. CPU를 오래 쓰는 작업은 우선순위를 낮추고 짧게 쓰고 입력을 기다리는 대화형 작업은 앞에 두는 다단계 피드백 큐의 원형을 만들었습니다.'},
+   {year:'1973',title:'실시간 스케줄링 이론',body:'리우와 레이랜드는 주기적으로 반복되는 작업이 마감 시간을 지킬 수 있는 조건을 증명했습니다. 주기가 짧은 작업에 높은 우선순위를 주는 rate monotonic 방식과 마감이 가까운 작업부터 실행하는 EDF가 이때 정리되었고 지금도 임베디드와 실시간 시스템의 기본입니다.'},
+   {year:'2007',title:'Linux CFS',body:'잉고 몰나르가 만든 Completely Fair Scheduler가 Linux 2.6.23에 들어갔습니다. 우선순위별 큐 대신 각 스레드의 가상 실행 시간을 레드-블랙 트리에 넣고 가장 작은 것을 실행합니다. 대화형 작업을 골라내는 복잡한 추측 규칙을 없애고 "적게 실행된 쪽이 다음"이라는 하나의 규칙으로 바꿨습니다.'},
+   {year:'2008',title:'cgroup과 컨테이너',body:'Linux 2.6.24에 들어간 cgroup은 프로세스 묶음에 CPU와 메모리 한도를 걸 수 있게 했습니다. Docker와 Kubernetes의 CPU 제한은 모두 이 기능으로 구현됩니다. cgroup v2에서는 cpu.max 파일에 "주기 안에 쓸 수 있는 시간"을 적습니다.'},
+   {year:'2023',title:'EEVDF',body:'Linux 6.6부터 피터 지일스트라가 제안한 EEVDF가 CFS를 대신하기 시작했습니다. 1995년 논문에서 나온 방식으로, 받을 몫보다 덜 받은 작업 중 가상 마감 시간이 가장 이른 것을 고릅니다. 공정성은 유지하면서 지연에 민감한 작업이 더 빨리 차례를 받게 합니다.'}
+  ],
+  decisions:[
+   {question:'왜 작업을 끝까지 실행하지 않고 중간에 바꿀까?',answer:'긴 계산 작업이 CPU를 붙들고 있으면 키보드 입력이나 짧은 웹 요청이 그만큼 기다립니다. 정해진 시간이 지나면 강제로 바꾸는 선점 덕분에 긴 작업이 있어도 짧은 작업이 빨리 끝납니다.',cost:'바꿀 때마다 레지스터 저장과 캐시 손실이 생깁니다. 너무 자주 바꾸면 실제 일보다 교체에 시간을 씁니다.'},
+   {question:'왜 우선순위 대신 "공정함"을 기준으로 했을까?',answer:'고정 우선순위는 높은 작업이 계속 있으면 낮은 작업이 영원히 실행되지 못하는 기아를 만듭니다. CFS는 모두가 가중치만큼의 몫을 받게 해서 낮은 작업도 결국 차례를 받습니다.',cost:'공정함만으로는 마감이 있는 작업을 보장하지 못합니다. 실시간 작업에는 SCHED_FIFO나 SCHED_DEADLINE 같은 별도 정책을 씁니다.'},
+   {question:'왜 컨테이너 CPU 제한이 지연을 만들까?',answer:'cgroup은 기본 100ms 주기마다 할당량을 줍니다. 여러 스레드가 동시에 일하면 할당량을 주기 초반에 다 써 버리고 남은 시간 동안 그룹 전체가 멈춥니다. 평균 사용률은 낮게 보여도 순간적인 정지가 생깁니다.',cost:'제한을 풀면 이웃 컨테이너를 보호하지 못합니다. 지연 민감 서비스는 requests를 넉넉히 주고 limit을 높이거나 스레드 수를 코어 수에 맞춥니다.'}
+  ],
+  today:[
+   '컨테이너 안에서 os.cpu_count()는 노드 전체 코어 수를 돌려줄 수 있습니다. 워커 수를 정할 때는 cgroup의 CPU 제한을 기준으로 합니다.',
+   '지연이 튀면 CPU 사용률과 함께 스로틀링 횟수, 실행 큐 대기 시간, 로드 애버리지를 봅니다.',
+   'nice와 cgroup 가중치로 배치 작업의 몫을 줄이면 같은 서버에서 온라인 요청을 덜 방해합니다.'
+  ],
+  sources:[
+   ['Corbató et al., An Experimental Time-Sharing System (1962)','https://doi.org/10.1145/1460833.1460871'],
+   ['Liu & Layland, Scheduling Algorithms for Multiprogramming in a Hard-Real-Time Environment (JACM, 1973)','https://doi.org/10.1145/321738.321743'],
+   ['Linux Kernel · CFS Scheduler','https://docs.kernel.org/scheduler/sched-design-CFS.html'],
+   ['Linux Kernel · EEVDF Scheduler','https://docs.kernel.org/scheduler/sched-eevdf.html'],
+   ['Linux Kernel · Control Group v2','https://docs.kernel.org/admin-guide/cgroup-v2.html']
+  ]
+ },
+ tls:{
+  intro:'웹이 처음 만들어졌을 때 모든 통신은 평문이었습니다. 온라인 결제가 등장하자 카드 번호를 숨길 방법이 필요했고 넷스케이프가 SSL을 만들었습니다. 그 뒤 30년은 결함을 찾고 고치고 오래된 버전을 버리는 역사였습니다. 동시에 인증서를 얻는 일이 비싸고 번거로운 일에서 자동화된 무료 서비스로 바뀌며 HTTPS가 기본이 되었습니다.',
+  timeline:[
+   {year:'1995',title:'SSL',body:'넷스케이프는 브라우저와 서버 사이를 암호화하는 SSL 2.0을 공개했습니다. 설계 결함이 많아 1996년 SSL 3.0으로 다시 만들었고 이것이 이후 TLS의 바탕이 되었습니다.'},
+   {year:'1999',title:'TLS 1.0',body:'IETF가 SSL 3.0을 이어받아 RFC 2246으로 TLS 1.0을 표준화했습니다. 2008년 TLS 1.2(RFC 5246)는 더 안전한 해시와 암호 방식을 쓸 수 있게 했습니다.'},
+   {year:'2011',title:'DigiNotar 사건',body:'네덜란드의 인증 기관 DigiNotar가 해킹당해 google.com 등에 대한 가짜 인증서가 발급되었고 실제 감청에 쓰였습니다. 브라우저들은 DigiNotar를 신뢰 목록에서 지웠고 회사는 파산했습니다. 루트 CA 하나의 실수가 전체를 무너뜨릴 수 있다는 교훈은 모든 발급 기록을 공개 로그에 남기는 Certificate Transparency(RFC 6962, 2013)로 이어졌습니다.'},
+   {year:'2014',title:'Heartbleed와 POODLE',body:'OpenSSL의 버그 Heartbleed는 서버 메모리의 일부를 읽어 가게 해서 개인키까지 유출될 수 있었습니다. 같은 해 POODLE 공격이 발표되며 SSL 3.0은 RFC 7568로 사용 금지되었습니다. 많은 서비스가 인증서를 재발급하고 키를 교체했습니다.'},
+   {year:'2015~2016',title:'Let’s Encrypt',body:'인증서를 무료로, 자동으로 발급하는 Let’s Encrypt가 공개되었습니다. ACME 프로토콜로 서버가 스스로 도메인 소유를 증명하고 90일짜리 인증서를 받아 갱신합니다. 이후 HTTPS 비율이 빠르게 늘었습니다.'},
+   {year:'2018~2021',title:'TLS 1.3과 옛 버전 퇴출',body:'2018년 TLS 1.3(RFC 8446)은 왕복 한 번으로 핸드셰이크를 끝내고 약한 암호 방식을 모두 뺐습니다. 2021년 RFC 8996은 TLS 1.0과 1.1의 사용을 공식적으로 금지했습니다.'}
+  ],
+  decisions:[
+   {question:'왜 서버가 중간 CA 인증서까지 보내야 할까?',answer:'루트 CA의 개인키는 유출되면 대체가 매우 어렵기 때문에 오프라인 금고에 두고 거의 쓰지 않습니다. 실제 발급은 루트가 서명한 중간 CA가 합니다. 클라이언트의 신뢰 저장소에는 루트만 있으므로 서버가 중간 인증서를 함께 보내야 체인이 이어집니다.',cost:'중간 인증서를 빠뜨리면 일부 클라이언트에서만 실패해서 원인을 찾기 어렵습니다.'},
+   {question:'왜 인증서 수명을 점점 짧게 할까?',answer:'유출된 키나 잘못 발급된 인증서를 폐기 목록으로 막는 방법은 실제로 잘 동작하지 않습니다. 수명이 짧으면 문제가 있는 인증서도 금방 만료되어 피해 기간이 줄어듭니다.',cost:'갱신을 자동화하지 않으면 만료 사고가 자주 납니다. 그래서 짧은 수명과 ACME 자동화는 함께 갑니다.'},
+   {question:'왜 TLS 1.3은 선택지를 줄였을까?',answer:'옛 TLS는 수많은 암호 방식 조합을 허용했고 공격자는 양쪽을 속여 가장 약한 조합으로 협상하게 만드는 다운그레이드 공격을 썼습니다. TLS 1.3은 안전한 소수의 방식만 남기고 전방 비밀성을 필수로 만들었습니다.',cost:'오래된 클라이언트는 TLS 1.3으로 접속하지 못합니다. 서비스는 지원할 최소 버전을 정해야 합니다.'}
+  ],
+  today:[
+   '서버에는 중간 인증서를 포함한 fullchain을 배포하고 openssl s_client -showcerts로 실제 체인을 확인합니다.',
+   '인증서 갱신은 ACM, cert-manager, certbot 같은 도구로 자동화하고 만료 일수를 따로 감시합니다.',
+   '내부 서비스 사이에도 TLS를 쓰고 필요하면 클라이언트도 인증서를 내는 mTLS로 서로를 확인합니다. HSTS 헤더로 브라우저가 HTTP로 접속하지 않게 합니다.'
+  ],
+  sources:[
+   ['RFC 8446 · TLS 1.3','https://www.rfc-editor.org/rfc/rfc8446'],
+   ['RFC 8996 · Deprecating TLS 1.0 and 1.1','https://www.rfc-editor.org/rfc/rfc8996'],
+   ['RFC 7568 · Deprecating SSL 3.0','https://www.rfc-editor.org/rfc/rfc7568'],
+   ['RFC 6962 · Certificate Transparency','https://www.rfc-editor.org/rfc/rfc6962'],
+   ['Let’s Encrypt · About','https://letsencrypt.org/about/'],
+   ['MDN · Strict-Transport-Security','https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Strict-Transport-Security']
+  ]
+ },
+ websocket:{
+  intro:'웹은 문서를 요청하고 받는 구조로 시작했습니다. 웹 메일과 채팅, 주식 시세처럼 서버의 변화를 바로 보여 주는 화면이 생기자 개발자들은 HTTP를 비틀어 쓰는 여러 기법을 만들었습니다. WebSocket은 그 우회로들을 정리해 처음부터 양방향 통신을 위해 만든 표준입니다.',
+  timeline:[
+   {year:'2000년대 초',title:'폴링',body:'브라우저가 몇 초마다 "새 메시지 있나요?"를 묻는 방식입니다. 구현은 쉽지만 대부분의 요청이 빈 응답이고 사용자가 많으면 서버가 쓸모없는 요청을 계속 처리합니다.'},
+   {year:'2006',title:'Comet과 롱 폴링',body:'서버가 요청을 바로 답하지 않고 새 소식이 생길 때까지 붙잡아 두는 롱 폴링이 퍼졌고 이런 기법들을 Comet이라고 불렀습니다. 지연은 줄었지만 메시지마다 새 요청과 헤더가 필요했고 프록시가 오래 열린 요청을 끊는 문제가 있었습니다.'},
+   {year:'2011',title:'RFC 6455',body:'IETF가 WebSocket 프로토콜을 표준화했습니다. HTTP의 Upgrade로 시작하므로 기존 80·443 포트와 프록시를 지나갈 수 있고 그 뒤에는 작은 프레임 헤더만 붙여 메시지를 보냅니다. 클라이언트가 보내는 프레임은 마스킹하도록 정해 중간 캐시를 속이는 공격을 막았습니다.'},
+   {year:'2010년대',title:'Server-Sent Events',body:'HTML 표준에 서버에서 클라이언트로 한 방향 이벤트를 흘려보내는 EventSource가 들어갔습니다. 평범한 HTTP 응답이라 프록시와 인증을 그대로 쓰고 끊기면 브라우저가 자동으로 다시 연결합니다. 알림과 진행률에는 이쪽이 더 단순합니다.'},
+   {year:'2018',title:'HTTP/2 위의 WebSocket',body:'RFC 8441은 HTTP/2 연결 하나에서 여러 WebSocket을 스트림으로 열 수 있게 했습니다. 연결 수를 줄일 수 있지만 지원 여부는 서버와 프록시마다 확인해야 합니다.'}
+  ],
+  decisions:[
+   {question:'왜 별도 포트 대신 HTTP Upgrade로 시작할까?',answer:'회사와 학교 네트워크는 80과 443 외의 포트를 막는 경우가 많습니다. HTTP 요청으로 시작하면 기존 방화벽과 프록시, TLS 설정을 그대로 지나갈 수 있고 쿠키로 인증할 수도 있습니다.',cost:'프록시가 Upgrade를 이해하지 못하거나 헤더를 버리면 연결이 실패합니다. nginx 같은 프록시에 별도 설정이 필요합니다.'},
+   {question:'왜 ping과 pong이 필요할까?',answer:'TCP는 상대가 사라져도 한동안 알아채지 못하고 중간의 로드 밸런서와 NAT는 오래 조용한 연결을 정리해 버립니다. 주기적인 ping은 연결이 살아 있음을 확인하고 중간 장비의 유휴 타이머를 초기화합니다.',cost:'연결 수가 많으면 ping 트래픽도 무시할 수 없습니다. 주기는 중간 장비의 제한 시간보다 조금 짧게 잡습니다.'},
+   {question:'왜 서버가 여러 대면 중계가 필요할까?',answer:'사용자 A는 서버 1에, B는 서버 2에 연결되어 있을 수 있습니다. A가 보낸 메시지를 B에게 전달하려면 서버 1이 서버 2에게 알려야 합니다. Redis Pub/Sub이나 메시지 브로커가 이 역할을 합니다.',cost:'중계 계층이 새 장애 지점이 되고 메시지 순서와 유실을 따로 고민해야 합니다.'}
+  ],
+  today:[
+   '한 방향 알림이면 SSE를, 양방향이고 지연이 중요하면 WebSocket을, 업데이트가 드물면 폴링을 먼저 검토합니다.',
+   'nginx에는 proxy_http_version 1.1과 Upgrade, Connection 헤더를 설정하고 proxy_read_timeout보다 짧은 주기로 ping을 보냅니다.',
+   '클라이언트는 끊기면 지수 백오프와 무작위 지연으로 재연결하고 마지막으로 받은 메시지 ID를 보내 빠진 메시지를 다시 받습니다.'
+  ],
+  sources:[
+   ['RFC 6455 · The WebSocket Protocol','https://www.rfc-editor.org/rfc/rfc6455'],
+   ['RFC 8441 · Bootstrapping WebSockets with HTTP/2','https://www.rfc-editor.org/rfc/rfc8441'],
+   ['HTML Standard · Server-sent events','https://html.spec.whatwg.org/multipage/server-sent-events.html'],
+   ['nginx · WebSocket proxying','https://nginx.org/en/docs/http/websocket.html'],
+   ['MDN · WebSocket API','https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API']
+  ]
+ },
+ ratelimit:{
+  intro:'속도 제한은 네트워크 장비에서 먼저 쓰였습니다. 회선이 감당할 수 있는 만큼만 내보내고 넘치는 것은 버리거나 늦추는 장치였습니다. 웹 API가 공개되고 누구나 프로그램으로 호출하게 되자 같은 장치가 API 앞에 붙었습니다. 그리고 장애가 날 때마다 문제는 공격자보다 선의의 재시도인 경우가 많다는 것을 배웠습니다.',
+  timeline:[
+   {year:'1980년대',title:'리키 버킷과 토큰 버킷',body:'통신망에서는 들쭉날쭉한 트래픽을 일정한 속도로 다듬기 위해 바닥에 구멍 뚫린 양동이처럼 일정 속도로만 내보내는 리키 버킷과, 일정 속도로 채워지는 허용량을 꺼내 쓰는 토큰 버킷을 썼습니다. ATM 망의 트래픽 계약과 이후 인터넷의 서비스 품질 규격이 이 방식을 정리했습니다.'},
+   {year:'2012',title:'429 Too Many Requests',body:'API마다 제각각이던 한도 초과 응답을 RFC 6585가 429 상태 코드로 정했습니다. 서버는 Retry-After 헤더로 언제 다시 시도하면 되는지 알려 줄 수 있습니다.'},
+   {year:'2015',title:'지수 백오프와 지터',body:'AWS 아키텍처 블로그의 마크 브루커는 여러 클라이언트가 같은 간격으로 재시도하면 경합이 줄지 않고 백오프 간격에 무작위 값을 섞어야 전체 작업이 빨리 끝난다는 시뮬레이션 결과를 발표했습니다. 이후 AWS SDK를 비롯한 많은 클라이언트가 기본으로 지터를 넣었습니다.'},
+   {year:'2017',title:'대규모 서비스의 속도 제한',body:'Stripe는 토큰 버킷 기반의 요청 제한기와 동시 요청 제한기, 부하가 높을 때 중요하지 않은 요청부터 버리는 부하 차단기를 함께 쓰는 방법을 공개했습니다. 같은 해 Cloudflare는 전 세계 서버에서 근사한 슬라이딩 윈도로 요청을 세는 방법을 설명했습니다.'},
+   {year:'2020년대',title:'RateLimit 헤더 표준화',body:'IETF HTTP API 작업 그룹이 남은 한도와 초기화 시각을 응답 헤더로 알려 주는 RateLimit 헤더를 표준으로 만드는 작업을 하고 있습니다. 클라이언트가 한도에 닿기 전에 스스로 속도를 줄일 수 있게 하려는 것입니다.'}
+  ],
+  decisions:[
+   {question:'왜 고정 윈도 대신 토큰 버킷을 많이 쓸까?',answer:'1분마다 카운터를 0으로 되돌리는 고정 윈도는 구현이 쉽지만 59초에 100번, 61초에 100번을 보내면 2초 사이에 한도의 두 배가 통과합니다. 토큰 버킷은 버킷 크기만큼만 몰림을 허용하고 그 뒤로는 채우는 속도를 넘지 못합니다.',cost:'대상마다 토큰 수와 마지막 시각 두 값을 저장하고 매번 계산해야 합니다. 서버가 여러 대면 이 상태를 공유 저장소에 둬야 합니다.'},
+   {question:'왜 거절할 때 429와 Retry-After를 돌려줄까?',answer:'500처럼 보이면 클라이언트는 서버가 고장 났다고 보고 바로 재시도합니다. 429는 "너무 많이 보냈다"는 뜻이라 클라이언트가 속도를 줄이고 Retry-After는 언제 다시 와도 되는지 정확히 알려 줍니다.',cost:'클라이언트가 헤더를 무시하면 소용이 없습니다. 반복해서 무시하는 키는 더 강하게 차단하는 단계가 필요합니다.'},
+   {question:'왜 재시도에 무작위 값을 섞을까?',answer:'장애 순간 실패한 수만 개의 클라이언트가 모두 1초, 2초, 4초 뒤에 재시도하면 같은 순간에 몰려 복구된 서버를 다시 쓰러뜨립니다. 0부터 백오프 값 사이의 무작위 시간을 기다리면 재시도가 고르게 흩어집니다.',cost:'개별 요청의 재시도가 운 나쁘게 늦어질 수 있습니다. 최대 대기 시간과 최대 횟수를 함께 둡니다.'}
+  ],
+  today:[
+   'API 앞에서는 API Gateway나 nginx의 limit_req, 앱 안에서는 Redis 카운터로 대상별 한도를 겁니다. 서버별로 따로 세면 전체 한도가 서버 수만큼 늘어난다는 점을 기억합니다.',
+   '거절은 429와 Retry-After로 하고 남은 한도를 헤더로 알려 주면 클라이언트가 미리 속도를 줄일 수 있습니다.',
+   '클라이언트 재시도는 멱등한 요청에만 하고 지수 백오프, 지터, 최대 횟수, 전체 제한 시간을 둡니다. 여러 층이 각자 재시도하면 시도 횟수가 곱으로 늘어납니다.'
+  ],
+  sources:[
+   ['RFC 6585 · Additional HTTP Status Codes (429)','https://www.rfc-editor.org/rfc/rfc6585'],
+   ['AWS Architecture Blog · Exponential Backoff And Jitter','https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/'],
+   ['AWS Builders’ Library · Timeouts, retries, and backoff with jitter','https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/'],
+   ['Stripe · Scaling your API with rate limiters','https://stripe.com/blog/rate-limiters'],
+   ['Cloudflare · How we built rate limiting capable of scaling to millions of domains','https://blog.cloudflare.com/counting-things-a-lot-of-different-things/'],
+   ['IETF · RateLimit header fields for HTTP (draft)','https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/']
+  ]
+ },
+ replication:{
+  intro:'데이터를 복사해 두는 일은 백업만큼 오래되었지만 복사본을 실시간으로 따라오게 하고 읽기에 쓰는 일은 웹 서비스가 커지면서 일상이 되었습니다. 한 대로 버티다가 읽기를 복제본으로 나누고 그래도 부족하면 데이터를 나누는 순서는 수많은 서비스가 똑같이 밟은 길입니다. 그 길에서 배운 것은 복사본은 늦을 수 있고 나누는 기준은 바꾸기 어렵다는 점입니다.',
+  timeline:[
+   {year:'2000',title:'MySQL 복제',body:'MySQL 3.23이 binlog를 이용한 주·복제본 복제를 넣었습니다. 쓰기는 한 서버에, 읽기는 여러 복제본에 보내는 구성이 LAMP 시대 웹 서비스의 표준이 되었습니다.'},
+   {year:'2007',title:'Amazon Dynamo',body:'아마존은 장바구니가 절대 쓰기를 거절하지 않도록 일관 해싱으로 데이터를 나누고 여러 노드에 복제하는 Dynamo를 발표했습니다. 잠깐 서로 다른 값이 있어도 나중에 맞추는 최종 일관성을 택했고 Cassandra와 DynamoDB에 큰 영향을 줬습니다. 일관 해싱 자체는 1997년 카거 등의 논문에서 나왔습니다.'},
+   {year:'2000~2002',title:'CAP 정리',body:'에릭 브루어는 2000년 강연에서 네트워크가 갈라질 때 일관성과 가용성을 동시에 가질 수 없다고 주장했고 2002년 길버트와 린치가 이를 증명했습니다. 복제 시스템을 설계할 때 갈라짐이 생기면 어느 쪽을 포기할지 먼저 정하라는 뜻으로 쓰입니다.'},
+   {year:'2010',title:'PostgreSQL 스트리밍 복제',body:'PostgreSQL 9.0이 WAL을 실시간으로 보내는 스트리밍 복제와 복제본에서 읽기를 받는 핫 스탠바이를 넣었습니다. 기본은 비동기이고 9.1부터 동기 복제를 고를 수 있습니다.'},
+   {year:'2018',title:'GitHub의 24시간 장애',body:'GitHub의 미국 동부 데이터센터와 네트워크 허브 사이 연결이 43초 동안 끊기자 자동 장애 조치가 서부의 복제본을 주 DB로 승격했습니다. 동부에는 서부로 복제되지 않은 쓰기가 남아 있었고 두 곳의 데이터를 맞추느라 24시간 11분 동안 서비스가 저하됐습니다. 비동기 복제의 장애 조치가 데이터 일관성 문제를 만들 수 있음을 보여 준 사례입니다.'}
+  ],
+  decisions:[
+   {question:'왜 대부분 비동기 복제가 기본일까?',answer:'동기 복제는 커밋마다 복제본이 받아 적을 때까지 기다리므로 쓰기 지연이 네트워크 왕복만큼 늘어납니다. 복제본이 느리거나 죽으면 주 DB의 쓰기도 멈춥니다. 비동기는 주 DB가 기다리지 않아 빠르고 복제본 장애가 쓰기에 영향을 주지 않습니다.',cost:'장애 조치 순간 아직 복제되지 않은 쓰기가 사라질 수 있습니다. 결제처럼 잃으면 안 되는 데이터는 동기나 반동기 복제, 또는 쿼럼 기반 저장소를 씁니다.'},
+   {question:'왜 샤딩은 가능한 한 미룰까?',answer:'샤딩하면 샤드를 넘는 조인, 트랜잭션, 고유 제약을 DB가 해 주지 않아 앱이 직접 해야 합니다. 샤드 키를 잘못 고르면 바꾸기도 매우 어렵습니다. 인덱스, 캐시, 읽기 복제본, 더 큰 서버로 버틸 수 있으면 그쪽이 훨씬 단순합니다.',cost:'너무 늦게 시작하면 데이터가 커진 상태에서 옮기느라 더 위험합니다. 쓰기량 추세를 보고 한계에 닿기 전에 계획합니다.'},
+   {question:'왜 해시 나머지 대신 일관 해싱을 쓸까?',answer:'hash(key) % N으로 나누면 서버를 하나 늘릴 때 거의 모든 키의 자리가 바뀌어 데이터를 대부분 옮겨야 합니다. 일관 해싱은 키와 서버를 같은 원 위에 놓아 새 서버가 맡게 된 구간의 키만 옮기면 됩니다.',cost:'서버 수가 적으면 구간 크기가 고르지 않아 가상 노드를 여러 개 둬야 하고 구현이 복잡해집니다.'}
+  ],
+  today:[
+   '읽기 복제본을 쓰면 쓰기 직후 읽기, 재고 확인, 결제 직전 확인은 주 DB로 보내고 나머지 목록 조회를 복제본으로 보냅니다.',
+   '복제 지연(ReplicaLag, pg_stat_replication의 replay_lag)을 지표와 알림에 넣습니다. 지연이 길어지면 읽기를 주 DB로 되돌리는 장치도 둡니다.',
+   '샤딩이 필요하면 대부분의 쿼리가 한 샤드에서 끝나는 키(예: 사용자 ID, 테넌트 ID)를 고르고 DynamoDB처럼 샤딩을 대신해 주는 저장소도 함께 검토합니다.'
+  ],
+  sources:[
+   ['DeCandia et al., Dynamo: Amazon’s Highly Available Key-value Store (SOSP, 2007)','https://doi.org/10.1145/1323293.1294281'],
+   ['Karger et al., Consistent Hashing and Random Trees (STOC, 1997)','https://doi.org/10.1145/258533.258660'],
+   ['Gilbert & Lynch, Brewer’s Conjecture … (SIGACT News, 2002)','https://doi.org/10.1145/564585.564601'],
+   ['PostgreSQL · Log-Shipping Standby Servers','https://www.postgresql.org/docs/current/warm-standby.html'],
+   ['GitHub · October 21 post-incident analysis (2018)','https://github.blog/news-insights/company-news/oct21-post-incident-analysis/'],
+   ['AWS · RDS read replicas','https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html']
+  ]
+ },
+ raft:{
+  intro:'여러 컴퓨터가 하나의 결정에 동의하게 만드는 문제는 분산 시스템의 가장 깊은 문제입니다. 이론은 일찍부터 이 문제가 얼마나 어려운지 보여 줬고 실용적인 해법인 Paxos는 정확했지만 이해하기 어려웠습니다. Raft는 정확성보다 이해하기 쉬움을 설계 목표로 내세운 드문 알고리즘이고 그 덕분에 지금 많은 인프라의 바닥에서 돌아갑니다.',
+  timeline:[
+   {year:'1985',title:'FLP 불가능성',body:'피셔, 린치, 패터슨은 메시지 지연에 상한이 없는 비동기 시스템에서는 서버 하나만 멈출 수 있어도 항상 합의에 도달하는 결정적 알고리즘이 없다는 것을 증명했습니다. 이후 실제 알고리즘들은 타임아웃 같은 시간 가정을 써서 이 벽을 피해 갑니다.'},
+   {year:'1989~1998',title:'Paxos',body:'램포트는 그리스 섬의 가상의 의회 이야기로 합의 알고리즘 Paxos를 설명한 논문을 썼습니다. 1990년에 제출했지만 비유가 어렵다는 이유로 오래 미뤄져 1998년에야 출판됐습니다. 정확성은 인정받았지만 실제 시스템으로 옮기기 어렵다는 평이 따라다녔습니다.'},
+   {year:'2006',title:'Chubby와 ZooKeeper',body:'구글은 Paxos 위에 분산 잠금 서비스 Chubby를 만들어 리더 선출과 설정 저장에 썼습니다. 비슷한 역할의 오픈소스 ZooKeeper가 뒤따랐고 Hadoop과 Kafka가 이를 썼습니다. 논문은 Paxos를 실제로 구현하며 겪은 어려움을 자세히 적었습니다.'},
+   {year:'2014',title:'Raft',body:'스탠퍼드의 온가로와 오스터하우트는 「이해할 수 있는 합의 알고리즘을 찾아서」에서 Raft를 발표했습니다. 리더 선출, 로그 복제, 안전성을 따로 설명하고 학생 실험에서 Paxos보다 이해도가 높다는 결과도 실었습니다. 같은 시기 CoreOS의 etcd가 Raft를 채택했고 etcd는 Kubernetes의 상태 저장소가 되었습니다.'},
+   {year:'2020~2025',title:'Kafka의 KRaft',body:'Kafka는 메타데이터 관리를 ZooKeeper에 맡기던 구조를 Raft 기반의 자체 쿼럼 KRaft로 바꾸는 작업(KIP-500)을 시작했고 Kafka 4.0부터는 ZooKeeper 없이 KRaft만 지원합니다. 운영해야 할 시스템이 하나 줄었습니다.'}
+  ],
+  decisions:[
+   {question:'왜 리더를 하나 두는 구조일까?',answer:'모든 서버가 동시에 쓰기를 받으면 같은 위치에 서로 다른 값을 넣으려 해서 충돌 해결이 복잡해집니다. 리더 하나가 순서를 정하면 팔로워는 그대로 따라 적기만 하면 되어 이해하고 구현하기 쉽습니다.',cost:'모든 쓰기가 리더를 거치므로 리더가 병목이 되고 리더가 죽으면 새 리더가 뽑힐 때까지 짧게 쓰기가 멈춥니다.'},
+   {question:'왜 과반수일까?',answer:'과반수 두 집합은 반드시 한 서버 이상 겹칩니다. 그래서 커밋된 항목은 다음 선거의 과반수 안에 반드시 있는 서버가 알고 있고 로그가 뒤처진 후보는 표를 받지 못해 커밋된 항목이 사라지지 않습니다. 네트워크가 갈라져도 과반수를 가진 쪽은 하나뿐이라 리더가 둘이 되어 서로 다른 결정을 내리지 않습니다.',cost:'과반수가 살아 있지 않으면 시스템 전체가 쓰기를 멈춥니다. 가용성보다 일관성을 택한 설계입니다.'},
+   {question:'왜 임기 번호를 붙일까?',answer:'네트워크가 끊겼다 돌아온 옛 리더는 자기가 아직 리더라고 믿을 수 있습니다. 모든 메시지에 임기 번호를 붙이면 더 높은 임기를 본 서버는 즉시 팔로워로 물러나고 낮은 임기의 메시지는 거절됩니다.',cost:'임기와 투표 기록을 디스크에 안전하게 저장해야 해서 디스크가 느리면 하트비트와 선거가 흔들립니다. etcd가 빠른 디스크를 요구하는 이유입니다.'}
+  ],
+  today:[
+   'Kubernetes의 모든 상태는 etcd에 저장되고 etcd는 Raft로 복제됩니다. 직접 운영한다면 서로 다른 영역에 3대나 5대를 두고 디스크 fsync 지연을 감시합니다.',
+   '분산 잠금이나 리더 선출이 필요할 때 직접 구현하지 말고 etcd, Consul, ZooKeeper 같은 검증된 합의 시스템이나 관리형 서비스를 씁니다.',
+   '합의 시스템은 설정, 메타데이터, 리더 정보처럼 작고 중요한 데이터에 맞습니다. 대량의 업무 데이터를 넣으면 과반수 왕복 때문에 느려집니다.'
+  ],
+  sources:[
+   ['Ongaro & Ousterhout, In Search of an Understandable Consensus Algorithm (USENIX ATC, 2014)','https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro'],
+   ['Raft 공식 사이트','https://raft.github.io/'],
+   ['Lamport, The Part-Time Parliament (TOCS, 1998)','https://doi.org/10.1145/279227.279229'],
+   ['Fischer, Lynch & Paterson, Impossibility of Distributed Consensus with One Faulty Process (JACM, 1985)','https://doi.org/10.1145/3149.214121'],
+   ['Burrows, The Chubby Lock Service (OSDI, 2006)','https://www.usenix.org/legacy/event/osdi06/tech/burrows.html'],
+   ['Apache Kafka · KIP-500','https://cwiki.apache.org/confluence/display/KAFKA/KIP-500%3A+Replace+ZooKeeper+with+a+Self-Managed+Metadata+Quorum']
+  ]
+ },
+ pytest:{
+  intro:'개발자가 직접 테스트 코드를 쓰는 습관은 생각보다 새롭습니다. 오랫동안 테스트는 개발이 끝난 뒤 다른 사람이 하는 일이었습니다. 작은 테스트를 자주 돌리면 설계까지 좋아진다는 생각이 1990년대에 퍼지면서 테스트 도구는 언어마다 기본 장비가 되었습니다. Python에서는 그 도구를 얼마나 덜 번거롭게 만들 수 있는가가 경쟁의 축이었습니다.',
+  timeline:[
+   {year:'1989~1997',title:'SUnit과 JUnit',body:'켄트 벡은 Smalltalk용 테스트 도구 SUnit을 만들었고 1997년 에리히 감마와 함께 Java용 JUnit을 만들었습니다. 테스트 클래스, setUp과 tearDown, assert 메서드라는 틀은 이후 수많은 언어의 xUnit 도구로 복제되었습니다.'},
+   {year:'2001',title:'Python unittest',body:'JUnit을 본뜬 PyUnit이 Python 2.1 표준 라이브러리에 unittest로 들어갔습니다. 클래스를 만들고 self.assertEqual 같은 메서드를 써야 했습니다. 공식 문서도 JUnit에서 영감을 받았다고 적고 있습니다.'},
+   {year:'2002',title:'테스트 주도 개발',body:'켄트 벡의 책 『테스트 주도 개발』은 실패하는 테스트를 먼저 쓰고, 통과할 만큼만 코드를 쓰고, 다시 다듬는 짧은 순환을 제안했습니다. 테스트를 검증 도구가 아니라 설계 도구로 보게 만든 책입니다.'},
+   {year:'2004',title:'py.test의 시작',body:'PyPy 프로젝트의 홀거 크레켈은 unittest가 Java 같은 문체라 번거롭다고 보고 평범한 assert와 함수만으로 테스트하는 도구를 만들기 시작했습니다. assert 문을 다시 해석해 실패한 값을 보여 주는 기능이 이때부터 있었고 이것이 py.test를 거쳐 지금의 pytest가 되었습니다.'},
+   {year:'2000~2010년대',title:'속성 기반 테스트와 테스트 피라미드',body:'2000년 Haskell의 QuickCheck는 예시 몇 개 대신 무작위 입력 수백 개로 성질을 확인하는 방식을 보여 줬고 Python에서는 Hypothesis가 이어받았습니다. 마이크 콘이 제안하고 마틴 파울러가 정리한 테스트 피라미드는 빠른 단위 테스트를 많이, 느린 UI 테스트를 적게 두라는 기준이 되었습니다.'}
+  ],
+  decisions:[
+   {question:'왜 pytest는 평범한 assert를 쓸까?',answer:'self.assertEqual(a, b), assertIn, assertTrue처럼 수십 개의 메서드를 외우는 대신 Python 문법 그대로 assert a == b를 쓰게 했습니다. pytest는 테스트 파일을 불러올 때 assert 문을 고쳐 써서 실패하면 양쪽 값과 차이를 보여 줍니다.',cost:'assert를 다시 쓰는 마법은 테스트 파일과 등록된 플러그인에만 적용됩니다. 일반 모듈의 assert는 python -O로 실행하면 사라지므로 업무 검증에는 쓰지 않습니다.'},
+   {question:'왜 setUp 대신 픽스처를 쓸까?',answer:'setUp은 클래스의 모든 테스트가 같은 준비를 공유해 필요 없는 준비까지 합니다. 픽스처는 테스트가 매개변수 이름으로 필요한 것만 요청하고 픽스처끼리 조합할 수 있으며 범위(함수, 모듈, 세션)를 골라 비싼 준비를 재사용합니다.',cost:'픽스처가 여러 파일의 conftest.py에 흩어지면 어디서 오는지 찾기 어렵습니다. pytest --fixtures로 목록을 확인합니다.'},
+   {question:'왜 가짜 객체를 쓰되 아껴 써야 할까?',answer:'외부 결제 API나 이메일 서버를 매번 실제로 부르면 느리고 돈이 들고 상대 서버 상태에 따라 테스트가 흔들립니다. 가짜 객체로 바꾸면 빠르고 결과가 일정합니다.',cost:'가짜는 실제와 다를 수 있어 테스트는 통과하는데 실제로는 깨질 수 있습니다. 중요한 연결은 테스트 환경의 실제 서비스나 계약 테스트로 따로 확인합니다.'}
+  ],
+  today:[
+   '버그를 고칠 때는 그 버그를 재현하는 테스트를 먼저 써서 실패를 확인한 뒤 고칩니다.',
+   '경계값(빈 입력, 0, 최댓값, 음수)을 parametrize로 묶어 두고 외부 의존성은 monkeypatch나 가짜 객체로 바꿉니다.',
+   'CI에서 pytest를 돌려 실패하면 병합을 막고 느린 통합 테스트에는 마커를 붙여 따로 돌릴 수 있게 합니다.'
+  ],
+  sources:[
+   ['pytest · History','https://docs.pytest.org/en/stable/history.html'],
+   ['pytest · Fixtures','https://docs.pytest.org/en/stable/how-to/fixtures.html'],
+   ['Python · unittest','https://docs.python.org/3/library/unittest.html'],
+   ['Claessen & Hughes, QuickCheck (ICFP, 2000)','https://doi.org/10.1145/351240.351266'],
+   ['Martin Fowler · TestPyramid','https://martinfowler.com/bliki/TestPyramid.html'],
+   ['Hypothesis','https://hypothesis.readthedocs.io/']
+  ]
+ },
+ git:{
+  intro:'Git은 기술보다 사건에서 태어났습니다. 리눅스 커널 개발자들이 쓰던 상용 도구를 쓸 수 없게 되자 리누스 토르발스가 몇 주 만에 직접 만들었습니다. 빠르고, 분산되어 있고, 브랜치가 가벼워야 한다는 처음의 목표는 이후 개발자들이 협업하는 방식 자체를 바꿨습니다.',
+  timeline:[
+   {year:'1990년대',title:'중앙 집중식 버전 관리',body:'CVS와 2000년에 나온 Subversion은 서버 하나에 이력을 두고 개발자가 거기서 파일을 받아 고친 뒤 다시 올렸습니다. 서버에 연결해야 이력을 볼 수 있었고 브랜치를 만들고 합치는 일이 무겁고 위험해서 잘 쓰지 않았습니다.'},
+   {year:'2005',title:'BitKeeper 사태와 Git의 탄생',body:'리눅스 커널은 2002년부터 분산 버전 관리 도구 BitKeeper를 무료로 썼습니다. 2005년 개발 회사와의 관계가 깨져 무료 사용이 철회되자 리누스 토르발스는 속도, 단순한 설계, 수천 개의 병렬 브랜치, 완전한 분산을 목표로 Git을 만들었습니다. 첫 커밋은 2005년 4월이고 몇 달 뒤 커널 개발이 Git으로 옮겨졌습니다.'},
+   {year:'2008',title:'GitHub',body:'GitHub이 문을 열고 풀 리퀘스트로 변경을 제안하고 리뷰하는 방식을 대중화했습니다. 저장소를 포크하고 풀 리퀘스트를 보내는 흐름이 오픈소스와 회사 개발 모두의 기본이 되었습니다.'},
+   {year:'2010',title:'git-flow와 트렁크 기반 개발',body:'빈센트 드리센이 develop, feature, release, hotfix 브랜치를 나누는 git-flow 모델을 발표해 널리 쓰였습니다. 지속적 배포가 흔해지면서 수명이 짧은 브랜치를 main에 자주 병합하는 트렁크 기반 개발이 다시 주목받았고 드리센도 나중에 웹 앱에는 더 단순한 흐름이 맞다는 메모를 덧붙였습니다.'},
+   {year:'2020',title:'기본 브랜치 이름',body:'Git 2.28은 git init이 만드는 첫 브랜치 이름을 init.defaultBranch 설정으로 바꿀 수 있게 했습니다. 같은 해 GitHub은 새 저장소의 기본 브랜치를 main으로 바꿨습니다.'}
+  ],
+  decisions:[
+   {question:'왜 차이 대신 스냅샷을 저장할까?',answer:'Git은 각 커밋에서 프로젝트 전체의 상태를 가리킵니다. 바뀌지 않은 파일은 같은 해시의 객체를 그대로 다시 가리키므로 실제로 공간을 거의 쓰지 않습니다. 어떤 커밋으로 가든 차이를 차례로 적용할 필요 없이 바로 그 상태를 꺼낼 수 있어 브랜치 전환이 빠릅니다.',cost:'큰 바이너리 파일을 자주 바꾸면 버전마다 새 객체가 쌓여 저장소가 커집니다. 이런 파일은 Git LFS로 따로 관리합니다.'},
+   {question:'왜 내용의 해시를 이름으로 쓸까?',answer:'같은 내용은 어디서나 같은 이름을 가지므로 중복 저장이 없고 두 저장소를 비교하기 쉽습니다. 커밋 해시에는 부모 커밋의 해시가 들어가서 과거 이력을 몰래 바꾸면 그 뒤의 모든 해시가 달라져 바로 드러납니다.',cost:'SHA-1의 충돌 공격이 현실이 되면서 Git은 SHA-256 저장소 형식을 추가했지만 생태계 전환은 아직 진행 중입니다.'},
+   {question:'왜 브랜치를 그렇게 가볍게 만들었을까?',answer:'브랜치는 커밋 해시 하나를 적은 작은 파일일 뿐입니다. 만들고 지우는 데 비용이 거의 없으니 실험이나 작은 작업마다 브랜치를 만들 수 있고 이것이 풀 리퀘스트 중심의 협업을 가능하게 했습니다.',cost:'브랜치를 쉽게 만들 수 있는 만큼 오래 방치된 브랜치가 쌓이고 늦게 합칠수록 충돌이 커집니다.'}
+  ],
+  today:[
+   'main은 항상 배포 가능한 상태로 두고 작업은 수명이 짧은 브랜치에서 하며 풀 리퀘스트로 리뷰와 CI를 거친 뒤 병합합니다.',
+   '커밋은 하나의 의도만 담고 메시지 첫 줄에 무엇을 왜 바꿨는지 적습니다. 비밀 키를 커밋했다면 이력에서 지우는 것보다 키를 먼저 폐기합니다.',
+   '공유 브랜치에서는 되돌릴 때 revert를 쓰고 강제 push가 필요하면 --force-with-lease를 씁니다.'
+  ],
+  sources:[
+   ['Pro Git · A Short History of Git','https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git'],
+   ['Pro Git · Git Objects','https://git-scm.com/book/en/v2/Git-Internals-Git-Objects'],
+   ['Git 첫 커밋 (2005)','https://github.com/git/git/commit/e83c5163316f89bfbde7d9ab23ca2e25604af290'],
+   ['Driessen · A successful Git branching model (2010)','https://nvie.com/posts/a-successful-git-branching-model/'],
+   ['Trunk Based Development','https://trunkbaseddevelopment.com/'],
+   ['GitHub Blog · Highlights from Git 2.28','https://github.blog/news-insights/the-library/highlights-from-git-2-28/']
+  ]
+ },
+ kubernetes:{
+  intro:'Kubernetes는 구글이 10년 넘게 쓴 내부 클러스터 관리 경험을 바탕으로 2014년 공개한 오픈소스입니다. 핵심 생각은 오래되었습니다. 서버를 하나하나 관리하지 말고 원하는 상태를 적어 두면 시스템이 계속 맞춘다는 것입니다. 컨테이너가 대중화된 시점에 이 생각이 표준 API로 나오면서 클라우드에서 앱을 운영하는 공통 언어가 되었습니다.',
+  timeline:[
+   {year:'2003~2015',title:'Borg',body:'구글은 2000년대 초부터 Borg로 검색, Gmail 같은 서비스와 배치 작업을 수만 대 서버에 함께 배치했습니다. 2015년 EuroSys 논문에서 그 설계와 교훈을 공개했습니다. 작업을 선언하고 시스템이 배치와 재시작을 맡는 방식, 여러 작업을 한 서버에 촘촘히 채우는 방식이 여기서 나왔습니다.'},
+   {year:'2013',title:'Docker',body:'Docker는 Linux의 namespace와 cgroup 위에 이미지 형식과 쉬운 도구를 얹어 컨테이너를 누구나 쓰게 만들었습니다. 컨테이너 하나는 쉬워졌지만 수백 개를 여러 서버에서 운영하는 문제가 남았습니다.'},
+   {year:'2014~2015',title:'Kubernetes 공개와 CNCF',body:'구글은 2014년 Borg의 교훈을 담은 Kubernetes를 오픈소스로 공개했고 2015년 1.0을 내며 리눅스 재단 산하에 새로 만든 CNCF에 기증했습니다. 특정 회사의 제품이 아니라 여러 클라우드가 함께 지원하는 표준이 된 계기입니다.'},
+   {year:'2017~2018',title:'관리형 Kubernetes',body:'구글 GKE에 이어 Azure AKS, AWS EKS가 나오며 컨트롤 플레인을 클라우드가 운영해 주는 방식이 일반화되었습니다. 사용자는 etcd와 API 서버를 직접 운영하지 않아도 되었습니다.'},
+   {year:'2022',title:'dockershim 제거',body:'Kubernetes 1.24는 Docker 엔진을 직접 쓰기 위한 중간 계층 dockershim을 제거했습니다. 컨테이너 실행은 표준 인터페이스(CRI)를 지원하는 containerd나 CRI-O가 맡습니다. Docker로 만든 이미지는 표준 형식이라 그대로 실행됩니다.'}
+  ],
+  decisions:[
+   {question:'왜 명령 대신 원하는 상태를 선언할까?',answer:'"파드 하나 더 만들어"라는 명령은 중간에 실패하거나 놓치면 상태가 어긋납니다. "파드는 3개여야 한다"는 선언은 컨트롤러가 계속 실제와 비교하므로 무엇이 실패했든 다음 확인에서 바로잡습니다. 같은 YAML을 여러 번 적용해도 결과가 같아 Git에 두고 관리하기도 좋습니다.',cost:'원하는 상태와 실제 상태가 맞춰지기까지 시간이 걸리고 왜 아직 맞지 않는지 이벤트와 상태 필드를 읽는 법을 익혀야 합니다.'},
+   {question:'왜 컨테이너 대신 파드가 기본 단위일까?',answer:'로그 수집기나 프록시처럼 앱 컨테이너와 항상 함께 붙어 다니며 네트워크와 저장 공간을 공유해야 하는 보조 컨테이너가 있습니다. 파드로 묶으면 같은 노드에 함께 배치되고 localhost로 통신합니다.',cost:'파드는 언제든 사라지고 새 IP로 다시 만들어지는 일회용입니다. 파드 IP를 직접 쓰지 말고 Service를 통해 접근해야 합니다.'},
+   {question:'왜 상태를 etcd 하나에 모을까?',answer:'모든 컨트롤러가 API 서버를 통해 하나의 저장소를 보고 고치므로 구성 요소끼리 직접 대화할 필요가 없습니다. 컨트롤러가 죽었다 살아나도 etcd의 상태를 다시 읽으면 이어서 일할 수 있습니다.',cost:'etcd가 클러스터의 심장이 되어 백업과 성능 관리가 중요해집니다. 관리형 서비스를 쓰는 큰 이유입니다.'}
+  ],
+  today:[
+   '모든 컨테이너에 CPU와 메모리 requests를 주고 readiness probe로 준비된 파드만 트래픽을 받게 합니다. liveness probe는 외부 의존성을 보지 않습니다.',
+   '앱은 SIGTERM을 받으면 새 요청을 거절하고 진행 중인 요청을 마친 뒤 종료합니다. 설정과 비밀은 ConfigMap과 Secret으로 이미지 밖에 둡니다.',
+   '서비스가 적고 팀이 작다면 ECS, Cloud Run, App Runner 같은 더 단순한 관리형 컨테이너 서비스도 먼저 비교합니다.'
+  ],
+  sources:[
+   ['Verma et al., Large-scale cluster management at Google with Borg (EuroSys, 2015)','https://doi.org/10.1145/2741948.2741964'],
+   ['Kubernetes Blog · Borg: The Predecessor to Kubernetes','https://kubernetes.io/blog/2015/04/borg-predecessor-to-kubernetes/'],
+   ['Kubernetes Blog · Dockershim FAQ','https://kubernetes.io/blog/2022/02/17/dockershim-faq/'],
+   ['Kubernetes · Controllers','https://kubernetes.io/docs/concepts/architecture/controller/'],
+   ['CNCF · Who we are','https://www.cncf.io/about/who-we-are/']
+  ]
  }
 };

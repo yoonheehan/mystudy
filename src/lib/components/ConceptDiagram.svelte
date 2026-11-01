@@ -141,6 +141,11 @@
  .diagram-speed select{min-height:40px;border:0;background:var(--bg,#fff);padding:0 10px}
  .diagram-note{margin:12px 0 0;font-size:13px;color:var(--muted,#5f5f5f)}
  @media (max-width:720px){
+  .seq{padding:12px 8px}
+  .seq-head,.seq-row{grid-template-columns:repeat(var(--lanes),minmax(0,1fr));min-width:0}
+  .seq-head span{font-size:12px;padding:8px 2px}
+  .seq-label{margin:0 -20px;font-size:12px}
+  .seq-self{font-size:12px;padding:4px 6px;max-width:100%}
   .diagram{padding:20px 16px;margin-inline:calc(var(--margin,16px) * -1)}
   .diagram-controls{grid-template-columns:1fr 1fr}
   .diagram-controls input{grid-column:1/-1;grid-row:1}

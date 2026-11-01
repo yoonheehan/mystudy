@@ -338,5 +338,109 @@ export const diagrams:Record<string,Diagram>={
    {lane:0,text:'장애 인지 · 쓰기 중단',tone:'wait',state:'14:20',caption:'주문이 사라졌다는 문의로 장애를 알아채고 쓰기를 막습니다.'},
    {lane:1,text:'새 DB를 14:12 시점으로 복원',tone:'ok',state:'14:20 ~ 14:55',caption:'0시 백업을 펼치고 WAL을 14:12까지만 재생한 새 DB를 만듭니다. 원래 DB는 덮어쓰지 않습니다.'},
    {lane:1,text:'데이터 확인 · 앱 연결 전환',tone:'ok',state:'15:05',caption:'주문 수를 확인하고 앱의 연결 대상을 새 DB로 바꿉니다. 14:12부터 쓰기를 막은 14:20 사이의 주문은 원래 DB의 기록과 비교해 따로 살립니다.'}
+  ]},
+ sync:{kind:'timeline',title:'잔여 1개인 쿠폰을 두 스레드가 발급할 때',lanes:['스레드 A','스레드 B'],stateLabel:'쿠폰 재고',
+  steps:[
+   {lane:0,text:'재고 읽기 → 1',tone:'ok',state:'1',caption:'락 없이 A가 재고를 읽습니다. 1개 남았습니다.'},
+   {lane:1,text:'재고 읽기 → 1',tone:'ok',state:'1',caption:'A가 아직 차감하기 전에 스케줄러가 B로 바꿉니다. B도 1을 읽습니다.'},
+   {lane:0,text:'발급 · 재고 = 0',tone:'ok',state:'0',caption:'A는 자기가 읽은 1을 근거로 발급하고 0을 씁니다.'},
+   {lane:1,text:'발급 · 재고 = 0',tone:'fail',state:'0 · 발급 2건',caption:'B도 자기가 읽은 1을 근거로 발급합니다. 쿠폰은 하나인데 두 명이 받았습니다.'},
+   {lane:0,text:'with lock: 읽기 → 1 · 발급 · 0',tone:'ok',state:'0',caption:'고친 코드에서는 A가 락을 잡고 읽기와 차감을 한 덩어리로 끝낸 뒤 락을 놓습니다.'},
+   {lane:1,text:'락 대기 → 읽기 → 0 · 거절',tone:'note',state:'0 · 발급 1건',caption:'B는 A가 락을 놓을 때까지 기다렸다가 재고 0을 보고 발급하지 않습니다.'}
+  ]},
+ scheduling:{kind:'table',title:'CPU limit 0.5코어인 컨테이너에 요청이 몰릴 때',columns:['시각','남은 할당량','상태'],packetLabel:'지금 일어나는 일',
+  steps:[
+   {rows:[['0ms','50ms','대기']],highlight:[0],packet:'100ms 주기 시작 · cpu.max = 50000 100000',caption:'cgroup은 100ms마다 이 컨테이너에 CPU 시간 50ms를 줍니다.'},
+   {rows:[['0ms','50ms','대기'],['5ms','30ms','스레드 4개 실행']],highlight:[1],packet:'요청 4개가 동시에 도착 · 스레드 4개가 4코어에서 실행',caption:'스레드 4개가 동시에 일하면 실제 시간 1ms마다 할당량이 4ms씩 줄어듭니다.'},
+   {rows:[['0ms','50ms','대기'],['5ms','30ms','스레드 4개 실행'],['12.5ms','0ms','스로틀링']],highlight:[2],packet:'할당량 소진 · 컨테이너 전체 정지',caption:'주기가 시작된 지 12.5ms 만에 50ms를 다 썼습니다. 컨테이너의 모든 스레드가 멈춥니다.'},
+   {rows:[['0ms','50ms','대기'],['5ms','30ms','스레드 4개 실행'],['12.5ms','0ms','스로틀링'],['40ms','0ms','새 요청도 대기']],highlight:[3],packet:'새 요청 도착 · 처리할 수 없음',caption:'그 사이 도착한 요청은 CPU가 비어 있어도 처리되지 않습니다. 평균 사용률은 50%로 보입니다.'},
+   {rows:[['12.5ms ~ 100ms','0ms','87.5ms 동안 정지'],['100ms','50ms','재개']],highlight:[1],packet:'다음 주기 · 할당량 다시 50ms',caption:'다음 주기에야 다시 실행됩니다. nr_throttled 지표가 늘고 p99 지연이 튑니다. limit을 올리거나 워커 수를 할당량에 맞춥니다.'}
+  ]},
+ tls:{kind:'flow',title:'api.example.com의 인증서를 Python 클라이언트가 검증할 때',
+  nodes:[
+   {label:'체인 만들기',sub:'서버 인증서 + 서버가 보낸 중간 인증서'},
+   {label:'루트까지 서명 확인',sub:'신뢰 저장소의 루트에 닿는가'},
+   {label:'기간 확인',sub:'notBefore ≤ 지금 ≤ notAfter'},
+   {label:'이름 확인',sub:'SAN에 api.example.com이 있는가'},
+   {label:'개인키 소유 확인',sub:'핸드셰이크 서명 검증'}
+  ],
+  steps:[
+   {active:0,status:{0:'fail'},result:'unable to get local issuer certificate',caption:'처음 배포한 서버는 자기 인증서만 보냈습니다. 중간 인증서가 없어 체인이 루트까지 이어지지 않습니다. 브라우저는 캐시로 채웠지만 Python은 실패합니다.'},
+   {active:0,status:{0:'ok'},caption:'서버 설정을 fullchain으로 바꿔 중간 인증서를 함께 보냅니다.'},
+   {active:1,status:{0:'ok',1:'ok'},caption:'서버 인증서의 서명은 중간 CA의 공개키로, 중간 CA의 서명은 루트의 공개키로 확인됩니다. 루트는 시스템 신뢰 저장소에 있습니다.'},
+   {active:2,status:{0:'ok',1:'ok',2:'ok'},caption:'유효 기간 안입니다. 만료 30일 전부터 알림을 받도록 감시합니다.'},
+   {active:3,status:{0:'ok',1:'ok',2:'ok',3:'ok'},caption:'SAN에 api.example.com이 있습니다. IP 주소로 접속했다면 여기서 실패합니다.'},
+   {active:4,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'ok'},result:'검증 통과 · TLS 1.3 연결 수립',caption:'서버가 개인키로 서명한 핸드셰이크 값이 인증서의 공개키로 검증됩니다. 인증서를 훔쳐 온 것이 아니라 진짜 주인입니다.'}
+  ]},
+ websocket:{kind:'sequence',title:'nginx 뒤의 채팅 서버에 WebSocket으로 연결할 때',lanes:['브라우저','nginx','채팅 서버'],
+  steps:[
+   {from:0,to:1,label:'GET /chat · Upgrade: websocket · Key',caption:'브라우저가 HTTP 요청으로 WebSocket 전환을 요청합니다.'},
+   {from:1,to:2,label:'Upgrade · Connection 헤더 전달',caption:'nginx에 Upgrade 헤더 설정이 있어야 앱까지 전달됩니다. 설정이 없으면 앱은 평범한 GET으로 받고 연결이 실패합니다.'},
+   {from:2,to:0,label:'101 Switching Protocols · Accept',caption:'서버가 키로 계산한 Accept 값을 담아 101로 답합니다. nginx는 이때부터 양쪽 연결을 터널로 이어 줍니다.'},
+   {from:2,to:0,label:'새 메시지: "안녕하세요"',caption:'요청 없이 서버가 먼저 메시지를 보냅니다.'},
+   {from:0,to:2,label:'메시지: "반가워요"',caption:'브라우저도 같은 연결로 언제든 보냅니다.'},
+   {from:2,to:0,label:'ping (30초마다)',tone:'note',caption:'방이 조용해도 서버가 30초마다 ping을 보내고 브라우저가 pong으로 답합니다. nginx의 60초 유휴 제한에 걸리지 않습니다.'},
+   {from:1,to:0,label:'연결 끊김 (재배포)',tone:'fail',caption:'서버를 재배포하면 연결이 끊깁니다. close 프레임 없이 끊기면 코드 1006이 보입니다.'},
+   {from:0,to:1,label:'1.3초 뒤 재연결 · 마지막 메시지 ID',tone:'wait',caption:'브라우저는 무작위 지연을 섞어 다시 연결하고 마지막으로 받은 메시지 ID를 보내 빠진 메시지를 받습니다.'}
+  ]},
+ ratelimit:{kind:'table',title:'API 키 K의 토큰 버킷 · 초당 1개 채움, 최대 5개',columns:['시각','요청','남은 토큰','응답'],packetLabel:'지금 일어나는 일',
+  steps:[
+   {rows:[['0.0초','—','5','—']],highlight:[0],packet:'한동안 조용해서 버킷이 가득 찼습니다',caption:'토큰은 초당 1개씩 채워지지만 5개를 넘지 않습니다.'},
+   {rows:[['0.0초','—','5','—'],['0.0초','요청 5개','0','200 × 5']],highlight:[1],packet:'같은 순간 요청 5개',caption:'모아 둔 토큰 5개로 버스트 5개가 모두 통과합니다.'},
+   {rows:[['0.0초','—','5','—'],['0.0초','요청 5개','0','200 × 5'],['0.1초','요청 2개','0','429 × 2 · Retry-After: 1']],highlight:[2],packet:'토큰 없음 → 거절',caption:'0.1초 동안 채워진 토큰은 0.1개라 꺼낼 수 없습니다. 429와 함께 1초 뒤에 오라고 알립니다.'},
+   {rows:[['0.0초','—','5','—'],['0.0초','요청 5개','0','200 × 5'],['0.1초','요청 2개','0','429 × 2 · Retry-After: 1'],['1.1초','재시도 1개','0.1','200']],highlight:[3],packet:'Retry-After를 따른 재시도',caption:'1초 동안 토큰 1개가 채워져 재시도가 통과합니다. 남은 토큰은 0.1개입니다.'},
+   {rows:[['장애 복구 + 1초','앱 1만 대 동시 재시도','곧 0','대부분 429'],['복구 + 0~1초','지터로 흩어진 재시도','채워지는 만큼','차례로 200']],highlight:[1],packet:'장애 복구 직후의 재시도',caption:'클라이언트 1만 대가 모두 정확히 1초 뒤 재시도하면 다시 몰립니다. 지터를 섞으면 재시도가 1초 안에 고르게 흩어집니다.'}
+  ]},
+ replication:{kind:'timeline',title:'댓글을 쓰고 바로 목록을 새로고침할 때',lanes:['주 DB','복제본'],stateLabel:'사용자 화면',
+  steps:[
+   {lane:0,text:'INSERT 댓글 101 · 커밋',tone:'ok',state:'작성 완료',caption:'쓰기는 주 DB로 갑니다. 비동기 복제라 주 DB는 복제본을 기다리지 않고 커밋을 끝냅니다.'},
+   {lane:1,text:'WAL 수신 대기 · 지연 0.5초',tone:'wait',state:'—',caption:'변경 기록이 복제본으로 가는 중입니다. 대량 쓰기가 있으면 지연이 더 길어집니다.'},
+   {lane:1,text:'SELECT 목록 → 100까지',tone:'fail',state:'내 댓글이 없음',caption:'0.2초 뒤 목록 조회가 복제본으로 갑니다. 아직 101이 적용되지 않아 방금 쓴 댓글이 보이지 않습니다.'},
+   {lane:1,text:'WAL 적용 · 101까지',tone:'ok',state:'다시 새로고침하면 보임',caption:'0.5초 뒤 복제본이 따라잡습니다. 사용자는 댓글이 사라졌다 나타났다고 느낍니다.'},
+   {lane:0,text:'쓰기 후 5초는 주 DB에서 SELECT',tone:'ok',state:'바로 보임',caption:'고친 방법: 쓰기를 한 사용자의 읽기는 5초 동안 주 DB로 보냅니다. 다른 사용자의 목록 조회는 계속 복제본이 받습니다.'},
+   {lane:1,text:'지연 > 30초면 읽기 대상에서 제외',tone:'note',state:'—',caption:'복제 지연을 감시해 너무 늦은 복제본은 읽기에서 빼고 주 DB나 다른 복제본으로 보냅니다.'}
+  ]},
+ raft:{kind:'sequence',title:'3대 Raft 클러스터에서 쓰기와 리더 교체',lanes:['클라이언트','노드 1','노드 2','노드 3'],
+  steps:[
+   {from:0,to:1,label:'SET x = 5',caption:'임기 2의 리더인 노드 1이 쓰기를 받아 자기 로그 7번에 붙입니다.'},
+   {from:1,to:2,label:'AppendEntries #7 (임기 2)',caption:'리더가 팔로워들에게 항목을 복제합니다.'},
+   {from:2,to:1,label:'저장함',caption:'노드 2가 저장했다고 답합니다. 리더와 합쳐 2대, 3대 중 과반수입니다.'},
+   {from:1,to:0,label:'커밋 · 성공',caption:'과반수가 저장했으므로 7번은 커밋됩니다. 노드 3의 답을 기다리지 않고 성공을 돌려줍니다.'},
+   {from:1,to:1,label:'노드 1 장애',tone:'fail',caption:'노드 1이 멈춰 하트비트가 끊깁니다.'},
+   {from:3,to:3,label:'선거 타임아웃 · 임기 3 후보',tone:'wait',caption:'무작위 타임아웃이 먼저 끝난 노드 3이 임기를 3으로 올리고 후보가 됩니다.'},
+   {from:3,to:2,label:'RequestVote (임기 3 · 마지막 6번)',caption:'노드 3은 7번을 받지 못해 로그가 6번까지입니다.'},
+   {from:2,to:3,label:'거절 · 내 로그가 더 최신',tone:'fail',caption:'노드 2는 커밋된 7번을 가졌으므로 뒤처진 후보에게 투표하지 않습니다. 커밋된 항목이 사라지지 않게 하는 규칙입니다.'},
+   {from:2,to:3,label:'RequestVote (임기 4 · 마지막 7번)',tone:'note',caption:'다음 타임아웃에 노드 2가 임기 4 후보로 나서고 노드 3이 투표해 노드 2가 리더가 됩니다.'},
+   {from:2,to:3,label:'AppendEntries #7 (임기 4)',caption:'새 리더가 노드 3에게 빠진 7번을 채워 줍니다. 세 노드의 로그가 다시 같아집니다.'}
+  ]},
+ pytest:{kind:'table',title:'할인 버그를 테스트로 재현하고 고칠 때',columns:['테스트','입력','결과'],packetLabel:'지금 일어나는 일',
+  steps:[
+   {rows:[['test_vip_discount','10,000원 · 회원 10%','통과']],highlight:[0],packet:'pytest -q · 기존 테스트',caption:'기존 테스트는 회원 할인만 확인해서 통과합니다. 쿠폰과 함께 쓰는 경우는 확인하지 않았습니다.'},
+   {rows:[['test_vip_discount','10,000원 · 회원 10%','통과'],['test_coupon[2000-3000-0]','2,000원 · 쿠폰 3,000원','실패 · assert -1000 == 0']],highlight:[1],packet:'버그를 재현하는 테스트를 먼저 추가',caption:'신고된 버그를 그대로 테스트로 적습니다. pytest가 실제 값 −1000과 기대값 0을 함께 보여 줍니다.'},
+   {rows:[['test_vip_discount','10,000원 · 회원 10%','통과'],['test_coupon[2000-3000-0]','2,000원 · 쿠폰 3,000원','통과']],highlight:[1],packet:'코드 수정: return max(0, round(discounted))',caption:'금액이 0 아래로 내려가지 않게 고치자 재현 테스트가 통과합니다.'},
+   {rows:[['test_vip_discount','10,000원 · 회원 10%','통과'],['test_coupon[10000-3000-7000]','10,000원 · 쿠폰 3,000원','통과'],['test_coupon[2000-3000-0]','2,000원 · 쿠폰 3,000원','통과'],['test_coupon[0-0-0]','0원','통과']],highlight:[1,3],packet:'parametrize로 경계값 추가',caption:'정상 경우와 0원 같은 경계값도 같은 테스트에 묶어 둡니다. 줄 하나가 테스트 하나로 실행됩니다.'},
+   {rows:[['전체 4개','—','4 passed in 0.03s']],highlight:[0],packet:'풀 리퀘스트 → CI에서 pytest 실행',caption:'CI가 모든 테스트를 통과시켜야 병합할 수 있습니다. 누군가 나중에 같은 계산을 고쳐도 이 테스트가 버그의 재발을 막습니다.'}
+  ]},
+ git:{kind:'timeline',title:'main과 feature 브랜치가 같은 줄을 고쳤을 때',lanes:['main','feature/timeout'],stateLabel:'상태',
+  steps:[
+   {lane:1,text:'git switch -c feature/timeout (A에서)',tone:'ok',state:'두 브랜치 모두 커밋 A',caption:'커밋 A에서 작업 브랜치를 만듭니다. 브랜치는 A를 가리키는 이름표 하나가 더 생긴 것뿐입니다.'},
+   {lane:0,text:'커밋 B: TIMEOUT = 5 (동료가 먼저 병합)',tone:'ok',state:'main → B',caption:'그사이 동료의 변경이 main에 병합되었습니다. config.py의 TIMEOUT이 5가 됐습니다.'},
+   {lane:1,text:'커밋 C: TIMEOUT = 10',tone:'ok',state:'feature → C',caption:'나는 같은 줄을 10으로 바꿔 커밋했습니다.'},
+   {lane:1,text:'git rebase main → 충돌',tone:'fail',state:'<<<<<<< 5 ======= 10 >>>>>>>',caption:'main의 최신 상태 위에 내 커밋을 다시 적용하려 하자 같은 줄을 양쪽이 다르게 고쳐 충돌이 납니다.'},
+   {lane:1,text:'합의한 8로 고침 · git add · rebase --continue',tone:'note',state:'feature → C′ (B 위)',caption:'동료와 이야기해 8로 정하고 충돌 표시를 지웁니다. 커밋 C는 부모가 B로 바뀌어 새 해시의 C′가 됩니다.'},
+   {lane:1,text:'pytest 통과 · git push --force-with-lease',tone:'ok',state:'원격 feature → C′',caption:'리베이스로 해시가 바뀌어 일반 push는 거절됩니다. --force-with-lease는 원격이 내가 마지막으로 본 상태일 때만 덮어써서 남의 커밋을 지우지 않습니다.'},
+   {lane:0,text:'풀 리퀘스트 병합 · main → C′',tone:'ok',state:'이력 A → B → C′',caption:'리뷰와 CI를 통과해 병합합니다. main은 fast-forward로 C′를 가리키고 이력은 한 줄로 남습니다.'}
+  ]},
+ kubernetes:{kind:'sequence',title:'Deployment를 적용하고 노드 하나가 죽을 때',lanes:['kubectl','API 서버·etcd','컨트롤러','스케줄러','kubelet'],
+  steps:[
+   {from:0,to:1,label:'apply · replicas: 3',caption:'원하는 상태를 담은 Deployment를 제출합니다. API 서버가 검증하고 etcd에 저장합니다.'},
+   {from:2,to:1,label:'파드 3개 생성',caption:'Deployment와 ReplicaSet 컨트롤러가 실제 파드 수 0을 보고 파드 객체 3개를 만듭니다. 아직 노드는 정해지지 않았습니다.'},
+   {from:3,to:1,label:'파드마다 노드 배정',caption:'스케줄러가 requests를 감당할 수 있는 노드를 골라 기록합니다. 가능하면 노드를 나눠 배치합니다.'},
+   {from:4,to:1,label:'컨테이너 실행 · Ready',caption:'각 노드의 kubelet이 이미지를 받아 실행하고 readiness probe가 통과하면 Ready로 보고합니다. 이제 Service가 트래픽을 보냅니다.'},
+   {from:4,to:4,label:'노드 2 응답 없음',tone:'fail',caption:'노드 하나가 죽어 그 노드의 kubelet이 보고를 멈춥니다.'},
+   {from:1,to:1,label:'노드 장애 표시 · 파드 정리',tone:'wait',caption:'노드 컨트롤러가 일정 시간 보고가 없는 노드를 NotReady로 표시하고 그 위의 파드를 정리합니다. Service에서도 빠집니다.'},
+   {from:2,to:1,label:'실제 2 < 원하는 3 → 1개 생성',caption:'ReplicaSet 컨트롤러가 차이를 보고 새 파드를 만듭니다. 사람이 아무것도 하지 않았습니다.'},
+   {from:3,to:1,label:'남은 노드에 배정',caption:'스케줄러가 살아 있는 노드에 새 파드를 배정합니다.'},
+   {from:4,to:1,label:'Ready · 다시 3개',tone:'ok',caption:'kubelet이 실행하고 readiness가 통과하면 다시 파드 3개가 트래픽을 받습니다. 원하는 상태와 실제 상태가 다시 같아졌습니다.'}
   ]}
 };

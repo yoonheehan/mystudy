@@ -21,8 +21,8 @@ for(const lesson of lessons){
  }
 }
 assert.ok(Object.keys(backtonyDeepening).every(id=>!deepening[id]),'duplicate supplementary topic');
-assert.equal(lessons.length,32);
-assert.equal(Object.keys(contexts).length,32);
+assert.ok(lessons.length>=32);assert.equal(new Set(lessons.map(l=>l.id)).size,lessons.length);
+assert.equal(Object.keys(contexts).length,lessons.length);
 const examples=[];
 for(const lesson of lessons){
  const context=contexts[lesson.id];assert.ok(context,lesson.id);
@@ -34,7 +34,7 @@ for(const lesson of lessons){
  assert.ok(lesson.refs.every(ref=>sources[ref]),lesson.id+' source');
  assert.ok(chapterOrder.includes(lesson.category),lesson.id+' chapter');
 }
-const result=spawnSync('python',['-c','import json,ast,sys\nfor example in json.loads(sys.stdin.buffer.read().decode("utf-8")): ast.parse(example["code"], filename=example["id"])\nprint("32 lessons: context, roles, Python syntax and source coverage passed.")'],{input:JSON.stringify(examples),encoding:'utf8'});
+const result=spawnSync('python',['-c','import json,ast,sys\nfor example in json.loads(sys.stdin.buffer.read().decode("utf-8")): ast.parse(example["code"], filename=example["id"])\nprint("All lessons: context, roles, Python syntax and source coverage passed.")'],{input:JSON.stringify(examples),encoding:'utf8'});
 assert.equal(result.status,0,result.stderr);console.log(result.stdout.trim());
 for(const [id,extra] of Object.entries({...deepening,...backtonyDeepening})){
  assert.ok(lessons.some(lesson=>lesson.id===id),'unknown supplement '+id);

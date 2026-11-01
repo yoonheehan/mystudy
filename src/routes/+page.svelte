@@ -24,7 +24,7 @@
   algDone=new Set((algorithm.completed||[]).filter((i:number)=>Number.isInteger(i)&&i>=0&&i<12)).size;
  }catch{warning=true;}});
 </script>
-<svelte:head><title>CS 노트 · 개발 공부방</title><meta name="description" content="백엔드·CS 32단원과 Python 코딩 테스트 24문제. 요청 하나가 지나는 순서대로 읽는 공부 노트."/></svelte:head>
+<svelte:head><title>CS 노트 · 개발 공부방</title><meta name="description" content="백엔드·CS {lessons.length}단원과 Python 코딩 테스트 24문제. 요청 하나가 지나는 순서대로 읽는 공부 노트."/></svelte:head>
 
 <header class="hero">
  <div class="hero-corners">
@@ -33,7 +33,7 @@
  </div>
  <h1 class="hero-title"><span>요청 하나를</span><span>끝까지 따라가기</span></h1>
  <div class="hero-foot">
-  <p>백엔드·CS 32단원과 Python 코딩 테스트 24문제를 담은 공부 노트입니다. 프로그램 실행부터 운영까지, 요청이 지나는 순서대로 읽습니다.</p>
+  <p>백엔드·CS {lessons.length}단원과 Python 코딩 테스트 24문제를 담은 공부 노트입니다. 프로그램 실행부터 운영까지, 요청이 지나는 순서대로 읽습니다.</p>
   <div class="hero-actions">
    {#if lastLesson}<a class="btn light" href={'/backend?lesson='+lastLesson.id}>이어 읽기 · {lastLesson.title}</a>{:else}<a class="btn light" href="/backend?lesson=process">첫 단원부터 읽기</a>{/if}
    <a class="text-link" href="/practice" data-sveltekit-reload>코딩 테스트 풀기</a>
@@ -49,7 +49,7 @@
   </div>
   {#if warning}<p class="notice">저장된 기록을 읽지 못했습니다. 각 학습 화면에서 기록을 확인해 주세요.</p>{/if}
   <dl class="facts">
-   <div data-rise><dt><a href="/backend">32단원</a></dt><dd>백엔드·CS · {csDone.length}개 완료</dd></div>
+   <div data-rise><dt><a href="/backend">{lessons.length}단원</a></dt><dd>백엔드·CS · {csDone.length}개 완료</dd></div>
    <div data-rise><dt><a href="/practice" data-sveltekit-reload>24문제</a></dt><dd>Python 코딩 테스트 · {solvedIds.length}개 해결</dd></div>
    <div data-rise><dt><a href="/algorithm.html" data-sveltekit-reload>12단원</a></dt><dd>알고리즘 그림 · {algDone}개 학습</dd></div>
    <div data-rise><dt>7장</dt><dd>실행에서 운영까지</dd></div>
