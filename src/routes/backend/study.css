@@ -227,3 +227,11 @@
  .timeline li{grid-template-columns:1fr;gap:4px}
  .book-pager button:nth-child(2){grid-column:1/-1;grid-row:2;justify-self:center}
 }
+
+/* Book-style story read before the definitions */
+.story h3{margin:40px 0 12px}
+.story p{line-height:1.85}
+.story-bridge{padding:14px 18px;background:var(--surface);color:var(--muted)}
+.story-reading{padding-left:1.2em}
+.story-reading li{margin:12px 0;line-height:1.6}
+.story-reading span{color:var(--muted);font-size:var(--step-small)}

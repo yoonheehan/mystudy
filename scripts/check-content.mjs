@@ -91,6 +91,26 @@ for(const p of problems){
  if(p.theory)check(pageTitles.some(t=>t===p.theory||t.startsWith(p.theory+' ·')),`practice '${p.id}': theory link '${p.theory}' matches no algorithm lesson`);
 }
 
+// Book-style stories: optional per lesson, but complete when present.
+const {stories}=load('src/lib/lesson-story.ts');
+for(const [id,story] of Object.entries(stories)){
+ check(ids.has(id),`stories: '${id}' has no matching lesson`);
+ check(story.parts.length>=3,`${id}: story needs at least 3 parts`);
+ for(const part of story.parts){
+  check(filled(part.heading)&&part.paragraphs.length>=1,`${id}: story part '${part.heading}' is empty`);
+  for(const para of part.paragraphs){
+   check(filled(para,40),`${id}: short paragraph in '${part.heading}'`);
+   check((para.match(/\*\*/g)||[]).length%2===0,`${id}: unmatched ** in '${part.heading}'`);
+  }
+ }
+ check(story.books.length>=1,`${id}: story needs at least one textbook`);
+ for(const r of [...story.books,...story.papers])check(filled(r.title)&&filled(r.by)&&filled(r.note,10)&&(!r.url||isUrl(r.url)),`${id}: incomplete reading '${r.title}'`);
+}
+// A story that hands off to the next lesson should sit right before it in reading order.
+const {chapterOrder}=load('src/lib/lesson-context.ts');
+const order=chapterOrder.flatMap(c=>lessons.filter(l=>l.category===c).map(l=>l.id)); // reading order across chapters
+for(const [id,story] of Object.entries(stories))if(story.from){const prev=order[order.indexOf(id)-1];check(stories[prev]?.to,`${id}: story starts from the previous lesson, but '${prev}' has no closing hand-off`);}
+
 // Progress backup: a round trip keeps every page's record, and foreign or broken files are refused.
 const {buildBackup,parseBackup,applyBackup,progressKeys}=load('src/lib/progress-backup.ts');
 const memory=entries=>{const m=new Map(Object.entries(entries));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),map:m};};
@@ -106,4 +126,4 @@ for(const bad of ['not json','{"app":"other","version":1,"data":{}}','{"app":"cs
 
 if(errors.length){console.error(errors.map(e=>'✗ '+e).join('\n'));console.error(`\n${errors.length} content problem(s).`);process.exit(1);}
 const withDiagram=lessons.filter(l=>diagrams[l.id]).length;
-console.log(`${lessons.length} lessons: history, deep notes and ${withDiagram} diagrams valid; ${pageTitles.length} algorithm notes, practice links and progress backup valid.`);
+console.log(`${lessons.length} lessons: history, deep notes and ${withDiagram} diagrams valid; ${pageTitles.length} algorithm notes, ${Object.keys(stories).length} stories, practice links and progress backup valid.`);

@@ -468,5 +468,11 @@ desired = 2                # 원하는 상태를 바꾸면
 reconcile()
 print(len(pods))           # 2개로 줄어듭니다`,codeNotes:['컨트롤러는 "무엇이 바뀌었나"가 아니라 "지금 상태와 원하는 상태가 다른가"를 봅니다. 그래서 놓친 이벤트가 있어도 다음 확인에서 바로잡습니다.','실제 Deployment 컨트롤러는 ReplicaSet을 거쳐 파드를 만들고 롤링 업데이트 때 새 버전과 옛 버전의 개수를 함께 조절합니다.','desired 값을 바꿔 가며 reconcile을 여러 번 불러도 결과가 같은지 확인하세요. 조정 루프는 멱등해야 합니다.'],answer:'Kubernetes는 원하는 상태를 선언하면 컨트롤러가 실제 상태와 비교해 계속 맞춰 주는 시스템입니다. Deployment로 파드 수와 롤링 업데이트를 관리하고 Service로 안정된 주소를 주며 readiness probe로 준비된 파드에만 트래픽을 보내겠습니다. 자원 requests와 limits, 종료 시 SIGTERM 처리도 함께 설정합니다.',follow:[['liveness와 readiness probe는 어떻게 다른가요?','readiness가 실패하면 트래픽만 끊고 파드는 그대로 둡니다. liveness가 실패하면 컨테이너를 재시작합니다. liveness에 DB 같은 외부 의존성을 넣으면 DB 장애 때 모든 파드가 재시작되는 연쇄 장애가 생깁니다.'],['파드를 지울 때 요청이 끊기지 않게 하려면?','Kubernetes는 SIGTERM을 보내고 유예 시간(기본 30초)을 줍니다. 앱은 새 요청을 받지 않고 진행 중인 요청을 마친 뒤 종료해야 합니다. Service에서 빠지는 데 시간이 걸리므로 종료 직전 짧은 대기를 두기도 합니다.']],memory:'원하는 상태를 적어 두면 컨트롤러가 계속 맞춘다. 준비된 파드만 손님을 받는다.',mistake:'liveness probe에 DB 연결 확인을 넣지 마세요. DB가 잠깐 느려지면 모든 파드가 동시에 재시작됩니다.',quiz:{question:'파드는 Running인데 시작 직후 요청이 실패한다면 가장 먼저 확인할 것은?',options:['readiness probe 설정','노드의 디스크 크기','DNS TTL'],correct:0,explanation:'readiness probe가 없으면 앱이 준비되기 전부터 Service가 트래픽을 보냅니다.'},refs:['k8sDeployment','docker']})
 ];
-export const lessons = [...core, ...operatingSystem, ...expansion, ...additions].sort((a,b) => a.category-b.category);
+// Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
+const sequence: Record<number, string[]> = {
+ 1: ['process', 'scheduling', 'sync', 'deadlock', 'memory', 'linux', 'diagnosis'],
+ 0: ['dns', 'tcp', 'nat', 'http', 'tls', 'websocket']
+};
+const position = (x: Lesson) => { const i = sequence[x.category]?.indexOf(x.id) ?? -1; return i < 0 ? Infinity : i; };
+export const lessons = [...core, ...operatingSystem, ...expansion, ...additions].sort((a,b) => a.category-b.category || position(a)-position(b));
 
