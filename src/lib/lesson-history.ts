@@ -1330,5 +1330,34 @@ export const histories:Record<string,LessonHistory>={
    ['Rosenblum & Ousterhout, The Design and Implementation of a Log-Structured File System (TOCS, 1992)','https://doi.org/10.1145/146941.146943'],
    ['LWN · PostgreSQL’s fsync() surprise (2018)','https://lwn.net/Articles/752063/']
   ]
+ },
+ internet:{
+  intro:'인터넷은 한 회사가 설계한 제품이 아니라 서로 다른 네트워크를 이어 붙이는 약속입니다. 그 출발점에는 전화망과 전혀 다른 생각, 즉 데이터를 잘게 잘라 각자 길을 찾게 하자는 생각이 있었습니다. 이 생각은 처음에 통신 회사들로부터 비현실적이라는 평을 들었지만 결국 지구 전체를 잇는 방식이 되었습니다.',
+  timeline:[
+   {year:'1960년대 초',title:'바란과 데이비스의 패킷 교환',body:'미국 RAND의 폴 바란은 일부가 파괴되어도 살아남는 통신망을 연구하며 메시지를 작은 조각으로 나눠 여러 경로로 보내는 분산 네트워크를 제안했습니다. 비슷한 시기 영국 국립물리연구소(NPL)의 도널드 데이비스는 독립적으로 같은 생각에 이르렀고 그 조각에 패킷이라는 이름을 붙였습니다.'},
+   {year:'1969',title:'ARPANET',body:'미국 국방부 연구 기관의 지원으로 대학과 연구소의 컴퓨터를 잇는 ARPANET이 만들어졌습니다. 1969년 10월 UCLA에서 스탠퍼드 연구소로 첫 메시지를 보냈는데 LOGIN을 치다가 두 글자 LO만 보내고 시스템이 멈췄다는 일화가 유명합니다.'},
+   {year:'1974',title:'네트워크를 잇는 네트워크',body:'ARPANET 말고도 무선 패킷망, 위성망 같은 서로 다른 네트워크가 생기자 서프와 칸은 이들을 하나로 잇는 방법을 제안했습니다. 각 네트워크의 내부는 그대로 두고 공통된 주소와 패킷 형식만 맞추자는 것이었고 이것이 TCP/IP가 되었습니다.'},
+   {year:'1981~1983',title:'IP의 표준화와 플래그 데이',body:'1981년 RFC 791이 IPv4를 정의했습니다. 1983년 1월 1일 ARPANET의 모든 컴퓨터가 옛 프로토콜에서 TCP/IP로 한꺼번에 옮겨 갔습니다. 하루에 전체를 바꾸는 이 플래그 데이 이후로 오늘의 인터넷 주소 체계가 이어지고 있습니다.'},
+   {year:'1988',title:'인터넷의 설계 철학',body:'데이비드 클라크는 논문 「The Design Philosophy of the DARPA Internet Protocols」에서 인터넷이 무엇을 가장 중요하게 여겼는지 정리했습니다. 첫째가 서로 다른 네트워크의 연결, 둘째가 일부가 고장 나도 통신이 계속되는 생존성이었습니다. 그래서 중간 장비는 연결 상태를 기억하지 않고 패킷마다 독립적으로 나릅니다.'},
+   {year:'2021',title:'BGP 하나로 사라진 페이스북',body:'2021년 10월 페이스북은 백본 설정 작업 중 실수로 자기 네트워크를 인터넷에 알리는 BGP 경로를 거둬들였습니다. 전 세계 라우터가 페이스북의 주소로 가는 길을 잃었고 DNS 서버까지 닿지 않아 서비스가 약 6시간 동안 사라졌습니다. 라우팅이 인터넷의 바닥에서 얼마나 중요한지 보여 준 사건입니다.'}
+  ],
+  decisions:[
+   {question:'왜 전화처럼 선을 잇지 않고 패킷으로 나눴을까?',answer:'컴퓨터 통신은 잠깐 몰렸다 한참 쉬는 일이 많아서 선을 통째로 잡아 두면 대부분의 시간이 낭비됩니다. 패킷으로 나누면 여러 사용자가 같은 선을 번갈아 쓰고 한 경로가 끊겨도 다른 경로로 돌아갈 수 있습니다.',cost:'패킷이 늦거나 사라지거나 순서가 바뀔 수 있고 붐비면 지연이 들쭉날쭉해집니다. 그 문제를 끝의 TCP가 해결해야 합니다.'},
+   {question:'왜 주소를 네트워크 부분과 장비 부분으로 나눴을까?',answer:'라우터가 세상의 모든 장비 주소를 하나하나 알 수는 없습니다. 앞부분으로 네트워크 단위의 길만 알면 되고 그 네트워크 안에서는 그곳의 라우터가 마지막 전달을 맡습니다. CIDR로 경계를 자유롭게 정하면서 여러 범위를 하나로 묶어 알릴 수도 있게 되었습니다.',cost:'주소 범위를 처음에 잘못 나누면 나중에 바꾸기 어렵고 IPv4 주소 자체가 모자라 NAT 같은 우회가 필요해졌습니다.'},
+   {question:'왜 층을 나눴을까?',answer:'IP는 나르는 일만, TCP는 신뢰성만, HTTP는 의미만 맡으면 각 층을 따로 바꿀 수 있습니다. 같은 IP 위에서 웹, 메일, 영상 통화가 모두 돌고 Wi-Fi든 광케이블이든 아래가 바뀌어도 위는 그대로입니다.',cost:'층마다 머리말이 붙어 작은 데이터에도 부담이 생기고 층 사이의 정보가 감춰져 최적화가 어려울 때가 있습니다.'}
+  ],
+  today:[
+   'VPC와 서브넷의 주소 범위는 처음부터 겹치지 않게 정합니다. Python의 ipaddress 모듈로 겹침과 포함 관계를 확인할 수 있습니다.',
+   '접속 문제를 볼 때는 ping과 traceroute로 패킷이 어디까지 가는지 먼저 확인합니다. ICMP가 막힌 곳도 많으니 결과를 해석할 때 주의합니다.',
+   '해외 사용자가 느리다면 서버 코드보다 네트워크 거리를 먼저 의심하고 CDN이나 가까운 리전을 검토합니다.'
+  ],
+  sources:[
+   ['Computer History Museum · Internet History 1960s','https://www.computerhistory.org/internethistory/1960s/'],
+   ['Internet Society · Brief History of the Internet','https://www.internetsociety.org/internet/history-internet/brief-history-internet/'],
+   ['RFC 791 · Internet Protocol (1981)','https://www.rfc-editor.org/rfc/rfc791'],
+   ['RFC 801 · NCP/TCP Transition Plan (1981)','https://www.rfc-editor.org/rfc/rfc801'],
+   ['Clark, The Design Philosophy of the DARPA Internet Protocols (SIGCOMM, 1988)','https://doi.org/10.1145/52324.52336'],
+   ['Meta Engineering · More details about the October 4 outage (2021)','https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/']
+  ]
  }
 };

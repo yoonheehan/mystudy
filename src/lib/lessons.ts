@@ -42,6 +42,8 @@ export const sources = {
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ rfc791: { name: 'RFC 791 · Internet Protocol', url: 'https://www.rfc-editor.org/rfc/rfc791' },
+ pyIpaddress: { name: 'Python · ipaddress', url: 'https://docs.python.org/3/library/ipaddress.html' },
  fsyncMan: { name: 'Linux man-pages · fsync', url: 'https://man7.org/linux/man-pages/man2/fsync.2.html' },
  pyDis: { name: 'Python · dis', url: 'https://docs.python.org/3/library/dis.html' },
  pytestDocs: { name: 'pytest · Fixtures', url: 'https://docs.pytest.org/en/stable/how-to/fixtures.html' },
@@ -503,12 +505,31 @@ with open(tmp, "w") as f:
     f.flush()
     os.fsync(f.fileno())               # 디스크에 확실히 기록
 os.replace(tmp, original)              # 원자적으로 교체
-print(open(original).read().strip())`,codeNotes:['os.link로 만든 두 번째 이름은 복사본이 아니라 같은 inode를 가리킵니다. 그래서 st_ino가 같고 st_nlink가 2가 됩니다.','os.replace는 같은 파일 시스템 안에서 원자적이라 읽는 쪽이 반쯤 쓰인 파일을 볼 일이 없습니다.','os.fsync를 빼도 프로그램은 똑같이 동작하는 것처럼 보입니다. 차이는 정전이나 커널 장애 때만 드러납니다.'],answer:'파일 시스템은 이름 붙은 바이트를 디스크의 블록에 배치하고 그 정보를 관리합니다. UNIX 계열은 파일의 정보와 블록 위치를 inode에 두고 디렉터리는 이름과 inode 번호를 잇습니다. 프로그램은 파일 디스크립터로 읽고 쓰며 write는 먼저 페이지 캐시에 들어가므로 꼭 남아야 하는 데이터는 fsync하고 덮어쓰기는 임시 파일과 원자적 이름 바꾸기로 하겠습니다.',follow:[['파일을 지웠는데 디스크 공간이 안 줄어드는 이유는?','rm은 디렉터리에서 이름을 지울 뿐이고 그 파일을 열고 있는 프로세스가 있으면 inode와 데이터 블록은 남아 있습니다. 로그 파일을 지웠는데 공간이 그대로라면 lsof로 아직 열고 있는 프로세스를 찾아 재시작합니다.'],['하드 링크와 심볼릭 링크는 어떻게 다른가요?','하드 링크는 같은 inode를 가리키는 또 하나의 이름이라 원본 이름을 지워도 데이터가 남습니다. 심볼릭 링크는 다른 경로를 적어 둔 작은 파일이라 원본이 사라지면 끊어집니다.']],memory:'이름은 디렉터리에, 정보는 inode에, 내용은 블록에. 저장했다는 말은 fsync 뒤에 믿는다.',mistake:'write가 성공했다고 디스크에 저장됐다고 단정하지 마세요. 정전에 대비해야 하는 데이터는 fsync가 필요합니다.',quiz:{question:'설정 파일을 덮어쓰는 도중 서버가 꺼져도 반쯤 쓰인 파일이 남지 않게 하는 방법은?',options:['더 빠른 디스크를 쓴다','임시 파일에 쓰고 fsync한 뒤 원자적으로 이름을 바꾼다','파일 권한을 777로 바꾼다'],correct:1,explanation:'이름 바꾸기는 원자적이라 읽는 쪽은 옛 파일이나 새 파일 중 하나만 봅니다.'},refs:['fsyncMan','linux']})
+print(open(original).read().strip())`,codeNotes:['os.link로 만든 두 번째 이름은 복사본이 아니라 같은 inode를 가리킵니다. 그래서 st_ino가 같고 st_nlink가 2가 됩니다.','os.replace는 같은 파일 시스템 안에서 원자적이라 읽는 쪽이 반쯤 쓰인 파일을 볼 일이 없습니다.','os.fsync를 빼도 프로그램은 똑같이 동작하는 것처럼 보입니다. 차이는 정전이나 커널 장애 때만 드러납니다.'],answer:'파일 시스템은 이름 붙은 바이트를 디스크의 블록에 배치하고 그 정보를 관리합니다. UNIX 계열은 파일의 정보와 블록 위치를 inode에 두고 디렉터리는 이름과 inode 번호를 잇습니다. 프로그램은 파일 디스크립터로 읽고 쓰며 write는 먼저 페이지 캐시에 들어가므로 꼭 남아야 하는 데이터는 fsync하고 덮어쓰기는 임시 파일과 원자적 이름 바꾸기로 하겠습니다.',follow:[['파일을 지웠는데 디스크 공간이 안 줄어드는 이유는?','rm은 디렉터리에서 이름을 지울 뿐이고 그 파일을 열고 있는 프로세스가 있으면 inode와 데이터 블록은 남아 있습니다. 로그 파일을 지웠는데 공간이 그대로라면 lsof로 아직 열고 있는 프로세스를 찾아 재시작합니다.'],['하드 링크와 심볼릭 링크는 어떻게 다른가요?','하드 링크는 같은 inode를 가리키는 또 하나의 이름이라 원본 이름을 지워도 데이터가 남습니다. 심볼릭 링크는 다른 경로를 적어 둔 작은 파일이라 원본이 사라지면 끊어집니다.']],memory:'이름은 디렉터리에, 정보는 inode에, 내용은 블록에. 저장했다는 말은 fsync 뒤에 믿는다.',mistake:'write가 성공했다고 디스크에 저장됐다고 단정하지 마세요. 정전에 대비해야 하는 데이터는 fsync가 필요합니다.',quiz:{question:'설정 파일을 덮어쓰는 도중 서버가 꺼져도 반쯤 쓰인 파일이 남지 않게 하는 방법은?',options:['더 빠른 디스크를 쓴다','임시 파일에 쓰고 fsync한 뒤 원자적으로 이름을 바꾼다','파일 권한을 777로 바꾼다'],correct:1,explanation:'이름 바꾸기는 원자적이라 읽는 쪽은 옛 파일이나 새 파일 중 하나만 봅니다.'},refs:['fsyncMan','linux']}),
+l({id:'internet',category:0,title:'인터넷의 구조: 패킷과 IP',english:'Packet Switching / IP Address / Routing / Layers',hook:'서울의 노트북이 보낸 데이터는 어떻게 지구 반대편 서버를 찾아갈까?',definition:'인터넷은 데이터를 작은 패킷으로 잘라 각 패킷에 목적지 주소를 붙여 보내는 패킷 교환 네트워크입니다. 패킷의 주소가 IP 주소이고 IPv4는 32비트를 192.0.2.10처럼 네 숫자로 적습니다. 주소의 앞부분은 네트워크를, 뒷부분은 그 안의 장비를 가리키며 /24 같은 표기(CIDR)로 경계를 적습니다. 라우터는 패킷마다 목적지 주소를 보고 자기 라우팅 테이블에서 가장 구체적으로 맞는 경로를 골라 다음 라우터로 넘깁니다. 패킷마다 TTL이 있어 라우터를 지날 때마다 1씩 줄고 0이 되면 버려집니다. 통신은 층으로 나뉘어 IP는 패킷을 나르기만 하고 순서와 신뢰성은 그 위의 TCP가 맡습니다.',analogy:'우편 제도와 비슷합니다. 큰 짐을 상자 여러 개(패킷)로 나눠 상자마다 받는 주소(IP 주소)를 적어 보냅니다. 각 우체국(라우터)은 상자를 열어 보지 않고 주소만 보고 "서울 방면은 저쪽 트럭"처럼 다음 우체국으로 넘깁니다. 상자마다 다른 길로 갈 수도 있고 하나가 분실될 수도 있습니다. 상자를 다시 순서대로 모으고 빠진 것을 다시 보내 달라고 하는 일은 받는 사람(TCP)이 합니다.',steps:['보내는 쪽은 데이터를 패킷으로 나누고 출발지와 목적지 IP 주소를 붙입니다.','목적지가 같은 네트워크가 아니면 기본 게이트웨이(공유기)로 보냅니다.','각 라우터는 라우팅 테이블에서 목적지와 가장 길게 맞는 경로를 찾아 다음 라우터로 넘기고 TTL을 1 줄입니다.','목적지 네트워크의 라우터가 패킷을 서버에 전달하고 서버의 TCP가 패킷을 모아 응용에 넘깁니다.'],scenario:'해외 리전의 서버에 접속이 느리다는 문의가 왔습니다. traceroute로 경로를 보니 국내 통신사에서 바로 가지 않고 다른 대륙을 거쳐 돌아가고 있었습니다. 통신사 사이의 경로 선택(BGP) 문제라 우리 쪽에서 고칠 수는 없었지만 CDN을 앞에 두어 사용자 가까운 곳에서 응답하게 바꿨습니다.',aws:'VPC의 CIDR, 서브넷, 라우팅 테이블이 이 단원의 개념을 그대로 씁니다. 리전과 엣지 위치를 고를 때도 사용자와의 네트워크 거리를 고려합니다.',ncloud:'VPC의 IP 주소 범위와 서브넷, Route Table 설정이 같은 원리로 동작합니다. 다른 VPC나 사내망과 연결할 계획이 있으면 처음부터 주소 범위가 겹치지 않게 정합니다.',tradeoff:'패킷 교환은 회선을 독점하지 않아 효율적이고 일부 경로가 끊겨도 다른 길로 돌아가지만 패킷이 늦거나 사라지거나 순서가 바뀔 수 있습니다. 그 문제는 위층의 TCP가 해결하므로 IP는 단순하게 유지됩니다.',language:'Python · 주소 범위와 가장 긴 접두사 일치',code:`import ipaddress
+
+routes = {                      # 목적지 범위 → 다음 경로
+    "0.0.0.0/0": "공유기(기본 경로)",
+    "10.0.0.0/16": "사내 VPC",
+    "10.0.3.0/24": "DB 서브넷",
+}
+
+def next_hop(destination):
+    addr = ipaddress.ip_address(destination)
+    matches = [ipaddress.ip_network(r) for r in routes if addr in ipaddress.ip_network(r)]
+    best = max(matches, key=lambda n: n.prefixlen)   # 가장 구체적인 경로
+    return routes[str(best)]
+
+for dest in ["10.0.3.7", "10.0.9.1", "203.0.113.10"]:
+    print(dest, "→", next_hop(dest))
+
+net = ipaddress.ip_network("10.0.3.0/24")
+print(net.num_addresses, net[0], net[-1])   # 256 10.0.3.0 10.0.3.255`,codeNotes:['10.0.3.7은 세 경로 모두에 들어가지만 접두사가 가장 긴 /24가 선택됩니다. 라우터가 실제로 하는 일과 같습니다.','0.0.0.0/0은 모든 주소에 맞는 기본 경로입니다. 더 구체적인 경로가 없을 때만 쓰입니다.','ipaddress 모듈로 내 VPC의 CIDR에 주소가 몇 개 들어가는지, 두 범위가 겹치는지(overlaps) 확인해 보세요.'],answer:'인터넷은 데이터를 패킷으로 나눠 목적지 IP 주소를 붙여 보내는 패킷 교환 네트워크입니다. 라우터는 패킷마다 라우팅 테이블에서 목적지와 가장 길게 맞는 경로를 골라 다음 라우터로 넘기고 TTL로 무한히 도는 패킷을 막습니다. IP는 전달만 최선을 다하고 순서와 재전송은 TCP가 맡는 층 구조라서 각 층을 나눠 진단할 수 있습니다.',follow:[['IP 주소와 MAC 주소는 어떻게 다른가요?','IP 주소는 인터넷 전체에서 목적지를 찾는 논리적 주소이고 MAC 주소는 같은 네트워크 안에서 다음 장비에 프레임을 전달할 때 쓰는 하드웨어 주소입니다. 패킷이 라우터를 지날 때마다 MAC 주소는 바뀌지만 IP 주소는 그대로입니다.'],['traceroute는 어떻게 경로를 알아내나요?','TTL을 1, 2, 3으로 늘리며 패킷을 보냅니다. TTL이 0이 된 라우터가 시간 초과 메시지를 돌려주므로 몇 번째 라우터가 어디인지 차례로 알 수 있습니다.']],memory:'잘라서, 주소를 붙여, 우체국마다 가장 구체적인 길로. 순서와 분실은 위층이 챙긴다.',mistake:'인터넷이 전화처럼 출발지와 목적지 사이에 고정된 선을 잇는다고 생각하지 마세요. 패킷마다 독립적으로 길을 찾습니다.',quiz:{question:'라우팅 테이블에 0.0.0.0/0, 10.0.0.0/16, 10.0.3.0/24가 있을 때 10.0.3.7로 가는 패킷은 어느 경로를 쓰나요?',options:['0.0.0.0/0','10.0.0.0/16','10.0.3.0/24'],correct:2,explanation:'라우터는 목적지와 가장 길게 맞는(가장 구체적인) 접두사를 고릅니다.'},refs:['rfc791','pyIpaddress']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
  1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'filesystem', 'linux', 'diagnosis'],
- 0: ['dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
+ 0: ['internet', 'dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
  2: ['kit', 'rest', 'async', 'proxy', 'ratelimit'],
  3: ['normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
  5: ['session', 'cors', 'validation', 'iam'],
