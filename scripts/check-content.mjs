@@ -137,6 +137,12 @@ check(chapterIntros.length===chapterNames.length,'chapterIntros must have one sl
 for(const intro of chapterIntros.filter(Boolean))check(filled(intro.title)&&intro.paragraphs.length>=2&&intro.paragraphs.every(p=>filled(p,40)),`chapter intro '${intro.title}' is incomplete`);
 
 // Progress backup: a round trip keeps every page's record, and foreign or broken files are refused.
+const {techMap}=load('src/lib/tech-map.ts');
+for(const layer of techMap)for(const tool of layer.tools){
+ check(ids.has(tool.lesson),'techMap: '+tool.name+' points at unknown lesson '+tool.lesson);
+ check(tool.born&&tool.role&&tool.notFor,'techMap: '+tool.name+' needs born, role and notFor');
+}
+
 const {buildBackup,parseBackup,applyBackup,progressKeys}=load('src/lib/progress-backup.ts');
 const memory=entries=>{const m=new Map(Object.entries(entries));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),map:m};};
 const source=memory({'serverNotebook.v1':'{"completed":["dns"],"lastLesson":"dns"}','csLabPractice.v1':'{"records":{"maximum":{"accepted":true}}}','oneStepAlgorithmV1':'{"completed":[0,3]}','unrelated':'x'});

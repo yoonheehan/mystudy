@@ -435,7 +435,8 @@ export const deeps:Record<string,LessonDeep>={
    {title:'소비자를 멱등하게 만드는 방법',body:'메시지마다 주문 ID나 이벤트 ID 같은 고유한 키를 넣고 소비자는 처리 전에 이 키를 이미 처리했는지 확인합니다. 처리 결과를 저장하는 테이블에 이 키로 유일 제약을 걸고 같은 트랜잭션에서 결과와 키를 함께 저장하면, 두 번째 처리는 유일 제약에 걸려 실패하므로 안전하게 건너뛸 수 있습니다. 이메일 발송처럼 되돌릴 수 없는 일은 보내기 전에 "보냄"을 기록하고 보내는 순서를 정해 둡니다.'},
    {title:'가시성 타임아웃과 처리 시간',body:'가시성 타임아웃이 처리 시간보다 짧으면, 소비자가 아직 일하고 있는데 메시지가 다시 보여 다른 소비자가 같은 일을 시작합니다. 처리 시간이 길거나 들쭉날쭉하면 타임아웃을 넉넉히 잡고 정말 오래 걸리는 작업은 처리 중에 타임아웃을 연장(ChangeMessageVisibility)합니다. Celery의 acks_late=True도 같은 문제를 가집니다. 작업이 끝난 뒤에 확인을 보내므로 안전하지만 브로커의 타임아웃보다 오래 걸리면 다시 전달됩니다.'},
    {title:'DB 저장과 메시지 발행을 함께 하려면',body:'주문을 DB에 저장하고 "주문 생성됨" 메시지를 큐에 보내는 두 동작은 한 트랜잭션으로 묶을 수 없습니다. DB 커밋 뒤에 발행이 실패하면 메시지가 빠지고 발행 뒤에 커밋이 실패하면 없는 주문의 메시지가 나갑니다. 트랜잭셔널 아웃박스 패턴은 주문과 같은 트랜잭션으로 아웃박스 테이블에 메시지를 저장하고 별도 프로세스가 이 테이블을 읽어 큐로 보낸 뒤 보냈다고 표시합니다. 보내는 쪽도 중복이 생길 수 있으니 소비자는 여전히 멱등해야 합니다.'},
-   {title:'큐와 로그는 다르게 동작합니다',body:'SQS나 RabbitMQ 같은 큐에서 메시지는 한 소비자가 처리하면 사라집니다. Kafka는 메시지를 순서대로 쌓아 두는 로그이고 소비자 그룹마다 어디까지 읽었는지(오프셋)만 따로 기억합니다. 그래서 같은 이벤트를 결제, 알림, 분석 시스템이 각자 읽을 수 있고 버그를 고친 뒤 과거 위치부터 다시 처리할 수도 있습니다. 일을 나눠 맡기는 작업 큐에는 앞의 방식이, 여러 시스템이 같은 사건을 구독하는 이벤트 흐름에는 뒤의 방식이 잘 맞습니다.'}
+   {title:'큐와 로그는 다르게 동작합니다',body:'SQS나 RabbitMQ 같은 큐에서 메시지는 한 소비자가 처리하면 사라집니다. Kafka는 메시지를 순서대로 쌓아 두는 로그이고 소비자 그룹마다 어디까지 읽었는지(오프셋)만 따로 기억합니다. 그래서 같은 이벤트를 결제, 알림, 분석 시스템이 각자 읽을 수 있고 버그를 고친 뒤 과거 위치부터 다시 처리할 수도 있습니다. 일을 나눠 맡기는 작업 큐에는 앞의 방식이, 여러 시스템이 같은 사건을 구독하는 이벤트 흐름에는 뒤의 방식이 잘 맞습니다.'},
+   {title:'RabbitMQ, Kafka, SQS 중에서 고르기',body:'세 도구는 모두 메시지를 전달하지만 태어난 배경이 다릅니다.',list:['RabbitMQ(2007): 은행 업계가 만든 표준 프로토콜 AMQP를 구현한 브로커입니다. 교환기(exchange)와 라우팅 키로 메시지를 여러 큐에 나눠 보내는 규칙이 풍부하고 메시지마다 확인 응답과 재전달을 세밀하게 다룹니다. 작업 큐와 복잡한 라우팅에 맞고, 메시지를 오래 쌓아 두고 다시 읽는 용도에는 맞지 않습니다.','Kafka(2011): LinkedIn이 사이트의 모든 활동 기록을 여러 시스템에 흘려보내려고 만든 분산 로그입니다. 파티션 단위로 순서를 지키며 디스크에 순서대로 써서 초당 수백만 건을 처리하고 보관 기간 동안 다시 읽을 수 있습니다. 이벤트 흐름과 데이터 파이프라인에 맞고, 메시지 하나하나의 지연 재시도나 우선순위 같은 작업 큐 기능은 약하며 운영이 무겁습니다.','SQS(2004~2006): AWS의 관리형 큐로 운영할 서버가 없습니다. 가시성 타임아웃과 데드 레터 큐로 작업 큐를 간단히 만들 수 있고, 순서와 중복 제거가 필요하면 FIFO 큐를 씁니다. 라우팅 규칙이나 다시 읽기는 없습니다.','고르는 순서: 처리하면 사라져도 되는 작업 분배라면 SQS나 RabbitMQ, 같은 사건을 여러 시스템이 각자 읽거나 다시 처리해야 하면 Kafka(또는 Kinesis, Redis Streams)입니다. 규모가 작다면 4장 Redis 단원의 리스트와 스트림으로 시작할 수도 있습니다.']}
   ],
   sources:[
    ['AWS · Amazon SQS visibility timeout','https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html'],
@@ -1254,6 +1255,98 @@ export const deeps:Record<string,LessonDeep>={
    ['AWS · Well-Architected Reliability Pillar','https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html'],
    ['AWS · Shared Responsibility Model','https://aws.amazon.com/compliance/shared-responsibility-model/'],
    ['AWS · Nitro System','https://aws.amazon.com/ec2/nitro/']
+  ]
+ },
+ search:{
+  definition:'역색인은 토큰마다 그 토큰이 나오는 문서 번호의 목록(포스팅 목록)과 등장 횟수, 위치를 저장한 구조입니다. 문서를 색인할 때 분석기는 문자 필터, 토크나이저, 토큰 필터를 차례로 거쳐 본문을 토큰으로 바꿉니다. 검색할 때도 같은 분석기로 검색어를 토큰화해 포스팅 목록을 꺼내고 불리언 조건(AND, OR)으로 후보를 정한 뒤 BM25로 점수를 매깁니다. Elasticsearch는 색인을 여러 샤드로 나눠 서버에 분산하고 각 샤드에 복제본을 두며 검색 요청을 모든 샤드에 보내 결과를 합칩니다.',
+  terms:[
+   ['역색인','토큰 → 문서 목록 사전입니다. 단어로 문서를 바로 찾게 합니다.'],
+   ['분석기','글을 토큰으로 쪼개고 정규화하는 처리입니다. 한국어는 형태소 분석기를 씁니다.'],
+   ['TF-IDF','문서 안에서 자주, 전체에서는 드물게 나오는 단어에 높은 점수를 주는 방식입니다.'],
+   ['BM25','TF-IDF에 반복 포화와 문서 길이 보정을 더한 점수 공식입니다. Elasticsearch의 기본입니다.'],
+   ['샤드와 복제본','색인을 나눈 조각과 그 사본입니다. 4장 복제와 샤딩 단원의 생각과 같습니다.'],
+   ['refresh','새로 넣은 문서를 검색에 보이게 하는 작업입니다. 기본 1초마다 일어납니다.']
+  ],
+  sections:[
+   {title:'문서 하나가 색인되는 과정',body:'"무선 키보드를 샀습니다"라는 상품 리뷰가 들어오면 이렇게 처리됩니다.',list:['문자 필터가 HTML 태그 같은 것을 지웁니다.','토크나이저가 글을 토큰으로 쪼갭니다. 한국어 형태소 분석기는 "키보드를"을 "키보드"와 조사로 나눕니다.','토큰 필터가 조사를 버리고 영문은 소문자로 바꾸며 동의어를 펼칩니다.','남은 토큰마다 역색인의 포스팅 목록에 이 문서 번호와 위치를 덧붙입니다. 새 문서는 메모리 버퍼에 모였다가 refresh 때 새 세그먼트로 검색에 보이게 됩니다.']},
+   {title:'왜 앞에 %가 붙은 LIKE는 느릴까',body:'B-tree 인덱스는 값의 앞부분부터 정렬되어 있어서 LIKE \'키보드%\'처럼 앞부분이 정해진 검색은 빠릅니다. LIKE \'%키보드%\'는 어디에 들어 있는지 모르니 모든 행의 문자열을 처음부터 끝까지 비교해야 합니다. 행이 수백만 개면 검색마다 표 전체를 읽습니다. 역색인은 처음부터 단어 단위로 찾도록 만들어서 이 문제가 없습니다.'},
+   {title:'관련도 점수는 무엇을 보나',body:'BM25는 세 가지를 봅니다.',list:['단어 빈도(TF): 검색어가 문서에 많이 나올수록 점수가 오르지만 일정 횟수를 넘으면 거의 오르지 않습니다.','역문서 빈도(IDF): 전체에서 드문 단어일수록 가중치가 큽니다. "the"나 "상품" 같은 흔한 단어는 거의 기여하지 않습니다.','문서 길이: 같은 횟수라면 짧은 문서에 나온 쪽을 더 관련 있다고 봅니다.','실제 서비스는 여기에 판매량, 최신성, 평점 같은 업무 신호를 섞어 최종 순위를 정합니다.']},
+   {title:'DB와 함께 쓰는 구조',body:'검색 엔진은 원본이 아니라 사본입니다. 상품이 바뀌면 DB가 먼저 바뀌고 그 변경이 검색 엔진으로 전달됩니다. 앱에서 DB와 검색 엔진에 차례로 쓰는 이중 쓰기는 한쪽만 실패할 수 있으므로 4장 큐 단원의 아웃박스 패턴이나 DB의 변경 로그를 읽는 CDC를 씁니다. 검색 결과에서 상품을 고르면 상세 정보와 재고는 다시 DB에서 읽습니다. 매핑(필드 타입과 분석기)을 바꾸면 새 색인을 만들어 다시 넣고 별칭(alias)을 바꿔 끼웁니다.'}
+  ],
+  sources:[
+   ['Elasticsearch Guide · Inverted Index','https://www.elastic.co/guide/en/elasticsearch/guide/current/inverted-index.html'],
+   ['Elasticsearch · Near real-time search (refresh)','https://www.elastic.co/docs/manage-data/data-store/near-real-time-search'],
+   ['Elasticsearch · Korean (nori) Analysis Plugin','https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-nori.html'],
+   ['PostgreSQL · Full Text Search','https://www.postgresql.org/docs/current/textsearch-intro.html'],
+   ['Apache Lucene','https://lucene.apache.org/core/']
+  ]
+ },
+ documentdb:{
+  definition:'문서 DB의 저장 단위는 키(_id)가 붙은 중첩 문서입니다. 문서들은 컬렉션에 모이며 같은 컬렉션 안에서도 필드 구성이 다를 수 있습니다. MongoDB는 문서를 BSON으로 저장하고 B-tree 인덱스를 최상위 필드뿐 아니라 중첩 필드와 배열 원소에도 만들 수 있습니다. 쓰기의 원자성은 문서 하나 단위로 보장되며 여러 문서 트랜잭션은 별도로 시작해야 합니다. 복제 세트는 주 서버 하나와 복제본들로 구성되어 주 서버가 죽으면 투표로 새 주 서버를 뽑고, 샤딩은 샤드 키로 컬렉션을 나눠 여러 복제 세트에 분산합니다.',
+  terms:[
+   ['문서와 컬렉션','중첩된 레코드와 그 묶음입니다. 관계형의 행과 표에 해당하지만 모양을 강제하지 않습니다.'],
+   ['BSON','MongoDB가 쓰는 이진 JSON 형식입니다. 날짜와 정수 같은 타입을 구분합니다.'],
+   ['임베딩','관련 데이터를 문서 안에 넣는 방식입니다. 한 번에 읽고 함께 원자적으로 바뀝니다.'],
+   ['참조','다른 문서의 id만 저장하는 방식입니다. 공유하거나 따로 자라는 데이터에 씁니다.'],
+   ['복제 세트','주 서버 하나와 복제본으로 이루어진 묶음입니다. 장애 시 새 주 서버를 뽑습니다.'],
+   ['샤드 키','컬렉션을 여러 샤드에 나누는 기준 필드입니다. 쿼리 대부분이 이 키를 포함해야 빠릅니다.']
+  ],
+  sections:[
+   {title:'임베딩과 참조를 고르는 기준',body:'문서 설계의 대부분은 이 선택입니다.',list:['함께 읽고 함께 바뀌는가: 주문과 주문 항목처럼 그렇다면 임베딩합니다.','개수에 끝이 있는가: 주소 몇 개는 임베딩, 끝없이 늘어나는 댓글이나 로그는 참조합니다.','여러 곳에서 공유하는가: 상품 원본처럼 많은 문서가 가리키는 데이터는 참조하고 화면에 필요한 일부(이름, 가격)만 복사해 둘 수 있습니다.','복사한 값이 바뀌면 어떻게 맞출지, 또는 주문 당시 값처럼 일부러 옛 값을 남기는 것인지 정합니다.']},
+   {title:'관계형 설계를 그대로 옮기면 생기는 일',body:'표마다 컬렉션을 하나씩 만들고 코드에서 id로 여러 번 조회하면 조인의 비용은 그대로 남고 조인을 DB가 대신 해 주지도 않습니다. 외래 키 제약도 없어 지워진 고객을 가리키는 주문이 생길 수 있습니다. MongoDB에도 $lookup이라는 조인 연산이 있지만 관계형 DB만큼 최적화되어 있지 않습니다. 문서 DB를 쓴다면 화면과 API가 읽는 단위로 문서를 다시 설계해야 장점이 생깁니다.'},
+   {title:'스키마는 사라지지 않고 코드로 옮겨 간다',body:'DB가 모양을 강제하지 않아도 코드는 "주문에는 items 배열이 있다"고 가정합니다. 필드를 추가하거나 이름을 바꾸면 옛 문서와 새 문서가 섞이므로 읽는 코드가 둘 다 처리하거나 백그라운드로 옛 문서를 고쳐야 합니다. 그래서 운영에서는 스키마 검증, 문서에 버전 필드 두기, 마이그레이션 스크립트를 함께 씁니다.'},
+   {title:'MongoDB와 PostgreSQL JSONB',body:'PostgreSQL은 JSONB 컬럼에 문서를 저장하고 GIN 인덱스로 문서 안을 검색할 수 있습니다. 관계형 표와 문서를 한 트랜잭션에서 함께 다룰 수 있어 데이터 대부분이 관계형이고 일부만 모양이 제각각이면 이쪽이 단순합니다. 데이터 대부분이 문서 단위로 읽히고 여러 서버로 나눠야 할 만큼 크다면 MongoDB의 샤딩과 문서 중심 도구가 유리합니다.'}
+  ],
+  sources:[
+   ['MongoDB · Data Modeling','https://www.mongodb.com/docs/manual/data-modeling/'],
+   ['MongoDB · Transactions','https://www.mongodb.com/docs/manual/core/transactions/'],
+   ['PostgreSQL · JSON Types','https://www.postgresql.org/docs/current/datatype-json.html']
+  ]
+ },
+ redis:{
+  definition:'Redis는 키 공간 하나에 키와 자료구조 값을 저장하는 메모리 기반 서버입니다. 클라이언트는 RESP라는 간단한 텍스트 프로토콜로 명령을 보내고, 서버의 메인 스레드는 epoll 같은 이벤트 알림으로 준비된 연결의 명령을 읽어 하나씩 실행합니다. 키마다 만료 시각을 둘 수 있고 메모리가 maxmemory에 닿으면 축출 정책(LRU, LFU 등)에 따라 키를 지웁니다. 영속성은 메모리 전체를 주기적으로 파일에 쓰는 RDB와 변경 명령을 파일에 덧붙이는 AOF로 제공하며, 비동기 복제로 복제본에 변경을 보냅니다.',
+  terms:[
+   ['키값 저장소','키 하나로 값을 읽고 쓰는 저장소입니다. Redis의 값은 자료구조입니다.'],
+   ['정렬된 집합','멤버마다 점수를 두고 점수 순으로 유지하는 집합입니다. 순위표에 씁니다.'],
+   ['TTL','키의 남은 수명입니다. EXPIRE로 정하고 지나면 키가 사라집니다.'],
+   ['축출 정책','메모리가 가득 찼을 때 어떤 키를 지울지 정하는 규칙입니다.'],
+   ['RDB와 AOF','스냅샷 방식과 명령 기록 방식의 영속성입니다.'],
+   ['Sentinel과 Cluster','장애 시 복제본을 승격하는 감시 장치와 키를 슬롯으로 나눠 분산하는 구성입니다.']
+  ],
+  sections:[
+   {title:'자료구조별 대표 쓰임',body:'Redis를 잘 쓴다는 것은 일에 맞는 자료구조를 고른다는 뜻입니다.',list:['문자열: 캐시한 JSON, INCR로 세는 카운터와 처리율 제한.','해시: 사용자 세션이나 객체의 필드들을 키 하나에 묶어 일부 필드만 읽고 고칩니다.','리스트와 스트림: 작업 큐와 최근 활동 목록. 스트림은 소비자 그룹과 확인 응답을 지원합니다.','집합과 정렬된 집합: 중복 없는 방문자, 점수 순 순위표, 시간 순 정렬.','SET key value NX PX 30000: 키가 없을 때만 만료 시간과 함께 쓰는 명령으로 짧은 분산 락을 만듭니다.']},
+   {title:'한 스레드가 막히면 모두 멈춘다',body:'명령은 한 줄로 서서 처리됩니다. 백만 개 원소의 리스트를 통째로 읽거나 KEYS *로 모든 키를 훑으면 그동안 다른 모든 요청이 기다립니다. 그래서 SCAN, HSCAN처럼 조금씩 나눠 훑는 명령과 큰 키를 백그라운드에서 지우는 UNLINK를 씁니다. SLOWLOG로 오래 걸린 명령을 찾고, 하나의 키에 너무 많은 데이터를 넣지 않습니다(빅 키). 여러 명령을 원자적으로 묶어야 하면 MULTI/EXEC나 Lua 스크립트를 쓰는데 스크립트도 실행 중에는 다른 명령을 막습니다.'},
+   {title:'얼마나 잃을 수 있나: RDB와 AOF',body:'RDB는 자식 프로세스를 만들어 메모리 전체를 파일로 씁니다. 2장 프로세스 단원의 fork와 쓰기 시 복사 덕분에 서버를 멈추지 않지만 마지막 스냅샷 이후의 변경은 잃을 수 있습니다. AOF는 변경 명령을 파일에 덧붙이고 기본 설정(everysec)에서는 1초마다 fsync해 보통 1초 이내의 손실로 줄입니다. 매 명령 fsync(always)는 더 안전하지만 느립니다. 2장 파일 시스템 단원의 fsync 이야기와 같은 선택입니다.'},
+   {title:'Redis를 캐시로 둘 때와 원본으로 둘 때',body:'캐시라면 만료 시간과 축출 정책(allkeys-lru)을 두고 Redis가 비어도 DB에서 다시 채울 수 있게 합니다. 이때 Redis 장애는 느려짐일 뿐 데이터 손실이 아닙니다. 세션이나 장바구니처럼 Redis에만 있는 데이터라면 AOF, 복제, 장애 조치를 함께 설계하고 축출이 일어나지 않게(noeviction) 메모리를 넉넉히 잡습니다. 비동기 복제라 장애 조치 순간 최근 쓰기를 잃을 수 있다는 점은 4장 복제 단원과 같습니다.'}
+  ],
+  sources:[
+   ['Redis · Data Types','https://redis.io/docs/latest/develop/data-types/'],
+   ['Redis · Persistence','https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/'],
+   ['Redis · Key Eviction','https://redis.io/docs/latest/develop/reference/eviction/']
+  ]
+ },
+ monitoring:{
+  definition:'Prometheus의 시계열은 메트릭 이름과 라벨 집합으로 식별되며 (타임스탬프, float64 값) 샘플을 시간 순으로 가집니다. 메트릭 타입은 늘기만 하는 카운터, 오르내리는 게이지, 값을 구간(bucket)별로 세는 히스토그램, 클라이언트가 분위수를 계산하는 서머리가 있습니다. Prometheus 서버는 설정과 서비스 발견으로 대상을 정하고 HTTP로 /metrics를 스크레이프해 로컬 TSDB에 저장합니다. 기록 규칙과 알림 규칙을 주기적으로 평가해 알림을 Alertmanager로 보내고, Alertmanager는 묶기, 억제, 침묵, 경로 지정을 거쳐 알림을 전달합니다. Grafana는 데이터 원본별 질의를 실행해 패널로 그리고 패널 사이를 시간과 변수로 연결합니다.',
+  terms:[
+   ['스크레이프','Prometheus가 대상의 /metrics를 HTTP로 가져오는 일입니다.'],
+   ['시계열과 라벨','메트릭 이름과 라벨 조합 하나가 시계열 하나입니다. 라벨로 나누고 합칩니다.'],
+   ['카운터와 게이지','누적만 하는 값과 오르내리는 현재 값입니다. 카운터는 rate()로 봅니다.'],
+   ['히스토그램','응답 시간 같은 값을 구간별로 세어 p99 같은 백분위수를 계산하게 합니다.'],
+   ['PromQL','시계열을 고르고 계산하는 질의 언어입니다. rate, sum by, histogram_quantile 등을 씁니다.'],
+   ['카디널리티','시계열의 개수입니다. 라벨 값이 많을수록 폭발적으로 늘어납니다.']
+  ],
+  sections:[
+   {title:'/metrics에는 무엇이 있나',body:'Prometheus 클라이언트를 붙인 앱의 /metrics는 사람이 읽을 수 있는 텍스트입니다.',list:['http_requests_total{method="GET",path="/orders",status="200"} 10432 처럼 이름, 라벨, 현재 값이 한 줄씩 있습니다.','히스토그램은 http_request_duration_seconds_bucket{le="0.3"} 9811 처럼 "0.3초 이하로 끝난 요청 수"를 구간마다 내놓습니다.','path 라벨에는 /orders/{id}처럼 경로 틀을 넣고 실제 주문 번호는 넣지 않습니다. 넣으면 주문마다 시계열이 생깁니다.','process_cpu_seconds_total, 프로세스 메모리처럼 클라이언트 라이브러리가 기본으로 내놓는 지표도 있습니다.']},
+   {title:'자주 쓰는 PromQL 네 줄',body:'네 가지 황금 신호는 대개 이렇게 계산합니다.',list:['트래픽: sum(rate(http_requests_total[5m])) — 최근 5분의 초당 요청 수.','오류율: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])).','지연 p99: histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))).','포화도: 연결 풀 사용 수, 큐 길이, 디스크 사용률 같은 게이지. 서버별로 보려면 sum by (instance)를 씁니다.']},
+   {title:'좋은 알림의 조건',body:'알림은 사람을 깨우는 비싼 신호입니다. 오류율이나 지연처럼 사용자가 느끼는 증상에, 잠깐 튄 값은 무시하도록 for: 5m 같은 지속 조건과 함께 겁니다. 더 나아가 SLO의 오류 예산이 얼마나 빨리 타고 있는지(burn rate)로 알리면 큰 장애는 빨리, 느린 악화는 업무 시간에 알 수 있습니다. Alertmanager는 같은 원인의 알림 수백 개를 하나로 묶고, 상위 장애가 있을 때 하위 알림을 억제하며, 점검 중에는 침묵시킵니다. 알림마다 무엇을 확인할지 적은 런북을 연결합니다.'},
+   {title:'로그와 트레이스까지 이어 붙이기',body:'메트릭은 "무엇이 얼마나"를 싸게 알려 주지만 "왜"는 로그와 트레이스가 알려 줍니다. ELK(Elasticsearch, Logstash, Kibana)는 로그 본문을 역색인해 강력하게 검색하지만 비싸고, Loki는 라벨만 색인해 싸게 모으고 본문은 필요할 때 훑습니다. 트레이스는 OpenTelemetry로 수집해 Tempo나 Jaeger에 둡니다. Grafana에서 오류가 튄 그래프 지점을 누르면 같은 시간과 라벨의 로그로, 로그의 trace_id를 누르면 그 요청의 트레이스로 넘어가게 연결해 두면 장애 때 도구를 오가는 시간이 크게 줄어듭니다.'}
+  ],
+  sources:[
+   ['Prometheus · Querying Basics','https://prometheus.io/docs/prometheus/latest/querying/basics/'],
+   ['Prometheus · Histograms and Summaries','https://prometheus.io/docs/practices/histograms/'],
+   ['Prometheus · Alertmanager','https://prometheus.io/docs/alerting/latest/alertmanager/'],
+   ['Grafana Loki','https://grafana.com/docs/loki/latest/'],
+   ['OpenTelemetry · Collector','https://opentelemetry.io/docs/collector/']
   ]
  }
 };

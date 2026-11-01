@@ -1474,5 +1474,118 @@ export const histories:Record<string,LessonHistory>={
    ['NIST SP 800-145 · The NIST Definition of Cloud Computing (2011)','https://csrc.nist.gov/pubs/sp/800/145/final'],
    ['AWS · Summary of the Amazon S3 Service Disruption (2017)','https://aws.amazon.com/message/41926/']
   ]
+ },
+ search:{
+  intro:'원하는 문서를 단어로 찾는 일은 컴퓨터보다 오래되었습니다. 책의 찾아보기, 도서관의 주제 카드가 모두 같은 생각입니다. 컴퓨터가 생기자 학자들은 수많은 문서에서 관련 있는 것을 자동으로 찾고 순서를 매기는 방법을 연구했고 그 연구가 웹 검색을 거쳐 지금 우리 서비스의 검색창까지 이어졌습니다.',
+  timeline:[
+   {year:'1960~1970년대',title:'정보 검색 연구와 SMART',body:'코넬 대학의 제라드 솔턴은 SMART 시스템으로 문서와 검색어를 단어의 벡터로 보고 둘이 얼마나 비슷한지로 순위를 매기는 방법을 연구했습니다. 1975년 논문의 벡터 공간 모델은 이후 검색 엔진의 기본 틀이 되었습니다.'},
+   {year:'1972',title:'드문 단어가 더 중요하다',body:'캐런 스파크 존스는 많은 문서에 나오는 단어보다 적은 문서에만 나오는 단어가 문서를 더 잘 구별한다는 것을 통계로 보였습니다. 이 역문서 빈도(IDF)는 단어 빈도(TF)와 합쳐져 TF-IDF가 되었고 지금도 관련도 점수의 뼈대입니다.'},
+   {year:'1990년대',title:'BM25와 웹 검색',body:'스티븐 로버트슨 등은 확률 모형에서 출발해 TF-IDF를 다듬은 BM25를 만들었습니다. 같은 단어가 너무 많이 반복되면 점수가 끝없이 오르지 않게 하고 긴 문서가 유리해지지 않게 길이를 보정합니다. 1998년 브린과 페이지는 웹 페이지 사이의 링크까지 순위에 쓰는 Google의 구조를 논문으로 발표했습니다.'},
+   {year:'1999',title:'Lucene',body:'더그 커팅은 역색인과 관련도 점수를 구현한 Java 검색 라이브러리 Lucene을 만들어 공개했고 이후 아파치 재단의 프로젝트가 되었습니다. 그는 같은 흐름에서 Nutch와 Hadoop도 만들었습니다. 대부분의 오픈소스 검색 서버가 지금도 Lucene 위에서 동작합니다.'},
+   {year:'2010',title:'Elasticsearch',body:'샤이 바논은 Lucene을 쓰기 쉽게 감싼 Compass를 만들었던 경험을 바탕으로 2010년 Elasticsearch를 공개했습니다. 색인을 조각(샤드)으로 나눠 여러 서버에 두고 복제하며 HTTP와 JSON으로 다루게 해서 검색 기능을 서비스에 붙이는 일을 크게 쉽게 만들었습니다. 로그를 모아 검색하는 ELK(Elasticsearch, Logstash, Kibana)로도 널리 쓰였습니다.'},
+   {year:'2021',title:'라이선스 변경과 OpenSearch',body:'Elastic이 Elasticsearch의 라이선스를 클라우드 업체가 그대로 서비스하기 어렵게 바꾸자 AWS는 마지막 오픈소스 버전에서 갈라져 나온 OpenSearch를 만들었습니다. 지금은 두 갈래가 함께 쓰이며 기본 개념은 같습니다.'}
+  ],
+  decisions:[
+   {question:'왜 문서마다 단어를 적지 않고 단어마다 문서를 적을까?',answer:'문서마다 단어 목록을 두면 검색할 때 모든 문서를 열어 봐야 합니다. 단어마다 문서 목록을 두면 검색어의 단어 몇 개에 해당하는 목록만 꺼내 합치면 됩니다. 4장 인덱스 단원의 B-tree가 값으로 행을 찾듯이 역색인은 단어로 문서를 찾습니다.',cost:'문서를 넣거나 고칠 때마다 그 문서의 모든 단어 목록을 고쳐야 해서 쓰기가 비쌉니다. 그래서 Lucene은 새 문서를 작은 조각(세그먼트)에 모았다가 나중에 합칩니다. 넣은 문서가 검색에 보이기까지 짧은 지연이 생기는 이유입니다.'},
+   {question:'왜 검색 엔진을 DB와 따로 둘까?',answer:'관계형 DB는 정확한 값과 범위로 찾고 트랜잭션으로 데이터를 지키는 데 최적화되어 있습니다. 검색은 글을 쪼개 단어로 찾고 관련도로 정렬하는 전혀 다른 일입니다. 각자 잘하는 일을 맡기면 둘 다 빠릅니다.',cost:'같은 데이터를 두 곳에 두니 둘을 맞추는 경로가 필요하고 잠깐씩 어긋날 수 있습니다. 검색 엔진은 언제든 원본에서 다시 만들 수 있는 사본으로 다룹니다.'},
+   {question:'왜 분석기가 그렇게 중요할까?',answer:'"Keyboards"와 "keyboard", "키보드를"과 "키보드"가 같은 단어로 맞춰지지 않으면 역색인에서 서로를 찾지 못합니다. 문서를 넣을 때와 검색할 때 같은 분석기로 쪼개야 합니다. 조사와 어미가 붙는 한국어는 형태소 분석이 특히 중요합니다.',cost:'분석기를 바꾸면 이미 만든 역색인과 맞지 않아 전체를 다시 색인해야 합니다.'}
+  ],
+  today:[
+   '원본 데이터는 DB에 두고 검색이 필요한 필드만 검색 엔진에 사본으로 넣습니다. 변경은 아웃박스나 변경 데이터 캡처(CDC)로 전달하고 다시 색인하는 절차를 준비합니다.',
+   '한국어 검색은 nori 같은 형태소 분석기를 쓰고 실제 검색어로 결과를 확인하며 동의어와 사용자 사전을 다듬습니다.',
+   '데이터가 작고 검색이 단순하면 PostgreSQL의 전문 검색으로 시작하고 관련도 정렬, 자동 완성, 대량 검색이 필요해질 때 검색 엔진을 붙입니다.'
+  ],
+  sources:[
+   ['Salton, Wong & Yang, A Vector Space Model for Automatic Indexing (CACM, 1975)','https://doi.org/10.1145/361219.361220'],
+   ['Spärck Jones, A Statistical Interpretation of Term Specificity (1972)','https://doi.org/10.1108/eb026526'],
+   ['Robertson & Zaragoza, The Probabilistic Relevance Framework: BM25 and Beyond (2009)','https://doi.org/10.1561/1500000019'],
+   ['Brin & Page, The Anatomy of a Large-Scale Hypertextual Web Search Engine (1998)','https://doi.org/10.1016/S0169-7552(98)00110-X'],
+   ['Elastic · History of Elasticsearch','https://www.elastic.co/about/history-of-elasticsearch'],
+   ['OpenSearch · FAQ','https://opensearch.org/faq/']
+  ]
+ },
+ documentdb:{
+  intro:'관계형 DB는 데이터를 중복 없이 여러 표로 나누는 정규화 위에 서 있습니다. 그런데 프로그램은 데이터를 객체와 JSON처럼 중첩된 모양으로 다룹니다. 이 둘 사이의 어긋남을 줄이려는 시도가 문서 DB입니다.',
+  timeline:[
+   {year:'1989',title:'Lotus Notes',body:'Lotus Notes는 이미 문서를 단위로 저장하고 여러 서버에 복제하는 데이터베이스였습니다. 문서 DB의 생각 자체는 새롭지 않았습니다.'},
+   {year:'2000년대 초',title:'JSON의 확산',body:'더글러스 크록퍼드가 정리한 JSON이 웹 브라우저와 서버 사이의 데이터 형식으로 퍼졌고 2006년 RFC 4627로 문서화되었습니다. 데이터를 JSON 모양 그대로 저장하자는 생각이 자연스러워졌습니다.'},
+   {year:'2005',title:'CouchDB',body:'데이미언 카츠는 JSON 문서를 HTTP로 다루고 여러 곳에 복제해 오프라인에서도 쓸 수 있는 CouchDB를 만들었고 이후 아파치 프로젝트가 되었습니다.'},
+   {year:'2007~2009',title:'10gen과 MongoDB',body:'DoubleClick 출신들이 2007년 10gen을 세우고 2009년 MongoDB를 공개했습니다. JSON과 비슷한 문서, 문서 안 필드에 거는 인덱스, 익숙한 쿼리 방식으로 빠르게 퍼졌고 회사 이름도 2013년 MongoDB로 바뀌었습니다.'},
+   {year:'2014~2015',title:'WiredTiger 저장 엔진',body:'초기 MongoDB는 쓰기 잠금이 거칠고 장애 시 데이터 유실 사례로 비판받았습니다. MongoDB는 WiredTiger를 인수해 3.2부터 기본 저장 엔진으로 삼으며 문서 단위 동시성과 압축, 체크포인트를 갖췄습니다.'},
+   {year:'2018~2019',title:'여러 문서 트랜잭션',body:'MongoDB 4.0은 복제 세트에서, 4.2는 샤딩 환경에서 여러 문서에 걸친 ACID 트랜잭션을 지원했습니다. 같은 무렵 PostgreSQL의 JSONB(2014)처럼 관계형 DB도 문서 저장을 받아들이며 두 세계가 가까워졌습니다.'}
+  ],
+  decisions:[
+   {question:'왜 데이터를 쪼개지 않고 한 문서에 모을까?',answer:'화면 하나에 필요한 데이터가 한 문서에 있으면 디스크의 한 곳만 읽으면 되고 조인이 필요 없습니다. 문서가 독립적이라 문서 id를 기준으로 여러 서버에 나누기도 쉽습니다.',cost:'같은 데이터를 여러 문서에 복사하면 고칠 곳이 늘고 일부만 고쳐지는 불일치가 생길 수 있습니다. 4장 정규화 단원이 막으려던 바로 그 문제입니다.'},
+   {question:'왜 스키마를 강제하지 않을까?',answer:'상품 종류마다 속성이 다르거나 서비스 초기에 데이터 모양이 자주 바뀔 때 ALTER TABLE 없이 새 필드를 넣을 수 있습니다.',cost:'DB가 모양을 지켜 주지 않으니 코드가 오래된 모양과 새 모양을 모두 다뤄야 합니다. 그래서 MongoDB도 JSON Schema 검증을 제공합니다.'},
+   {question:'왜 원자성의 기본 단위가 문서 하나일까?',answer:'한 문서에 대한 쓰기만 원자적으로 보장하면 문서들이 여러 서버에 흩어져 있어도 서로를 기다릴 필요가 없어 빠르고 잘 늘어납니다. 함께 바뀌는 데이터를 한 문서에 두면 대부분 트랜잭션이 필요 없습니다.',cost:'여러 문서를 함께 바꿔야 하는 일은 트랜잭션을 쓰거나 설계를 바꿔야 하고 트랜잭션은 관계형 DB보다 비용이 큽니다.'}
+  ],
+  today:[
+   '상품 카탈로그, 콘텐츠, 사용자 설정, 이벤트 기록처럼 문서 단위로 읽고 모양이 제각각인 데이터에 문서 DB를 씁니다.',
+   '주문, 결제, 재고처럼 여러 데이터를 함께 맞춰야 하는 핵심 업무는 관계형 DB에 두는 경우가 많고 한 서비스에서 둘을 함께 쓰기도 합니다.',
+   '관계형 DB의 JSON 컬럼으로 대부분 해결되는 경우도 많아서 문서 DB를 따로 두기 전에 PostgreSQL JSONB로 충분한지 먼저 따져 봅니다.'
+  ],
+  sources:[
+   ['MongoDB · Data Modeling','https://www.mongodb.com/docs/manual/data-modeling/'],
+   ['MongoDB · Transactions','https://www.mongodb.com/docs/manual/core/transactions/'],
+   ['MongoDB · WiredTiger Storage Engine','https://www.mongodb.com/docs/manual/core/wiredtiger/'],
+   ['PostgreSQL · JSON Types','https://www.postgresql.org/docs/current/datatype-json.html']
+  ]
+ },
+ redis:{
+  intro:'4장 캐시 단원에서 자주 읽는 데이터를 DB 앞에 복사해 두는 생각을 봤습니다. 처음에는 그 캐시가 각 서버의 메모리에 있었지만 서버가 여러 대가 되자 캐시를 따로 떼어 모두가 함께 쓰는 서버가 필요해졌습니다. 그 서버가 단순한 저장소를 넘어 자료구조를 다루게 된 과정이 Redis의 역사입니다.',
+  timeline:[
+   {year:'2003',title:'Memcached',body:'블로그 서비스 LiveJournal의 브래드 피츠패트릭은 DB 부하를 줄이려고 여러 서버의 남는 메모리를 하나의 거대한 캐시처럼 쓰는 Memcached를 만들었습니다. 키와 문자열 값, 만료 시간만 있는 단순한 구조로 Facebook과 Wikipedia 등에 널리 퍼졌습니다.'},
+   {year:'2009',title:'Redis의 탄생',body:'이탈리아 개발자 살바토레 산필리포는 실시간 방문 분석 서비스를 만들다가 MySQL이 쓰기를 감당하지 못하자 리스트 같은 자료구조를 메모리에서 직접 다루는 서버를 만들었습니다. 이것이 REmote DIctionary Server, Redis입니다.'},
+   {year:'2010년대 초',title:'자료구조와 영속성',body:'해시, 집합, 정렬된 집합, 발행·구독이 더해지고 스냅샷(RDB)과 명령 기록(AOF)으로 디스크에 남길 수 있게 되었습니다. GitHub, Twitter, Instagram 등이 캐시를 넘어 큐와 카운터, 타임라인에 썼습니다.'},
+   {year:'2015',title:'Redis Cluster',body:'Redis 3.0의 클러스터는 키를 16384개의 해시 슬롯으로 나눠 여러 서버에 분산하고 서버마다 복제본을 두어 한 대의 메모리 한계를 넘게 했습니다. 그 전부터 있던 Sentinel은 주 서버 장애 시 복제본을 승격합니다.'},
+   {year:'2018~2020',title:'Streams와 I/O 스레드',body:'Redis 5.0은 Kafka처럼 기록을 쌓고 소비자 그룹이 나눠 읽는 Streams를 더했습니다. Redis 6.0은 명령 실행은 한 스레드로 유지하면서 네트워크 읽기와 쓰기만 여러 스레드로 나눌 수 있게 했습니다.'},
+   {year:'2024',title:'라이선스 변경과 Valkey',body:'Redis가 라이선스를 바꿔 클라우드 업체가 그대로 서비스하기 어려워지자 리눅스 재단 아래에서 마지막 오픈소스 버전을 이어받은 Valkey가 만들어졌습니다. 이후 Redis도 AGPL 선택지를 더했습니다. 두 갈래의 명령과 개념은 같습니다.'}
+  ],
+  decisions:[
+   {question:'왜 데이터를 메모리에 둘까?',answer:'메모리 접근은 디스크보다 수만 배 빠르고 Redis의 자료구조는 메모리에서 바로 다루기 좋은 모양(해시 테이블, 스킵 리스트)입니다. 명령 하나가 마이크로초 단위로 끝납니다.',cost:'데이터 크기가 메모리에 묶이고 메모리는 디스크보다 비쌉니다. 꽉 차면 축출 정책에 따라 키를 지우거나 쓰기를 거절합니다.'},
+   {question:'왜 명령을 한 스레드로 처리할까?',answer:'명령이 짧게 끝나니 여러 스레드로 나누는 이득보다 잠금과 문맥 교환 비용이 큽니다. 한 스레드가 차례로 처리하면 모든 명령이 저절로 원자적이고 구현도 단순해집니다. 3장 비동기 단원의 이벤트 루프와 같은 원리로 수많은 연결을 다룹니다.',cost:'오래 걸리는 명령 하나가 모든 요청을 멈춥니다. 큰 키를 지우거나 모든 키를 훑는 명령은 피하고 SCAN, UNLINK 같은 나눠서 하는 명령을 씁니다. CPU 코어 하나만 쓰므로 더 늘리려면 여러 인스턴스나 클러스터를 씁니다.'},
+   {question:'왜 값이 단순한 문자열이 아니라 자료구조일까?',answer:'Memcached처럼 문자열만 있으면 리스트에 하나를 더하려 해도 전체를 읽고 고쳐서 다시 써야 하고 그 사이에 다른 서버가 끼어들 수 있습니다. 서버가 자료구조를 알면 LPUSH, ZADD처럼 바뀐 부분만 원자적으로 고칠 수 있습니다.',cost:'명령과 자료구조마다 시간 복잡도가 달라 큰 컬렉션에 O(N) 명령을 쓰면 느려집니다. 자료구조를 고를 때 명령의 비용을 함께 봐야 합니다.'}
+  ],
+  today:[
+   'DB 앞의 캐시, 세션 저장소, 처리율 제한 카운터, 순위표, 짧은 수명의 분산 락에 가장 많이 씁니다.',
+   '잃어도 원본에서 다시 만들 수 있는 데이터를 담는 것이 기본이고, Redis를 주 저장소로 쓰려면 AOF와 복제, 또는 MemoryDB처럼 내구성을 보강한 서비스를 고릅니다.',
+   '메모리 사용량과 축출, 느린 명령(SLOWLOG), 복제 지연을 감시하고 키에는 항상 만료 시간을 고려합니다.'
+  ],
+  sources:[
+   ['Redis · Data Types','https://redis.io/docs/latest/develop/data-types/'],
+   ['Redis · Persistence','https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/'],
+   ['Redis · Key Eviction','https://redis.io/docs/latest/develop/reference/eviction/'],
+   ['Memcached','https://memcached.org/'],
+   ['Valkey','https://valkey.io/']
+  ]
+ },
+ monitoring:{
+  intro:'앞 단원에서 무엇을 봐야 하는지(네 가지 황금 신호, 로그·메트릭·트레이스)를 봤다면 이 단원은 그것을 실제로 보게 해 주는 도구들의 역사입니다. 도구는 시대마다 운영자가 던지던 질문에 맞춰 바뀌었습니다. "이 서버는 살아 있나"에서 "이 숫자는 시간에 따라 어떻게 변하나"로, 다시 "수천 개 컨테이너 중 어느 묶음이 문제인가"로.',
+  timeline:[
+   {year:'1999',title:'Nagios(NetSaint)',body:'에단 갈스태드가 만든 NetSaint(2002년 Nagios로 개명)는 서버와 서비스를 주기적으로 검사해 살아 있는지, 디스크가 찼는지 확인하고 문제가 생기면 알렸습니다. 결과는 대개 정상, 경고, 위험 같은 상태였고 시간에 따른 변화를 보기는 어려웠습니다.'},
+   {year:'1999~2008',title:'RRDtool과 Graphite',body:'토비 외티커의 MRTG와 RRDtool은 네트워크 트래픽 같은 숫자를 고정 크기 파일에 시간 순으로 저장하고 그래프로 그렸습니다. 2006년 Orbitz의 크리스 데이비스가 만든 Graphite는 아무 숫자나 이름을 붙여 보내면 저장하고 그려 주었고, 2011년 Etsy의 StatsD는 앱에서 "이것을 세라"는 신호를 쉽게 보내게 해 "측정할 수 있는 모든 것을 측정하라"는 문화를 퍼뜨렸습니다.'},
+   {year:'2012~2016',title:'Prometheus',body:'구글 출신 엔지니어들이 SoundCloud에서 구글 내부 모니터링 시스템 Borgmon에서 영감을 받아 Prometheus를 만들었습니다. 메트릭에 라벨을 붙여 여러 차원으로 나눠 보고, 대상을 자동으로 찾아 가져오며, PromQL로 계산합니다. 2015년 공개되고 2016년 Kubernetes에 이어 CNCF의 두 번째 프로젝트가 되었습니다.'},
+   {year:'2014',title:'Grafana',body:'토르켈 외데고르는 로그 도구 Kibana의 대시보드에서 출발해 Graphite 그래프를 보기 좋게 그리는 Grafana를 만들었습니다. 이후 Prometheus, Elasticsearch, 각종 DB까지 수많은 데이터 원본을 한 대시보드에 모으는 사실상의 표준 화면이 되었습니다.'},
+   {year:'2015',title:'Gorilla와 시계열 압축',body:'Facebook은 Gorilla 논문에서 시각의 차이의 차이와 값의 XOR만 저장해 데이터 점 하나를 평균 1.37바이트로 줄이는 방법을 발표했습니다. Prometheus 2.0의 저장 엔진도 이 압축 방식을 받아들여 수백만 개의 시계열을 서버 한 대에 담게 되었습니다.'},
+   {year:'2018~2019',title:'Loki와 OpenTelemetry',body:'Grafana Labs의 Loki는 로그 본문 전체를 색인하지 않고 Prometheus와 같은 라벨만 색인해 싸게 로그를 모았습니다. 2019년 OpenTelemetry는 메트릭, 로그, 트레이스를 같은 방식으로 수집해 원하는 저장소로 보내는 표준을 만들었습니다.'}
+  ],
+  decisions:[
+   {question:'왜 Prometheus는 대상에게서 가져오는(pull) 방식일까?',answer:'Prometheus가 대상 목록을 쥐고 있으니 대상이 죽으면 가져오기 실패로 바로 드러나고, 6장 Kubernetes처럼 대상이 수시로 생기고 사라지는 환경에서도 서비스 발견으로 목록을 자동 갱신합니다. 앱은 수집 서버의 주소를 몰라도 되고 개발자가 브라우저로 /metrics를 열어 바로 확인할 수 있습니다.',cost:'짧게 끝나는 배치 작업은 가져갈 틈이 없어 Pushgateway가 필요하고, 방화벽 너머의 대상에 접근하기 어렵습니다.'},
+   {question:'왜 메트릭에 라벨을 붙일까?',answer:'http_requests_total{path="/orders", status="500"}처럼 라벨을 붙이면 같은 메트릭을 경로별, 상태 코드별, 서버별로 자유롭게 나누고 합칠 수 있습니다. Graphite처럼 이름에 모든 정보를 넣으면 나중에 새 기준으로 묶기 어렵습니다.',cost:'라벨 값의 조합마다 시계열이 하나씩 생깁니다. 사용자 ID처럼 값이 끝없는 라벨은 시계열을 수백만 개로 늘려 메모리와 저장소를 터뜨립니다.'},
+   {question:'왜 알림은 원인보다 증상에 걸까?',answer:'CPU, 메모리 같은 원인 지표는 높아도 사용자가 괜찮을 수 있고 낮아도 장애일 수 있습니다. 오류율과 지연처럼 사용자가 느끼는 증상에 SLO 기준으로 알림을 걸면 사람을 깨우는 알림이 대부분 진짜 문제입니다. 원인 지표는 대시보드에서 원인을 좁히는 데 씁니다.',cost:'증상 알림은 무엇이 고장 났는지 바로 알려 주지 않으므로 대시보드와 로그, 트레이스로 원인을 찾아가는 길을 미리 만들어야 합니다.'}
+  ],
+  today:[
+   '메트릭은 Prometheus(또는 호환 저장소)로, 로그는 Loki나 Elasticsearch로, 트레이스는 Tempo나 Jaeger로 모으고 Grafana에서 함께 보는 조합이 흔합니다. 수집은 OpenTelemetry로 통일하는 추세입니다.',
+   '대시보드는 서비스마다 네 가지 황금 신호를 맨 위에 두고 그 아래에 원인을 좁히는 자원 지표를 둡니다.',
+   '알림은 SLO 기준의 증상에 for 조건과 함께 걸고 알림마다 대응 문서(런북) 링크를 붙입니다. 아무도 행동하지 않는 알림은 지웁니다.'
+  ],
+  sources:[
+   ['Prometheus · Overview','https://prometheus.io/docs/introduction/overview/'],
+   ['Prometheus · Data Model','https://prometheus.io/docs/concepts/data_model/'],
+   ['Grafana Documentation','https://grafana.com/docs/grafana/latest/'],
+   ['Pelkonen et al., Gorilla: A Fast, Scalable, In-Memory Time Series Database (VLDB, 2015)','https://www.vldb.org/pvldb/vol8/p1816-teller.pdf'],
+   ['Google SRE Book · Practical Alerting (Borgmon)','https://sre.google/sre-book/practical-alerting/'],
+   ['Graphite Documentation','https://graphite.readthedocs.io/en/latest/']
+  ]
  }
 };

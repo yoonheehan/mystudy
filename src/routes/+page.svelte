@@ -5,6 +5,7 @@
  import {problems} from '$lib/practice/problems';
  import {chapterPictures} from '$lib/archive';
  import {rise} from '$lib/rise';
+ import {techMap} from '$lib/tech-map';
  import {buildBackup,parseBackup,applyBackup} from '$lib/progress-backup';
  import '$lib/styles/notebook.css';
  import './home.css';
@@ -90,6 +91,31 @@
    {/each}
   </ol>
   <figure class="archive route-figure" data-rise><img src={chapterPictures[5].src} width={chapterPictures[5].width} height={chapterPictures[5].height} alt={chapterPictures[5].alt} loading="lazy" decoding="async"/><figcaption><b>{chapterPictures[5].year}</b>{chapterPictures[5].caption}</figcaption></figure>
+ </section>
+
+ <section class="techmap" id="tech-map" use:rise aria-labelledby="techmap-title">
+  <div class="techmap-intro">
+   <h2 id="techmap-title" data-rise>백엔드 기술 지도</h2>
+   <p data-rise>Redis, Kafka, Elasticsearch, Grafana. 이름은 많지만 저마다 어떤 불편에서 태어나 어떤 한 가지 일을 맡습니다. 맡은 일별로 묶고, 쓰지 말아야 할 때와 자세히 설명하는 단원을 함께 적었습니다.</p>
+  </div>
+  <div class="techmap-layers">
+   {#each techMap as layer}
+    <div class="techmap-layer" data-rise>
+     <h3>{layer.title}<span>{layer.question}</span></h3>
+     <ul>
+      {#each layer.tools as tool}
+       {@const home=lessons.find(l=>l.id===tool.lesson)}
+       <li><a href={'/backend?lesson='+tool.lesson}>
+        <span class="tool-name">{tool.name}</span>
+        <span class="tool-role">{tool.role}</span>
+        <span class="tool-meta"><b>왜 생겼나</b> {tool.born} · <b>맞지 않는 일</b> {tool.notFor}</span>
+        <span class="tool-lesson">{home?.title} →</span>
+       </a></li>
+      {/each}
+     </ul>
+    </div>
+   {/each}
+  </div>
  </section>
 
  <section class="history" use:rise aria-labelledby="history-title">

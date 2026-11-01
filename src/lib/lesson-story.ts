@@ -871,6 +871,12 @@ export const stories: Record<string, LessonStory> = {
     'NoSQL이 빠르고 잘 늘어나는 이유는 무언가를 포기했기 때문입니다. 대개 조인을 포기해서 함께 읽는 데이터를 한 문서나 한 키에 모아 두고, 여러 항목에 걸친 트랜잭션을 포기하거나 제한하고, 경우에 따라 즉시 일관성을 포기합니다. 그러면 데이터를 키로 나눠 여러 서버에 흩어 놓기 쉽습니다.',
     '대신 그 포기의 대가는 애플리케이션이 집니다. 접근 패턴을 미리 정해 데이터 모양을 거기에 맞춰야 하고 새로운 질문이 생기면 데이터를 다시 짜야 할 수 있습니다. 2010년대를 거치며 흐름은 다시 섞였습니다. MongoDB와 DynamoDB는 트랜잭션을 추가했고 Google Spanner 같은 분산 SQL DB는 여러 지역에 걸쳐 SQL과 트랜잭션을 제공했습니다. PostgreSQL은 JSON 컬럼으로 문서 저장을 받아들였습니다.'
    ]},
+   { heading: '저장소 지도: 각자 무엇을 위해 태어났나', paragraphs: [
+    'NoSQL이라는 이름 아래 섞인 저장소들은 저마다 풀려던 문제가 다릅니다. 그 문제를 알면 언제 쓰고 언제 쓰지 말아야 할지가 보입니다. **관계형 DB**는 여러 데이터를 함께 맞춰 바꾸고(트랜잭션) 미리 생각하지 못한 질문에도 SQL로 답하려고 태어났습니다. 대부분의 서비스에서 원본을 맡는 중심이고, 키 하나로 엄청난 양을 읽고 쓰거나 글 속의 단어로 찾는 일에는 맞지 않습니다.',
+    '**문서 DB**(MongoDB)는 JSON처럼 중첩된 데이터를 화면이 읽는 모양 그대로 저장하려고 나왔습니다. 문서 단위로 읽는 카탈로그와 콘텐츠에 맞고 여러 문서를 함께 맞추는 일이 많으면 맞지 않습니다. 바로 다음 단원에서 봅니다. **키값 저장소**(Redis, DynamoDB)는 키 하나로 아주 빠르게 읽고 쓰려고 나왔습니다. 캐시, 세션, 카운터에 맞고 키를 모르는 조회나 집계에는 맞지 않습니다. Redis는 캐시 단원 뒤에서 따로 다룹니다.',
+    '**와이드 컬럼 DB**(Bigtable, Cassandra, HBase)는 쓰기가 끝없이 쏟아지는 거대한 데이터를 여러 서버에 나눠 담으려고 나왔습니다. 메시지 기록, 센서 데이터처럼 키와 시간 순으로 읽는 일에 맞고 조인이나 즉석 질문에는 맞지 않습니다. **검색 엔진**(Elasticsearch, OpenSearch)은 글 속의 단어로 찾고 관련도 순으로 정렬하려고 나왔습니다. 문서 DB 다음 단원에서 보며 원본 저장소로는 쓰지 않습니다.',
+    '**시계열 DB**(Prometheus, InfluxDB, TimescaleDB)는 "시각과 숫자"가 끝없이 쌓이는 지표를 압축해 저장하고 시간 구간으로 집계하려고 나왔습니다. 7장 모니터링 도구 단원에서 봅니다. **그래프 DB**(Neo4j)는 "친구의 친구", "이 부품이 들어간 모든 제품"처럼 관계를 여러 단계 따라가는 질문을 빠르게 하려고 나왔습니다. 관계 탐색이 핵심이 아니면 관계형 DB로 충분합니다.'
+   ]},
    { heading: '질문에서 시작하는 선택', paragraphs: [
     '그래서 DB를 고를 때는 이름보다 질문이 먼저입니다. 여러 항목을 함께 맞춰 바꿔야 하나요? 새로운 조회 방식이 자주 생기나요? 키 하나로 읽고 쓰나요? 잠깐 틀리거나 사라져도 되나요? 이 단원의 그림처럼 같은 서비스 안에서도 주문은 관계형 DB에, 장바구니는 키값 저장소에 두는 식으로 답이 다를 수 있습니다. 처음에는 관계형 DB 하나로 시작하고 분명한 이유가 생길 때 다른 저장소를 더하는 것이 대부분의 팀에게 안전한 길입니다.'
    ]}
@@ -879,7 +885,7 @@ export const stories: Record<string, LessonStory> = {
    { belief: 'NoSQL은 관계형 DB보다 언제나 빠르다.', truth: 'NoSQL이 빠른 것은 조인과 여러 항목 트랜잭션 같은 기능을 포기하고 접근 패턴을 고정했기 때문입니다. 그 패턴을 벗어난 질문에는 오히려 느리거나 불가능합니다.' },
    { belief: 'NoSQL에는 트랜잭션이 없다.', truth: 'MongoDB와 DynamoDB처럼 지금은 트랜잭션을 지원하는 NoSQL도 많습니다. 제품마다 보장 범위가 달라 문서를 확인해야 합니다.' }
   ],
-  to: '어떤 DB를 쓰든 같은 데이터를 반복해서 읽으면 DB에 부담이 쌓입니다. 자주 읽는 결과를 더 가까운 곳에 복사해 두면 어떨까요? 다음 단원 캐시가 이 생각과 그 대가를 다룹니다.',
+  to: '지도의 첫 칸부터 들어가 봅니다. 프로그램은 데이터를 JSON처럼 중첩된 모양으로 다루는데 데이터베이스도 그 모양 그대로 저장하면 어떨까요? 다음 단원 문서 DB와 MongoDB가 이 생각을 다룹니다.',
   books: [
    { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '2장 데이터 모델과 질의 언어, 3장 저장소와 검색', note: '관계형, 문서형, 그래프 모델을 같은 예제로 비교하고 저장 구조의 차이가 성능에 주는 영향을 설명합니다.', url: 'https://dataintensive.net/' },
    { title: 'Database Internals', by: 'Alex Petrov', where: '1부 저장 엔진, 2부 분산 시스템', note: 'B-tree와 LSM-tree 기반 저장 엔진, 분산 DB가 내부에서 하는 일을 설명합니다. 더 깊이 알고 싶을 때 봅니다.', url: 'https://www.databass.dev/' }
@@ -914,7 +920,7 @@ export const stories: Record<string, LessonStory> = {
    { belief: 'Cache-Control: no-cache는 저장하지 말라는 뜻이다.', truth: 'no-cache는 저장해도 되지만 다시 쓰기 전에 서버에 확인하라는 뜻입니다. 저장 자체를 막는 것은 no-store입니다.' },
    { belief: '캐시에 있는 값이 진짜 데이터다.', truth: '캐시는 원본의 복사본입니다. 캐시가 비거나 꺼져도 원본에서 읽어 정상 동작해야 하고 결제 직전의 가격처럼 틀리면 안 되는 값은 원본에서 다시 확인합니다.' }
   ],
-  to: '캐시는 읽기를 빠르게 합니다. 그렇다면 오래 걸리는 쓰기 작업, 예를 들어 주문 뒤의 이메일 발송이나 썸네일 생성은 어떻게 할까요? 사용자를 기다리게 하지 않고 나중에 처리하는 방법이 다음 단원 메시지 큐입니다.',
+  to: '캐시를 서버마다 두면 서버가 늘수록 문제가 생깁니다. 모든 서버가 함께 쓰는 빠른 저장소가 필요해집니다. 다음 단원에서 그 대표인 Redis가 왜 메모리 위의 자료구조 서버가 되었는지 봅니다.',
   books: [
    { title: 'Computer Systems: A Programmer’s Perspective (컴퓨터 시스템)', by: 'Randal E. Bryant, David R. O’Hallaron', where: '3판 6장 메모리 계층', note: '지역성과 CPU 캐시가 왜 효과가 있는지를 프로그래머 관점에서 설명합니다. 모든 층의 캐시를 이해하는 출발점입니다.', url: 'https://csapp.cs.cmu.edu/' },
    { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '11장 스트림 처리 중 데이터베이스와 스트림(캐시 갱신), 12장 데이터 시스템의 미래', note: '캐시를 원본에서 파생된 데이터로 보고 어떻게 일관되게 유지할지 설명합니다.', url: 'https://dataintensive.net/' }
@@ -927,7 +933,7 @@ export const stories: Record<string, LessonStory> = {
  },
  queue: {
   question: '오래 걸리는 일을 사용자의 요청과 떼어 나중에 처리하려면 어떻게 하고, 그때 무엇을 조심해야 할까요?',
-  from: '앞 단원의 캐시는 읽기를 빠르게 했습니다. 이번에는 오래 걸리는 일을 사용자의 요청과 떼어 나중에 처리하는 방법을 봅니다.',
+  from: '앞 단원들에서 캐시와 Redis로 읽기를 빠르게 했습니다. 이번에는 오래 걸리는 일을 사용자의 요청과 떼어 나중에 처리하는 방법을 봅니다.',
   parts: [
    { heading: '요청 안에서 모든 것을 끝내려 할 때', paragraphs: [
     '주문을 받으면 주문을 저장하고, 확인 메일을 보내고, 재고 시스템에 알리고, 추천 데이터를 갱신해야 합니다. 이 모든 일을 요청 하나 안에서 차례로 하면 사용자는 메일 서버가 느린 만큼 기다려야 하고 메일 서버가 죽으면 주문까지 실패합니다. 꼭 지금 끝나야 하는 일(주문 저장)과 조금 뒤에 끝나도 되는 일(메일 발송)이 한데 묶여 있는 것이 문제입니다.',
@@ -1471,7 +1477,7 @@ export const stories: Record<string, LessonStory> = {
    { belief: '평균 응답 시간이 괜찮으면 사용자도 괜찮다.', truth: '평균은 느린 소수를 감춥니다. 요청 100개 중 1개가 5초 걸려도 평균은 멀쩡해 보이니 p99 같은 백분위수로 봅니다.' },
    { belief: 'CPU 사용률이 높으면 바로 사람을 깨워야 한다.', truth: '사용자가 괜찮다면 깨울 이유가 없습니다. 알림은 지연, 오류율 같은 사용자 쪽 지표와 SLO를 기준으로 겁니다.' }
   ],
-  to: '지표를 보다 보면 언젠가 "요청이 늘어서 느려진다"는 순간을 만납니다. 서버를 늘리면 해결될까요? 어디가 진짜 병목일까요? 다음 단원 스케일링과 병목이 이 질문을 다룹니다.',
+  to: '무엇을 봐야 하는지 알았으니 이제 실제로 보는 도구가 필요합니다. 수백 대 서버의 숫자를 누가 모으고, 어디에 저장하고, 어떻게 한 화면에 그려 필요할 때만 사람을 깨울까요? 다음 단원 모니터링 도구가 Prometheus와 Grafana를 중심으로 이 질문을 다룹니다.',
   books: [
    { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '4장 서비스 수준 목표, 6장 분산 시스템 모니터링', note: '네 가지 황금 신호와 SLO 기반 알림을 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://sre.google/sre-book/monitoring-distributed-systems/' },
    { title: 'Observability Engineering', by: 'Charity Majors, Liz Fong-Jones, George Miranda', where: '1부 관측 가능성으로 가는 길', note: '모니터링과 관측 가능성의 차이, 구조화된 이벤트로 처음 보는 문제를 좁히는 방법을 설명합니다.' }
@@ -1484,7 +1490,7 @@ export const stories: Record<string, LessonStory> = {
  },
  scale: {
   question: '요청이 늘어 느려질 때 서버를 늘리면 해결될까요, 진짜 병목은 어떻게 찾을까요?',
-  from: '앞 단원에서 지표로 서비스 안을 들여다보는 방법을 봤습니다. 지표를 보다 보면 요청이 늘수록 느려지는 순간을 만납니다.',
+  from: '앞 단원들에서 지표로 서비스 안을 들여다보고 대시보드와 알림을 만드는 방법을 봤습니다. 지표를 보다 보면 요청이 늘수록 느려지는 순간을 만납니다.',
   parts: [
    { heading: '서버를 늘리면 빨라질까', paragraphs: [
     '요청이 늘어 느려지면 가장 먼저 떠오르는 답은 서버를 늘리는 것입니다. 서버를 더 좋은 것으로 바꾸는 **수직 확장**과 같은 서버를 여러 대로 늘리는 **수평 확장**이 있습니다. 하지만 서버를 두 배로 늘렸는데 처리량이 거의 그대로인 일이 흔합니다. 느린 곳이 앱 서버가 아니었기 때문입니다.',
@@ -1865,6 +1871,174 @@ export const stories: Record<string, LessonStory> = {
    { title: 'Xen and the Art of Virtualization', by: 'Paul Barham 외', where: 'SOSP, 2003', note: '게스트 운영체제와 협력해 x86을 빠르게 가상화한 Xen 논문입니다. 초기 EC2가 Xen 위에서 돌았습니다.', url: 'https://doi.org/10.1145/945445.945462' },
    { title: 'A View of Cloud Computing', by: 'Michael Armbrust 외', where: 'Communications of the ACM, 2010', note: '버클리의 「Above the Clouds」 보고서를 정리한 글입니다. 클라우드가 무엇이 새로운지 짚습니다.', url: 'https://doi.org/10.1145/1721654.1721672' },
    { title: 'Summary of the Amazon S3 Service Disruption in the Northern Virginia (US-EAST-1) Region', by: 'AWS', where: '2017', note: '명령어 입력 실수 하나가 S3 장애로 번진 과정과 재발 방지책입니다.', url: 'https://aws.amazon.com/message/41926/' }
+  ]
+ },
+ search: {
+  question: '사용자가 검색창에 친 단어로 수백만 개의 문서를 순식간에 찾고 관련 있는 순서로 보여 주려면 어떤 구조가 필요할까요?',
+  from: '앞 단원까지 데이터를 어떤 모양으로 저장할지 봤습니다. 이번에는 저장한 데이터를 사용자가 쓰는 말로 찾는 문제입니다.',
+  parts: [
+   { heading: 'DB의 인덱스로는 안 되는 검색', paragraphs: [
+    '앞 단원들에서 본 관계형 DB는 "주문 번호 5531"이나 "가격이 1만 원 이상"처럼 정확한 값과 범위로 찾는 데 강합니다. B-tree 인덱스가 값을 정렬해 두기 때문입니다. 그런데 사용자는 검색창에 "무선 키보드"라고 칩니다. 상품 이름 어딘가에 그 단어가 들어 있는 것을 찾아야 하고, 수백 개가 나오면 더 관련 있는 것을 위에 보여 줘야 합니다.',
+    'SQL로 하면 name LIKE \'%키보드%\'가 됩니다. 앞에 %가 붙으면 그 단어가 어디에 있는지 모르니 B-tree를 쓸 수 없어 모든 행을 처음부터 끝까지 비교합니다. "키보드를"로 검색하면 아무것도 나오지 않고 찾은 결과의 순서도 정할 수 없습니다. 검색은 값으로 찾는 일과 근본적으로 다른 문제였습니다.'
+   ]},
+   { heading: '책의 찾아보기를 뒤집어 만들기: 역색인', paragraphs: [
+    '이 문제를 먼저 붙든 것은 도서관과 학술 문헌을 다루던 정보 검색 연구자들이었습니다. 그들이 찾은 답은 책 뒤의 찾아보기와 같습니다. 문서마다 어떤 단어가 있는지 적는 대신 단어마다 그 단어가 나오는 문서 목록을 적어 둡니다. "키보드 → 1, 2, 4번 문서"처럼요. 이것을 **역색인**이라고 합니다. 검색어가 들어오면 그 단어의 목록만 꺼내면 되니 문서가 백만 개여도 전체를 훑을 필요가 없습니다. 4장 인덱스 단원의 B-tree가 값으로 행을 찾는다면 역색인은 단어로 문서를 찾습니다.',
+    '여기에는 작은 전제가 하나 있습니다. 문서와 검색어가 같은 규칙으로 단어로 쪼개져야 합니다. "Keyboard"와 "keyboard", "키보드를"과 "키보드"가 같은 단어로 맞춰져야 서로를 찾습니다. 글을 단어(토큰)로 쪼개고 소문자로 바꾸고 조사나 어미를 떼어 내는 처리를 **분석기**라고 합니다. 조사가 붙는 한국어는 형태소 분석이 특히 중요합니다.'
+   ]},
+   { heading: '무엇이 더 관련 있는가: 관련도 점수', paragraphs: [
+    '찾은 문서가 수백 개면 순서가 중요합니다. 1960~70년대 코넬 대학의 제라드 솔턴은 문서와 검색어를 단어의 목록으로 보고 얼마나 비슷한지로 순위를 매기는 방법을 연구했습니다. 1972년 캐런 스파크 존스는 중요한 관찰을 하나 더했습니다. 많은 문서에 나오는 흔한 단어보다 적은 문서에만 나오는 드문 단어가 문서를 더 잘 구별한다는 것입니다. 문서 안에서 자주 나오고(단어 빈도) 전체에서는 드물게 나오는(역문서 빈도) 단어에 높은 점수를 주는 이 방식이 **TF-IDF**입니다.',
+    '1990년대 스티븐 로버트슨 등은 이를 다듬은 **BM25**를 만들었습니다. 같은 단어를 백 번 반복한 문서가 끝없이 높은 점수를 받지 않게 하고 긴 문서가 단어가 많다는 이유만으로 유리해지지 않게 보정했습니다. 지금 Elasticsearch의 기본 점수도 BM25입니다. 실제 쇼핑몰은 여기에 판매량, 평점, 최신성 같은 신호를 섞어 최종 순서를 정합니다.'
+   ]},
+   { heading: '라이브러리에서 검색 서버로: Lucene과 Elasticsearch', paragraphs: [
+    '1999년 더그 커팅은 역색인과 관련도 점수를 구현한 Java 라이브러리 Lucene을 만들어 공개했습니다. 덕분에 누구나 자기 프로그램에 검색 기능을 넣을 수 있게 되었지만 라이브러리라서 서버를 여러 대로 늘리거나 장애에 대비하는 일은 각자 해야 했습니다.',
+    '2010년 샤이 바논은 Lucene 위에 서버를 세워 Elasticsearch를 공개했습니다. 색인을 여러 조각(**샤드**)으로 나눠 여러 서버에 두고 조각마다 복제본을 두어 4장 복제와 샤딩 단원에서 본 방식으로 늘리고 버티게 했습니다. 다루는 방법은 3장에서 본 HTTP와 JSON이라 어느 언어에서든 쉽게 붙일 수 있었습니다. 로그를 모아 검색하는 ELK 조합으로도 널리 쓰였고 2021년 라이선스 변경 뒤로는 AWS가 갈라 만든 OpenSearch가 함께 쓰입니다.'
+   ]},
+   { heading: 'DB를 대신하지 않고 곁에 둔다', paragraphs: [
+    '검색 엔진은 빠르지만 DB를 대신하지는 않습니다. 트랜잭션이 없고 새로 넣은 문서가 검색에 보이기까지 짧은 지연(기본 1초)이 있으며 분석기를 바꾸면 전체를 다시 색인해야 합니다. 그래서 흔한 구성은 원본을 DB에 두고 검색에 필요한 필드만 사본으로 검색 엔진에 넣는 것입니다. 검색으로 상품을 고르면 상세 정보와 재고는 다시 DB에서 읽습니다.',
+    '사본을 둔다는 것은 둘을 맞춰야 한다는 뜻입니다. 앱에서 DB에 쓰고 검색 엔진에도 쓰면 한쪽만 실패할 수 있으니 4장 큐 단원의 아웃박스처럼 변경을 안전하게 전달하는 경로를 둡니다. 4장 캐시 단원의 원칙과 같습니다. 사본은 언제든 원본에서 다시 만들 수 있어야 합니다. 데이터가 작고 검색이 단순하다면 PostgreSQL의 전문 검색으로 시작해도 충분합니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: '검색은 LIKE \'%단어%\'로 충분하다.', truth: '앞에 %가 붙은 LIKE는 인덱스를 쓰지 못해 표 전체를 읽고 조사나 대소문자 차이를 맞추지 못하며 관련도 순서도 없습니다. 데이터가 커지면 역색인을 쓰는 전문 검색이 필요합니다.' },
+   { belief: 'Elasticsearch를 주 데이터베이스로 쓰면 DB가 필요 없다.', truth: '트랜잭션이 없고 검색에 보이기까지 지연이 있으며 다시 색인해야 할 때가 있습니다. 원본은 DB에 두고 검색 엔진은 다시 만들 수 있는 사본으로 둡니다.' },
+   { belief: '검색어에 많이 나오는 단어일수록 점수에 크게 기여한다.', truth: '많은 문서에 나오는 흔한 단어는 문서를 구별하지 못해 가중치가 작습니다. 드문 단어가 점수에 더 크게 기여합니다(IDF).' }
+  ],
+  to: '검색 엔진은 DB 곁에 두는 사본이었습니다. 사본을 두는 더 흔한 이유는 속도입니다. 같은 데이터를 반복해서 읽으면 DB에 부담이 쌓이니 자주 읽는 결과를 더 가까운 곳에 복사해 두면 어떨까요? 다음 단원 캐시가 이 생각과 그 대가를 다룹니다.',
+  books: [
+   { title: 'Introduction to Information Retrieval', by: 'Christopher D. Manning, Prabhakar Raghavan, Hinrich Schütze', where: '1장 불리언 검색과 역색인, 2장 용어와 포스팅, 6장 점수와 TF-IDF, 11장 확률 모형(BM25)', note: '역색인에서 관련도 점수까지 검색 엔진의 원리를 차근차근 설명하는 교과서입니다. 저자들이 웹에서 무료로 공개했습니다.' },
+   { title: 'Elasticsearch: The Definitive Guide', by: 'Clinton Gormley, Zachary Tong', where: '역색인, 분석기, 관련도 장', note: 'Elasticsearch가 역색인과 분석기를 어떻게 쓰는지 개발자 관점에서 설명합니다. 예전 버전 기준이지만 개념 설명은 지금도 유효하고 Elastic 사이트에 공개되어 있습니다.', url: 'https://www.elastic.co/guide/en/elasticsearch/guide/current/inverted-index.html' },
+   { title: 'Relevant Search', by: 'Doug Turnbull, John Berryman', where: '1~4장 검색의 관련도와 점수', note: '검색 결과의 순서를 업무에 맞게 다듬는 방법을 다룹니다. 관련도를 실무에서 어떻게 조정하는지 알고 싶을 때 봅니다.' }
+  ],
+  papers: [
+   { title: 'A Statistical Interpretation of Term Specificity and Its Application in Retrieval', by: 'Karen Spärck Jones', where: 'Journal of Documentation, 1972', note: '드문 단어가 더 중요하다는 IDF의 출발점입니다.', url: 'https://doi.org/10.1108/eb026526' },
+   { title: 'A Vector Space Model for Automatic Indexing', by: 'Gerard Salton, Andrew Wong, Chung-Shu Yang', where: 'Communications of the ACM, 1975', note: '문서와 검색어를 벡터로 보고 비슷한 정도로 순위를 매기는 모형입니다.', url: 'https://doi.org/10.1145/361219.361220' },
+   { title: 'The Probabilistic Relevance Framework: BM25 and Beyond', by: 'Stephen Robertson, Hugo Zaragoza', where: 'Foundations and Trends in Information Retrieval, 2009', note: 'BM25를 만든 사람이 그 배경과 공식을 정리한 글입니다.', url: 'https://doi.org/10.1561/1500000019' },
+   { title: 'The Anatomy of a Large-Scale Hypertextual Web Search Engine', by: 'Sergey Brin, Lawrence Page', where: 'Computer Networks, 1998', note: 'Google 초기 구조를 설명한 논문입니다. 역색인을 웹 규모로 어떻게 만들었는지 보여 줍니다.', url: 'https://doi.org/10.1016/S0169-7552(98)00110-X' }
+  ]
+ },
+ documentdb: {
+  question: '프로그램은 데이터를 JSON처럼 중첩된 모양으로 다루는데, 데이터베이스도 그 모양 그대로 저장하면 무엇을 얻고 무엇을 잃을까요?',
+  from: '앞 단원의 저장소 지도에서 문서 DB는 화면이 읽는 모양 그대로 데이터를 저장하려고 나왔다고 했습니다. 그 생각이 어디서 왔고 무엇을 대가로 치르는지 봅니다.',
+  parts: [
+   { heading: '표와 객체 사이의 어긋남', paragraphs: [
+    '4장 정규화 단원에서 데이터를 중복 없이 여러 표로 나누는 이유를 봤습니다. 고객은 customers에, 주문은 orders에, 주문 항목은 order_items에 두면 고객 이름을 바꿀 때 한 곳만 고치면 됩니다. 그런데 주문 상세 화면을 그리려면 세 표를 다시 조인해야 하고, 코드는 그 결과를 다시 "주문 안에 고객과 항목이 들어 있는" 객체로 조립합니다.',
+    '프로그램은 데이터를 늘 중첩된 모양으로 다룹니다. 3장에서 본 JSON이 그렇습니다. 저장할 때는 쪼개고 읽을 때는 다시 맞추는 이 반복을 사람들은 객체와 관계의 불일치라고 불렀습니다. ORM이 그 변환을 대신해 주었지만 조인의 비용은 그대로 남았습니다.'
+   ]},
+   { heading: '문서를 통째로 저장하자', paragraphs: [
+    '그렇다면 화면이 읽는 모양 그대로 저장하면 어떨까요? 이 생각이 **문서 DB**입니다. 주문 하나를 고객 이름과 주문 항목까지 품은 JSON 문서 하나로 저장하면 조인 없이 한 번에 읽힙니다. 1989년 Lotus Notes도 이미 문서를 단위로 저장했지만 이 생각이 널리 퍼진 것은 JSON이 웹의 공용어가 된 2000년대 후반입니다. 2005년 CouchDB가, 2009년 MongoDB가 나왔습니다.',
+    'MongoDB가 빠르게 퍼진 데는 이유가 있었습니다. JSON과 닮은 문서를 그대로 넣고 꺼낼 수 있었고, 같은 컬렉션 안의 문서라도 필드 구성이 달라도 되어 ALTER TABLE 없이 새 필드를 넣을 수 있었습니다. 문서 안의 필드에도 인덱스를 걸 수 있었고 문서가 서로 독립적이라 4장 복제와 샤딩 단원에서 볼 방식으로 여러 서버에 나누기도 쉬웠습니다. 서비스 초기에 데이터 모양이 자주 바뀌던 스타트업들에게 잘 맞았습니다.'
+   ]},
+   { heading: '모은 만큼 생기는 문제', paragraphs: [
+    '모아 둔다는 것은 복사한다는 뜻이기도 합니다. 주문 문서마다 고객 이름을 넣어 두었다면 고객이 이름을 바꿀 때 어느 문서까지 고칠지 정해야 합니다. 정규화가 막으려던 문제가 돌아온 것입니다. 다만 주문서에는 주문 당시 이름이 남는 것이 맞을 수도 있습니다. 그래서 문서 설계의 핵심 질문은 "이 데이터를 함께 읽고 함께 바꾸는가"입니다. 그렇다면 문서 안에 넣고(**임베딩**), 여러 곳에서 공유하거나 끝없이 자라는 데이터라면 id로 가리킵니다(참조).',
+    '원자성의 단위도 다릅니다. MongoDB는 문서 하나에 대한 쓰기를 항상 원자적으로 처리합니다. 함께 바뀌는 데이터를 한 문서에 두면 4장 트랜잭션 단원에서 본 여러 행 트랜잭션이 필요 없어 빠르고 잘 늘어납니다. 여러 문서를 함께 바꿔야 할 때를 위해 4.0(2018)부터 여러 문서 트랜잭션이 생겼지만 비용이 커서 공식 문서도 먼저 데이터 모델로 해결하라고 권합니다.'
+   ]},
+   { heading: '스키마가 없다는 말의 진짜 뜻', paragraphs: [
+    '"스키마가 없다"는 말은 오해를 부르기 쉽습니다. DB가 모양을 강제하지 않을 뿐 데이터를 읽는 코드는 여전히 "주문에는 items 배열이 있다"고 가정합니다. 스키마는 사라진 것이 아니라 DB에서 코드로 옮겨 간 것입니다. 필드 이름을 바꾸면 옛 문서와 새 문서가 섞이니 읽는 코드가 둘 다 다루거나 옛 문서를 고쳐야 합니다. 그래서 MongoDB도 JSON Schema 검증을 제공합니다.',
+    '관계형 설계를 그대로 옮기는 것도 흔한 실수입니다. 표마다 컬렉션을 만들고 코드에서 id로 여러 번 조회하면 조인의 비용은 남고 외래 키 제약은 사라집니다. 문서 DB의 장점은 화면과 API가 읽는 단위로 문서를 다시 설계할 때만 생깁니다.'
+   ]},
+   { heading: '두 세계가 가까워지다', paragraphs: [
+    '2010년대를 거치며 경계는 흐려졌습니다. MongoDB는 WiredTiger 저장 엔진과 트랜잭션을 갖추며 관계형 DB가 지키던 보장에 다가갔고, PostgreSQL은 2014년 JSONB로 문서를 컬럼에 저장하고 그 안을 인덱스로 검색하게 했습니다. 그래서 지금의 질문은 "SQL이냐 NoSQL이냐"보다 "데이터의 대부분이 문서 단위로 읽히는가, 여러 데이터를 함께 맞춰야 하는가"입니다.',
+    '상품 카탈로그, 게시글과 콘텐츠, 사용자 설정처럼 문서 단위로 읽고 모양이 제각각인 데이터는 문서 DB가 자연스럽습니다. 주문, 결제, 재고처럼 함께 맞춰야 하는 데이터는 관계형 DB가 자연스럽습니다. 많은 서비스가 둘을 함께 씁니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: 'MongoDB는 스키마가 없으니 데이터 설계를 하지 않아도 된다.', truth: 'DB가 강제하지 않을 뿐 코드가 데이터 모양을 가정합니다. 접근 패턴에 맞춘 문서 설계가 오히려 더 중요합니다.' },
+   { belief: '문서 DB에는 트랜잭션이 없어서 돈이 오가는 일에는 못 쓴다.', truth: '문서 하나의 쓰기는 항상 원자적이고 MongoDB 4.0부터 여러 문서 트랜잭션도 있습니다. 다만 여러 데이터를 함께 맞추는 일이 많다면 관계형 DB가 더 단순합니다.' },
+   { belief: '관계형 표를 그대로 컬렉션으로 옮기면 문서 DB로 옮긴 것이다.', truth: '그러면 조인 비용은 코드로 옮겨 가고 제약은 사라집니다. 화면과 API가 읽는 단위로 문서를 다시 설계해야 장점이 생깁니다.' }
+  ],
+  to: '관계형 DB도, 문서 DB도 정확한 값으로는 잘 찾습니다. 그런데 사용자는 검색창에 "무선 키보드"처럼 단어를 칩니다. 글 속의 단어로 찾고 관련 있는 순서로 정렬하려면 무엇이 필요할까요? 다음 단원 검색 엔진이 이 질문을 다룹니다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '2장 데이터 모델과 질의 언어(관계형 모델과 문서 모델 비교)', note: '같은 이력서 데이터를 관계형과 문서로 표현해 비교하고 객체와 관계의 불일치, 스키마 온 리드를 설명합니다.', url: 'https://dataintensive.net/' },
+   { title: 'MongoDB: The Definitive Guide', by: 'Shannon Bradshaw, Eoin Brazil, Kristina Chodorow', where: '스키마 설계, 복제, 샤딩 장', note: 'MongoDB의 문서 모델과 임베딩·참조 선택, 운영 구성을 다룹니다.' },
+   { title: 'NoSQL Distilled', by: 'Pramod J. Sadalage, Martin Fowler', where: '2장 집합체 데이터 모델, 9장 문서 데이터베이스', note: '함께 다루는 데이터 묶음(집합체)이라는 관점으로 NoSQL 모델들을 짧고 명확하게 정리합니다.' }
+  ],
+  papers: [
+   { title: 'MongoDB · Data Modeling', by: 'MongoDB', where: '공식 문서', note: '임베딩과 참조를 고르는 기준과 대표 설계 패턴을 설명합니다.', url: 'https://www.mongodb.com/docs/manual/data-modeling/' },
+   { title: 'RFC 8259 · The JavaScript Object Notation (JSON) Data Interchange Format', by: 'Tim Bray (ed.)', where: 'IETF, 2017', note: '문서 DB가 저장하는 JSON의 표준입니다. 처음 RFC 4627(2006)로 정리되었습니다.', url: 'https://www.rfc-editor.org/rfc/rfc8259' },
+   { title: 'PostgreSQL · JSON Types', by: 'PostgreSQL Global Development Group', where: '공식 문서', note: '관계형 DB 안에서 문서를 저장하고 검색하는 JSONB를 설명합니다.', url: 'https://www.postgresql.org/docs/current/datatype-json.html' }
+  ]
+ },
+ redis: {
+  question: '여러 서버가 함께 쓰는 아주 빠른 저장소가 필요할 때, 왜 데이터를 메모리에 두고 명령을 한 줄로 세워 처리하는 설계가 답이 되었을까요?',
+  from: '앞 단원에서 캐시가 읽기를 빠르게 하는 원리를 봤습니다. 그 캐시를 여러 서버가 함께 쓰려면 어디에 두어야 할까요?',
+  parts: [
+   { heading: '서버가 여러 대가 되자 생긴 문제', paragraphs: [
+    '앞 단원에서 캐시는 자주 읽는 결과를 가까운 곳에 복사해 두는 것이라고 했습니다. 가장 가까운 곳은 앱 서버의 메모리입니다. 그런데 6장에서 볼 로드 밸런서 뒤에 서버가 여러 대 서면 문제가 생깁니다. 서버마다 캐시가 따로 있어 같은 데이터를 여러 번 채우고, 한 서버에서 지운 값이 다른 서버에는 남아 있습니다. 로그인 시도 횟수를 서버마다 세면 같은 사용자가 서버 수만큼 더 시도할 수 있습니다.',
+    '앞 단원에서 본 memcached가 첫 번째 답이었습니다. 캐시를 앱에서 떼어 내 모든 서버가 함께 쓰는 별도의 서버로 만든 것입니다. 다만 memcached의 값은 문자열뿐이었고 그것으로 충분하지 않은 일들이 곧 드러났습니다.'
+   ]},
+   { heading: '문자열만으로는 부족했다', paragraphs: [
+    '2009년 이탈리아의 살바토레 산필리포는 웹사이트 방문 기록을 실시간으로 보여 주는 서비스를 만들고 있었습니다. 사이트마다 최근 방문 목록을 유지해야 했는데 MySQL로는 쓰기를 감당할 수 없었습니다. Memcached처럼 값이 문자열뿐이면 목록에 하나를 더하려 해도 전체를 읽고 고쳐 다시 써야 하고, 그 사이에 다른 서버가 끼어들 수 있습니다.',
+    '그래서 그는 서버가 자료구조를 직접 알게 만들었습니다. 값이 리스트라면 "맨 앞에 하나 넣어(LPUSH)", 숫자라면 "하나 올려(INCR)", 점수 순 집합이라면 "위에서 10개 줘(ZREVRANGE)"라고 명령하면 됩니다. 바뀐 부분만 서버 안에서 고치니 빠르고 다른 명령이 끼어들 틈도 없습니다. 이 서버가 원격 사전(REmote DIctionary Server), **Redis**입니다.'
+   ]},
+   { heading: '한 줄로 서서 처리하는 이유', paragraphs: [
+    'Redis의 명령은 하나의 실행 스레드가 차례로 처리합니다. 여러 코어를 두고 왜 한 스레드일까요? 데이터가 메모리에 있어 명령 하나가 마이크로초 단위로 끝나니, 여러 스레드로 나눠 얻는 이득보다 2장 동기화 단원에서 본 잠금과 문맥 교환의 비용이 더 큽니다. 한 줄로 세우면 모든 명령이 저절로 원자적이고 구현도 단순합니다. 수많은 연결은 3장 비동기 단원의 이벤트 루프로 한 스레드가 번갈아 돌봅니다.',
+    '이 설계의 대가도 분명합니다. 오래 걸리는 명령 하나가 줄 전체를 멈춥니다. 모든 키를 훑는 KEYS *나 백만 개짜리 리스트를 통째로 읽는 명령은 운영에서 다른 모든 요청을 기다리게 합니다. 그래서 SCAN처럼 조금씩 나눠 하는 명령을 씁니다. 병목이 대개 네트워크라서 Redis 6부터는 명령 실행은 한 스레드로 두고 네트워크 읽기와 쓰기만 여러 스레드로 나눌 수 있게 했습니다.'
+   ]},
+   { heading: '메모리에 있지만 사라지지 않게', paragraphs: [
+    '메모리는 전원이 꺼지면 지워집니다. Redis는 두 가지 방법으로 디스크에 남깁니다. RDB는 2장 프로세스 단원에서 본 fork로 자식 프로세스를 만들어 메모리 전체를 파일로 씁니다. 서버를 멈추지 않지만 마지막 스냅샷 이후의 변경은 잃을 수 있습니다. AOF는 변경 명령을 파일 끝에 계속 덧붙이고 보통 1초마다 fsync합니다. 2장 파일 시스템 단원의 그 선택, 얼마나 자주 디스크에 확정할 것인가가 그대로 나타납니다.',
+    '그래서 Redis를 쓸 때 가장 먼저 정할 것은 "이 데이터를 잃으면 어떻게 되나"입니다. DB에서 다시 만들 수 있는 캐시라면 만료 시간과 축출 정책만 두면 됩니다. 세션이나 장바구니처럼 Redis에만 있는 데이터라면 AOF와 복제, 장애 조치를 함께 설계해야 합니다.'
+   ]},
+   { heading: '캐시를 넘어 공유 상태로', paragraphs: [
+    '자료구조와 원자적 명령 덕분에 Redis는 캐시를 넘어 여러 서버가 함께 쓰는 상태 저장소가 되었습니다. INCR와 EXPIRE로 처리율 제한을, 정렬된 집합으로 게임 순위표를, 해시로 세션을, "키가 없을 때만 쓰기(SET NX)"로 짧은 분산 락을, 리스트와 스트림으로 간단한 작업 큐를 만듭니다. 2015년에는 키를 16384개의 슬롯으로 나눠 여러 서버에 분산하는 Redis Cluster가 나왔고, 2024년 라이선스 변경 뒤로는 리눅스 재단의 Valkey가 같은 명령으로 함께 쓰입니다.',
+    '그래도 원칙은 4장 캐시 단원과 같습니다. 원본은 DB에 두고 Redis는 빠르고 공유되지만 사라질 수 있는 곳으로 다룹니다. 이 원칙을 벗어나 Redis를 주 저장소로 쓰려면 그만큼의 내구성 설계를 따로 해야 합니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: 'Redis는 싱글 스레드라서 느리다.', truth: '데이터가 메모리에 있어 명령이 매우 짧게 끝나고 이벤트 루프로 많은 연결을 다루므로 초당 수십만 건을 처리합니다. 느려지는 것은 오래 걸리는 명령 하나가 줄 전체를 막을 때입니다.' },
+   { belief: 'Redis에 넣은 데이터는 서버가 꺼지면 무조건 사라진다.', truth: 'RDB 스냅샷과 AOF 기록으로 디스크에 남길 수 있습니다. 다만 설정에 따라 마지막 몇 초는 잃을 수 있어 잃으면 안 되는 원본은 DB에 둡니다.' },
+   { belief: 'Redis에서 GET으로 읽고 SET으로 쓰면 카운터를 안전하게 올릴 수 있다.', truth: '두 명령 사이에 다른 서버가 끼어들어 갱신이 사라질 수 있습니다. INCR처럼 한 명령으로 하거나 MULTI/EXEC, Lua 스크립트로 묶어야 합니다.' }
+  ],
+  to: 'Redis와 캐시는 읽기를 빠르게 합니다. 그렇다면 오래 걸리는 쓰기 작업, 예를 들어 주문 뒤의 이메일 발송이나 썸네일 생성은 어떻게 할까요? 사용자를 기다리게 하지 않고 나중에 처리하는 방법이 다음 단원 메시지 큐입니다.',
+  books: [
+   { title: 'Redis in Action', by: 'Josiah L. Carlson', where: '1~2장 자료구조와 웹 앱에서의 활용, 4장 영속성과 복제, 6장 락과 큐', note: '세션, 장바구니, 카운터, 락, 큐를 Redis 자료구조로 직접 만들어 보며 왜 그 자료구조를 고르는지 설명합니다. Redis 공식 사이트에 공개되어 있습니다.' },
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '3장 저장소와 검색(인메모리 데이터베이스), 8장 분산 시스템의 문제(락과 펜싱)', note: '메모리 DB가 빠른 진짜 이유와 Redis 같은 저장소로 만든 분산 락의 한계를 설명합니다.', url: 'https://dataintensive.net/' }
+  ],
+  papers: [
+   { title: 'Scaling Memcache at Facebook', by: 'Rajesh Nishtala 외', where: 'NSDI, 2013', note: '공유 메모리 캐시를 수천 대 규모로 운영하며 겪은 일관성과 부하 문제를 설명합니다.', url: 'https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala' },
+   { title: 'Redis · Persistence', by: 'Redis', where: '공식 문서', note: 'RDB와 AOF의 동작과 각각 잃을 수 있는 범위를 설명합니다.', url: 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/' },
+   { title: 'How to do distributed locking', by: 'Martin Kleppmann', where: '블로그, 2016', note: 'Redis로 만든 분산 락이 어떤 상황에서 안전하지 않은지 설명합니다. 락을 쓰기 전에 읽어 볼 만합니다.', url: 'https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html' }
+  ]
+ },
+ monitoring: {
+  question: '수백 개의 서버와 컨테이너가 내놓는 숫자와 기록을 어떻게 모으고 저장해서, 한 화면에서 보고 정말 필요할 때만 사람을 깨울 수 있을까요?',
+  from: '앞 단원에서 무엇을 봐야 하는지, 네 가지 황금 신호와 로그·메트릭·트레이스를 봤습니다. 이번에는 그것을 실제로 모으고 보여 주는 도구들입니다.',
+  parts: [
+   { heading: '살아 있나에서 어떻게 변하나로', paragraphs: [
+    '앞 단원에서 본 Nagios 같은 초기 도구의 질문은 "이 서버는 살아 있나"였습니다. 결과는 정상, 경고, 위험 같은 상태였습니다. 그런데 운영자가 정말 알고 싶은 것은 변화였습니다. 응답 시간이 지난주보다 늘었나? 배포 직후부터 오류가 늘었나? 이런 질문에 답하려면 숫자를 시간 순으로 계속 저장해야 합니다. 이렇게 시각과 값의 쌍이 끝없이 쌓이는 데이터를 시계열이라고 부릅니다.',
+    '1990년대 말 MRTG와 RRDtool이 네트워크 트래픽을 시간 순으로 저장하고 그래프로 그렸고, 2006년 Orbitz의 Graphite는 어떤 숫자든 이름을 붙여 보내면 저장하고 그려 주었습니다. 2011년 Etsy는 앱에서 "이것을 하나 세라"는 신호를 쉽게 보내는 StatsD를 공개하며 "측정할 수 있는 모든 것을 측정하라"는 문화를 퍼뜨렸습니다.'
+   ]},
+   { heading: '라벨과 끌어오기: Prometheus', paragraphs: [
+    'Graphite에서는 servers.web01.orders.status500.count처럼 이름에 모든 정보를 넣었습니다. 그러면 나중에 "모든 서버의 /orders 오류를 합쳐서"처럼 새로운 기준으로 묶기가 어렵습니다. 게다가 6장의 컨테이너처럼 서버가 수시로 생기고 사라지면 이름을 관리할 수 없습니다. 2012년 SoundCloud의 엔지니어들은 구글 내부의 모니터링 시스템 Borgmon에서 영감을 받아 **Prometheus**를 만들었습니다.',
+    'Prometheus는 두 가지를 바꿨습니다. 첫째, 메트릭에 라벨을 붙입니다. http_requests_total{path="/orders", status="500"}처럼 쓰면 경로별, 상태별, 서버별로 자유롭게 나누고 합칠 수 있습니다. 둘째, 앱이 보내는 대신 Prometheus가 가져갑니다. 앱은 /metrics 주소에 숫자를 내놓기만 하고 Prometheus가 대상 목록을 쥐고 15초마다 돌며 가져옵니다(스크레이프). 대상이 죽으면 가져오기 실패로 곧바로 드러나고, Kubernetes에 새 컨테이너가 뜨면 목록이 자동으로 갱신됩니다. 2016년 Prometheus는 Kubernetes에 이어 CNCF의 두 번째 프로젝트가 되었습니다.'
+   ]},
+   { heading: '숫자를 싸게 담는 법: 시계열 DB', paragraphs: [
+    '서버 수백 대가 15초마다 수천 개의 숫자를 내놓으면 하루에 수십억 개의 점이 쌓입니다. 일반 DB에 행으로 넣으면 감당하기 어렵습니다. 그래서 시계열만을 위한 저장 방식이 발전했습니다. 2015년 Facebook의 Gorilla 논문은 바로 앞 점과의 차이만 저장하면 시각과 값이 대부분 몇 비트로 줄어든다는 점을 이용해 점 하나를 평균 1.37바이트로 압축했습니다. Prometheus의 저장 엔진도 이 방식을 받아들여 서버 한 대에 수백만 개의 시계열을 담습니다. 앞 장의 저장소 지도에서 말한 시계열 DB가 바로 이것입니다.',
+    '이 압축은 라벨 조합 하나가 시계열 하나라는 전제 위에 있습니다. 라벨에 사용자 ID나 주문 번호처럼 값이 끝없는 것을 넣으면 시계열이 수백만 개로 늘어 메모리가 터집니다. 이것을 카디널리티 폭발이라고 부르며 Prometheus를 운영할 때 가장 흔한 사고입니다.'
+   ]},
+   { heading: '계산하고, 그리고, 깨우기', paragraphs: [
+    '요청 수는 누적 카운터로 저장되어 계속 커지기만 합니다. 그래서 값 자체가 아니라 PromQL의 rate()로 "최근 5분간 초당 얼마나 늘었나"를 계산합니다. 오류 속도를 요청 속도로 나누면 오류율이, 응답 시간 히스토그램에서 histogram_quantile()을 쓰면 p99 지연이 나옵니다. 앞 단원의 네 가지 황금 신호가 이렇게 숫자가 됩니다.',
+    '이 숫자를 그리는 화면은 대개 **Grafana**입니다. 2014년 토르켈 외데고르가 Graphite 그래프를 보기 좋게 그리려고 만들었고, 지금은 Prometheus, 로그 저장소, 트레이스 저장소, 각종 DB까지 한 대시보드에 모읍니다. 알림은 Prometheus의 규칙이 맡습니다. "오류율이 2%를 넘는 상태가 5분 계속되면"처럼 지속 조건을 두어 잠깐 튄 값으로 사람을 깨우지 않고, Alertmanager가 같은 원인의 알림 수백 개를 하나로 묶어 당직자에게 보냅니다. CPU 같은 원인보다 오류율과 지연 같은 증상에 알림을 거는 것이 앞 단원에서 본 SLO의 생각입니다.'
+   ]},
+   { heading: '로그와 트레이스까지 한 화면에', paragraphs: [
+    '메트릭은 "무엇이 얼마나"를 싸게 알려 주지만 "왜"는 로그와 트레이스에 있습니다. 로그는 오래도록 ELK, 즉 Elasticsearch, Logstash, Kibana 조합으로 모았습니다. 4장 검색 엔진 단원의 역색인으로 로그 본문을 강력하게 검색하지만 그만큼 비쌉니다. 2018년 Grafana Labs의 Loki는 본문은 색인하지 않고 Prometheus와 같은 라벨만 색인해 싸게 모으는 길을 택했습니다. 트레이스는 Jaeger나 Tempo에 저장합니다.',
+    '2019년 OpenTelemetry가 나오면서 세 신호를 같은 방식으로 수집해 원하는 저장소로 보내는 길이 생겼습니다. 잘 꾸린 환경에서는 Grafana의 오류 그래프를 누르면 같은 시간의 로그로, 로그의 trace_id를 누르면 그 요청의 트레이스로 넘어갑니다. 도구의 이름은 바뀌어도 목표는 같습니다. 장애가 났을 때 가장 짧은 길로 "무엇이"에서 "왜"까지 가는 것입니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: '요청 수 카운터를 그대로 그래프로 그리면 트래픽을 볼 수 있다.', truth: '카운터는 누적값이라 계속 올라가기만 합니다. rate()로 구간의 초당 증가량을 계산해야 트래픽이 보입니다.' },
+   { belief: '라벨은 많을수록 자세하게 볼 수 있어 좋다.', truth: '라벨 값의 조합마다 시계열이 하나씩 생깁니다. 사용자 ID처럼 값이 끝없는 라벨은 시계열을 폭발시켜 Prometheus를 멈추게 합니다. 개별 요청의 정보는 로그와 트레이스에 둡니다.' },
+   { belief: '알림은 많이 걸어 둘수록 안전하다.', truth: '자주 울리는데 행동할 필요가 없는 알림은 사람들이 무시하게 만들어 진짜 장애를 놓치게 합니다. 사용자가 느끼는 증상에 지속 조건과 함께 겁니다.' }
+  ],
+  to: '지표를 보다 보면 언젠가 "요청이 늘어서 느려진다"는 순간을 만납니다. 서버를 늘리면 해결될까요? 어디가 진짜 병목일까요? 다음 단원 스케일링과 병목이 이 질문을 다룹니다.',
+  books: [
+   { title: 'Prometheus: Up & Running', by: 'Julien Pivotto, Brian Brazil', where: '1장 소개, 3장 계측, 7장 PromQL, 18장 알림', note: 'Prometheus의 설계 이유와 계측, 질의, 알림을 실무 관점에서 설명합니다.' },
+   { title: 'Site Reliability Engineering', by: 'Betsy Beyer 외 (Google)', where: '6장 분산 시스템 모니터링, 10장 시계열 데이터 기반 알림', note: '네 가지 황금 신호와 증상 기반 알림, Prometheus의 원형인 Borgmon을 설명합니다. 웹에 무료로 공개되어 있습니다.', url: 'https://sre.google/sre-book/practical-alerting/' },
+   { title: 'Observability Engineering', by: 'Charity Majors, Liz Fong-Jones, George Miranda', where: '1~2장 관측 가능성, 7장 OpenTelemetry', note: '메트릭만으로는 답하지 못하는 질문과 구조화된 이벤트, 트레이스의 역할을 설명합니다.' }
+  ],
+  papers: [
+   { title: 'Gorilla: A Fast, Scalable, In-Memory Time Series Database', by: 'Tuomas Pelkonen 외 (Facebook)', where: 'VLDB, 2015', note: '시계열 압축의 고전입니다. Prometheus 저장 엔진에도 영향을 주었습니다.', url: 'https://www.vldb.org/pvldb/vol8/p1816-teller.pdf' },
+   { title: 'Prometheus · Overview', by: 'Prometheus Authors', where: '공식 문서', note: 'Prometheus의 구성 요소와 끌어오기 방식, 맞는 일과 맞지 않는 일을 설명합니다.', url: 'https://prometheus.io/docs/introduction/overview/' },
+   { title: 'Dapper, a Large-Scale Distributed Systems Tracing Infrastructure', by: 'Benjamin H. Sigelman 외 (Google)', where: 'Google Technical Report, 2010', note: '분산 추적 도구 Jaeger와 Zipkin, OpenTelemetry 트레이스의 원형입니다.', url: 'https://research.google/pubs/dapper-a-large-scale-distributed-systems-tracing-infrastructure/' }
   ]
  }
 };

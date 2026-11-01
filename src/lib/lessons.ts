@@ -39,6 +39,13 @@ export const sources = {
  websocket: { name: 'RFC 6455 · WebSocket', url: 'https://www.rfc-editor.org/rfc/rfc6455' },
  rfc6585: { name: 'RFC 6585 · 429 Too Many Requests', url: 'https://www.rfc-editor.org/rfc/rfc6585' },
  backoff: { name: 'AWS · Timeouts, retries and backoff with jitter', url: 'https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/' },
+ esInverted: { name: 'Elasticsearch Guide · Inverted Index', url: 'https://www.elastic.co/guide/en/elasticsearch/guide/current/inverted-index.html' },
+ mongoModeling: { name: 'MongoDB · Data Modeling', url: 'https://www.mongodb.com/docs/manual/data-modeling/' },
+ mongoTx: { name: 'MongoDB · Transactions', url: 'https://www.mongodb.com/docs/manual/core/transactions/' },
+ redisTypes: { name: 'Redis · Data Types', url: 'https://redis.io/docs/latest/develop/data-types/' },
+ redisPersistence: { name: 'Redis · Persistence', url: 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/' },
+ promOverview: { name: 'Prometheus · Overview', url: 'https://prometheus.io/docs/introduction/overview/' },
+ grafanaDocs: { name: 'Grafana Documentation', url: 'https://grafana.com/docs/grafana/latest/' },
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
@@ -613,17 +620,121 @@ print("AZ 1개:", one_az, "→ 연간 중단", downtime_hours(one_az), "시간")
 print("AZ 2개:", round(two_az, 6), "→ 연간 중단", downtime_hours(two_az), "시간")
 
 # 비용은 대략 두 배가 됩니다. 시간당 100원짜리 서버라면
-print("연간 비용:", 100 * hours_per_year, "원 →", 2 * 100 * hours_per_year, "원")`,codeNotes:['두 가용 영역이 서로 독립적으로 고장 난다는 가정 아래 둘 다 동시에 멈출 확률은 0.001 × 0.001입니다. 실제로는 배포 실수나 리전 전체 장애처럼 함께 멈추는 원인도 있어 이보다 덜 좋아집니다.','숫자를 바꿔 보세요. 99%짜리 두 개와 99.9%짜리 하나 중 무엇이 나은지, 세 개로 늘리면 얼마나 나아지는지 계산할 수 있습니다.','가용성 숫자는 비용과 함께 봐야 합니다. 모든 서비스가 같은 수준의 가용성을 필요로 하지는 않습니다.'],answer:'클라우드는 가상화 위에서 컴퓨팅 자원을 API로 빌려 쓰고 쓴 만큼 내는 방식입니다. 하이퍼바이저가 물리 서버를 여러 가상 머신으로 나누고 업체는 리전마다 전원과 네트워크가 독립된 가용 영역을 여러 개 둡니다. 운영 서비스는 최소 두 가용 영역에 나눠 배치해 한 영역의 장애를 견디게 하고, 관리 부담과 비용을 따져 IaaS, PaaS, 서버리스 중에서 고르겠습니다.',follow:[['가용 영역과 리전은 어떻게 다른가요?','리전은 서울, 도쿄처럼 지리적으로 떨어진 지역이고 가용 영역은 한 리전 안에서 수 킬로미터 이상 떨어져 전원과 네트워크가 독립된 데이터센터 묶음입니다. 가용 영역 사이는 지연이 짧아 동기 복제가 가능하고 리전 사이는 지연이 길어 보통 비동기로 복제합니다.'],['클라우드를 쓰면 보안은 업체가 다 책임지나요?','아닙니다. 공동 책임 모델에 따라 업체는 데이터센터, 하드웨어, 하이퍼바이저를 책임지고 고객은 운영체제 패치, 네트워크 설정, IAM 권한, 데이터 암호화를 책임집니다. 5장의 IAM 사고들은 대부분 고객 쪽 설정 문제였습니다.']],memory:'사지 말고 빌리고, 한 곳에 몰지 말고 나눠 두고, 쓴 만큼 낸다.',mistake:'"클라우드에 올렸으니 장애가 없다"고 생각하지 마세요. 한 가용 영역에만 두면 그 영역의 장애가 곧 서비스 장애입니다.',quiz:{question:'운영 서비스를 한 가용 영역의 장애에도 견디게 하는 가장 기본적인 방법은?',options:['더 큰 서버로 바꾼다','서버와 DB를 둘 이상의 가용 영역에 나눠 배치한다','서버를 한 대 더 같은 가용 영역에 둔다'],correct:1,explanation:'가용 영역은 전원과 네트워크가 독립되어 있어 나눠 두면 한 영역이 멈춰도 다른 영역이 서비스를 이어 갑니다.'},refs:['nistCloud','iam']})
+print("연간 비용:", 100 * hours_per_year, "원 →", 2 * 100 * hours_per_year, "원")`,codeNotes:['두 가용 영역이 서로 독립적으로 고장 난다는 가정 아래 둘 다 동시에 멈출 확률은 0.001 × 0.001입니다. 실제로는 배포 실수나 리전 전체 장애처럼 함께 멈추는 원인도 있어 이보다 덜 좋아집니다.','숫자를 바꿔 보세요. 99%짜리 두 개와 99.9%짜리 하나 중 무엇이 나은지, 세 개로 늘리면 얼마나 나아지는지 계산할 수 있습니다.','가용성 숫자는 비용과 함께 봐야 합니다. 모든 서비스가 같은 수준의 가용성을 필요로 하지는 않습니다.'],answer:'클라우드는 가상화 위에서 컴퓨팅 자원을 API로 빌려 쓰고 쓴 만큼 내는 방식입니다. 하이퍼바이저가 물리 서버를 여러 가상 머신으로 나누고 업체는 리전마다 전원과 네트워크가 독립된 가용 영역을 여러 개 둡니다. 운영 서비스는 최소 두 가용 영역에 나눠 배치해 한 영역의 장애를 견디게 하고, 관리 부담과 비용을 따져 IaaS, PaaS, 서버리스 중에서 고르겠습니다.',follow:[['가용 영역과 리전은 어떻게 다른가요?','리전은 서울, 도쿄처럼 지리적으로 떨어진 지역이고 가용 영역은 한 리전 안에서 수 킬로미터 이상 떨어져 전원과 네트워크가 독립된 데이터센터 묶음입니다. 가용 영역 사이는 지연이 짧아 동기 복제가 가능하고 리전 사이는 지연이 길어 보통 비동기로 복제합니다.'],['클라우드를 쓰면 보안은 업체가 다 책임지나요?','아닙니다. 공동 책임 모델에 따라 업체는 데이터센터, 하드웨어, 하이퍼바이저를 책임지고 고객은 운영체제 패치, 네트워크 설정, IAM 권한, 데이터 암호화를 책임집니다. 5장의 IAM 사고들은 대부분 고객 쪽 설정 문제였습니다.']],memory:'사지 말고 빌리고, 한 곳에 몰지 말고 나눠 두고, 쓴 만큼 낸다.',mistake:'"클라우드에 올렸으니 장애가 없다"고 생각하지 마세요. 한 가용 영역에만 두면 그 영역의 장애가 곧 서비스 장애입니다.',quiz:{question:'운영 서비스를 한 가용 영역의 장애에도 견디게 하는 가장 기본적인 방법은?',options:['더 큰 서버로 바꾼다','서버와 DB를 둘 이상의 가용 영역에 나눠 배치한다','서버를 한 대 더 같은 가용 영역에 둔다'],correct:1,explanation:'가용 영역은 전원과 네트워크가 독립되어 있어 나눠 두면 한 영역이 멈춰도 다른 영역이 서비스를 이어 갑니다.'},refs:['nistCloud','iam']}),
+l({id:'search',category:3,title:'검색 엔진과 Elasticsearch',english:'Inverted Index / Analyzer / Relevance (TF-IDF · BM25) / Elasticsearch',hook:'상품 100만 개에서 "무선 키보드"를 찾을 때 LIKE \'%무선%\'로는 왜 안 될까?',definition:'검색 엔진은 글 속의 단어로 문서를 빠르게 찾고 관련 있는 순서로 정렬해 돌려주는 시스템입니다. 핵심 자료구조는 역색인입니다. 문서마다 어떤 단어가 있는지 적는 대신 단어마다 그 단어가 나오는 문서 목록을 적어 두므로 단어 하나로 문서를 바로 찾습니다. 문서를 넣을 때 분석기가 글을 단어(토큰)로 쪼개고 소문자로 바꾸거나 어근만 남기며, 한국어는 형태소 분석으로 조사를 떼어 냅니다. 찾은 문서는 TF-IDF나 BM25 같은 공식으로 관련도 점수를 매겨 정렬합니다. Elasticsearch는 이 일을 하는 Lucene 라이브러리를 여러 서버에 나눠 쓰고 HTTP와 JSON으로 다루게 만든 검색 서버입니다. 보통 원본은 DB에 두고 검색용 사본을 Elasticsearch에 넣어 함께 씁니다.',analogy:'책 뒤의 찾아보기를 떠올리세요. "트랜잭션 … 112, 140, 203쪽"처럼 단어마다 나오는 쪽 번호를 미리 적어 두었기 때문에 책을 처음부터 넘기지 않아도 됩니다. 찾아보기를 만들 때는 "트랜잭션을", "트랜잭션은"처럼 조사가 붙은 말도 "트랜잭션" 하나로 모읍니다(분석기). 여러 쪽이 나오면 그 단어가 여러 번, 그리고 다른 곳에서는 드물게 나오는 쪽이 더 관련 있다고 봅니다(관련도 점수).',steps:['문서를 넣으면 분석기가 본문을 토큰으로 쪼개고 정규화(소문자, 형태소 분석)합니다.','토큰마다 그 토큰이 나오는 문서 번호와 위치를 역색인에 덧붙입니다.','검색어도 같은 분석기로 쪼갠 뒤 토큰마다 역색인에서 문서 목록을 꺼내 합치거나 교집합을 구합니다.','남은 문서마다 BM25 같은 공식으로 점수를 매겨 높은 순으로 돌려줍니다.'],scenario:'쇼핑몰 상품 검색을 PostgreSQL의 name LIKE \'%키보드%\'로 만들었다가 상품이 늘자 검색 한 번에 몇 초가 걸렸습니다. 앞에 %가 붙은 LIKE는 B-tree 인덱스를 쓸 수 없어 표 전체를 훑기 때문입니다. 게다가 "키보드를"로 검색하면 아무것도 나오지 않았고 순서도 엉망이었습니다. 상품이 바뀔 때마다 Elasticsearch에 사본을 넣고 한국어 형태소 분석기(nori)를 붙이자 검색이 수십 밀리초로 줄고 관련 있는 상품이 위로 올라왔습니다. 주문과 재고는 계속 PostgreSQL이 원본으로 관리합니다.',aws:'Amazon OpenSearch Service는 Elasticsearch에서 갈라져 나온 OpenSearch를 관리형으로 제공합니다. 원본 DB의 변경을 Lambda나 데이터 파이프라인으로 넘겨 검색 색인을 갱신하는 구성이 흔합니다.',ncloud:'Search Engine Service(Elasticsearch·OpenSearch 기반)를 관리형으로 제공합니다. 한국어 검색이라면 형태소 분석기 설정을 먼저 확인합니다.',tradeoff:'검색 엔진은 단어 검색과 관련도 정렬, 자동 완성, 오타 교정에 강하지만 트랜잭션과 즉시 일관성이 약하고 원본 DB와 사본을 맞추는 일이 생깁니다. 데이터가 작고 검색이 단순하면 PostgreSQL의 전문 검색(tsvector와 GIN 인덱스)으로 충분할 수 있습니다.',language:'Python · 역색인을 만들고 단어로 문서 찾기',code:`import math
+from collections import defaultdict
+
+docs = {
+    1: "무선 키보드 블루투스 연결",
+    2: "유선 키보드 기계식",
+    3: "무선 마우스 블루투스",
+    4: "키보드 손목 받침대",
+}
+
+index = defaultdict(dict)                 # 단어 → {문서 번호: 등장 횟수}
+for doc_id, text in docs.items():
+    for token in text.split():            # 실제로는 분석기(형태소 분석)가 쪼갭니다
+        index[token][doc_id] = index[token].get(doc_id, 0) + 1
+
+def search(query):
+    scores = defaultdict(float)
+    for token in query.split():
+        postings = index.get(token, {})
+        idf = math.log(len(docs) / (1 + len(postings))) + 1   # 드문 단어일수록 큰 가중치
+        for doc_id, tf in postings.items():
+            scores[doc_id] += tf * idf
+    return sorted(scores.items(), key=lambda kv: -kv[1])
+
+print(dict(index)["키보드"])        # {1: 1, 2: 1, 4: 1}
+print(search("무선 키보드"))        # 두 단어가 모두 있는 1번이 맨 위`,codeNotes:['역색인은 단어에서 문서로 가는 사전입니다. 검색어의 단어마다 사전을 한 번 찾으면 되므로 문서가 아무리 많아도 전체를 훑지 않습니다.','idf는 많은 문서에 나오는 흔한 단어의 가중치를 줄입니다. "키보드"보다 드문 "무선"이 점수에 더 크게 기여합니다. 실제 엔진은 이를 다듬은 BM25를 씁니다.','text.split()은 띄어쓰기로만 쪼개서 "키보드를"과 "키보드"를 다른 단어로 봅니다. 한국어 검색에 형태소 분석기가 필요한 이유를 직접 확인해 보세요.'],answer:'검색 엔진은 단어마다 그 단어가 나오는 문서 목록을 적은 역색인으로 문서를 빠르게 찾고 TF-IDF나 BM25로 관련도 순으로 정렬합니다. 문서와 검색어를 같은 분석기로 토큰화하는 것이 중요하고 한국어는 형태소 분석기를 씁니다. Elasticsearch는 Lucene을 분산해 HTTP로 다루게 한 검색 서버라서 원본은 DB에 두고 검색용 사본을 넣어 함께 쓰며 둘을 맞추는 경로를 설계하겠습니다.',follow:[['Elasticsearch를 주 데이터베이스로 써도 되나요?','권장하지 않습니다. 트랜잭션이 없고 넣은 문서가 검색에 보이기까지 짧은 지연(기본 1초 refresh)이 있으며 색인 구조를 바꾸려면 다시 색인해야 합니다. 원본은 DB에 두고 검색 엔진은 다시 만들 수 있는 사본으로 둡니다.'],['DB와 검색 엔진의 데이터는 어떻게 맞추나요?','DB에 쓰고 나서 검색 엔진에도 쓰는 이중 쓰기는 한쪽만 실패할 수 있습니다. 4장 큐 단원의 아웃박스나 DB 변경 로그를 읽는 방식(CDC)으로 변경을 전달하고 주기적으로 다시 색인할 수 있게 합니다.']],memory:'단어에서 문서로 가는 찾아보기, 같은 규칙으로 쪼개기, 드물고 자주 나오면 높은 점수.',mistake:'앞에 %가 붙은 LIKE 검색을 큰 테이블에 쓰지 마세요. 인덱스를 못 써서 표 전체를 읽습니다.',quiz:{question:'"키보드를"로 검색했는데 "키보드"가 들어간 상품이 나오지 않는다면 가장 먼저 확인할 것은?',options:['서버 메모리','분석기(형태소 분석) 설정','HTTPS 인증서'],correct:1,explanation:'문서와 검색어를 같은 규칙으로 토큰화해야 같은 단어로 맞춰집니다. 한국어는 조사를 떼는 형태소 분석이 필요합니다.'},refs:['esInverted','index']}),
+l({id:'documentdb',category:3,title:'문서 DB와 MongoDB',english:'Document Model / Embedding vs Referencing / MongoDB',hook:'상품마다 옵션 모양이 다를 때 표를 계속 늘려야 할까, 상품 하나를 통째로 저장할까?',definition:'문서 DB는 JSON처럼 중첩된 구조의 문서를 한 단위로 저장하고 꺼내는 데이터베이스입니다. 관계형 DB가 데이터를 여러 표로 쪼개고 조회할 때 조인으로 다시 맞춘다면, 문서 DB는 함께 읽는 데이터를 처음부터 한 문서에 모아 둡니다. 같은 컬렉션의 문서라도 필드 구성이 달라도 됩니다. MongoDB는 가장 널리 쓰이는 문서 DB로 문서를 BSON(이진 JSON)으로 저장하고 문서 안의 필드에도 인덱스를 만들 수 있으며, 샤딩으로 여러 서버에 나누고 복제 세트로 장애에 대비합니다. 문서 하나에 대한 쓰기는 원자적이고 4.0부터는 여러 문서에 걸친 트랜잭션도 지원하지만, 설계의 기본은 한 번에 함께 바뀌는 데이터를 한 문서에 두는 것입니다.',analogy:'관계형 DB가 서류를 종류별 서랍(고객 서랍, 주문 서랍, 주문 항목 서랍)에 나눠 두고 필요할 때 번호로 맞춰 꺼내는 사무실이라면, 문서 DB는 주문마다 파일 폴더 하나를 만들어 고객 이름, 배송지, 주문 항목을 모두 끼워 두는 사무실입니다. 폴더 하나만 꺼내면 주문 전체가 보여 빠르지만, 고객이 이사하면 그 고객의 폴더를 모두 찾아 고쳐야 할 수 있습니다.',steps:['화면이나 API가 데이터를 어떤 묶음으로 읽는지(접근 패턴)를 먼저 정합니다.','함께 읽고 함께 바뀌는 데이터는 한 문서 안에 넣고(임베딩), 따로 자라거나 여러 곳에서 공유하는 데이터는 id로 가리킵니다(참조).','자주 찾는 필드에 인덱스를 만들고 문서가 무한히 커지지 않는지 확인합니다.','여러 문서를 함께 바꿔야 하는 일이 잦다면 모델을 다시 보거나 트랜잭션, 또는 관계형 DB를 검토합니다.'],scenario:'상품 카탈로그를 관계형 표로 만들었더니 의류는 사이즈와 색상, 노트북은 CPU와 메모리, 책은 저자와 ISBN처럼 속성이 제각각이라 표와 빈 컬럼이 계속 늘었습니다. 상품 하나를 문서 하나로 두고 카테고리별 속성을 그 안에 중첩하자 상품 상세 화면을 쿼리 한 번으로 그릴 수 있게 되었습니다. 대신 재고 차감과 결제처럼 여러 데이터를 함께 맞춰야 하는 주문 처리는 관계형 DB에 남겨 두었습니다.',aws:'Amazon DocumentDB는 MongoDB API와 호환되는 관리형 문서 DB이고 MongoDB Atlas도 AWS 위에서 쓸 수 있습니다. 키 하나로 대량의 읽기와 쓰기를 처리하는 일이라면 DynamoDB도 후보입니다.',ncloud:'Cloud DB for MongoDB를 관리형으로 제공합니다. 복제 세트와 샤딩 구성, 백업 주기를 먼저 확인합니다.',tradeoff:'문서 모델은 함께 읽는 데이터를 한 번에 가져오고 모양이 제각각인 데이터를 다루기 쉽지만, 같은 데이터를 여러 문서에 복사하면 고칠 곳이 늘고 여러 문서에 걸친 조인과 제약은 관계형 DB보다 약합니다. 관계가 많고 새로운 질문이 자주 생기면 관계형 DB가, 문서 단위로 읽고 쓰는 일이 대부분이면 문서 DB가 맞습니다. PostgreSQL의 JSONB 컬럼으로 두 방식을 섞을 수도 있습니다.',language:'Python · 같은 주문을 표와 문서로 저장해 비교하기',code:`# 관계형: 여러 표로 나누고 조회할 때 맞춘다
+customers = {7: {"name": "김하늘", "city": "서울"}}
+orders = {101: {"customer_id": 7}}
+order_items = [
+    {"order_id": 101, "product": "키보드", "qty": 1},
+    {"order_id": 101, "product": "마우스", "qty": 2},
+]
+
+def order_view_relational(order_id):
+    order = orders[order_id]
+    customer = customers[order["customer_id"]]              # 조인 1
+    items = [i for i in order_items if i["order_id"] == order_id]  # 조인 2
+    return {"customer": customer["name"], "items": [(i["product"], i["qty"]) for i in items]}
+
+# 문서: 주문 화면에 필요한 것을 한 문서에 모아 둔다
+order_doc = {
+    "_id": 101,
+    "customer": {"id": 7, "name": "김하늘"},     # 주문 당시 이름을 함께 저장
+    "items": [{"product": "키보드", "qty": 1}, {"product": "마우스", "qty": 2}],
+}
+
+print(order_view_relational(101))
+print({"customer": order_doc["customer"]["name"],
+       "items": [(i["product"], i["qty"]) for i in order_doc["items"]]})`,codeNotes:['두 방식 모두 같은 화면 데이터를 만들지만 관계형은 세 곳을 맞춰 읽고 문서는 한 곳만 읽습니다. 문서 DB가 빠른 이유는 조인을 없앴기 때문입니다.','문서 쪽은 고객 이름을 주문 안에 복사했습니다. 고객이 이름을 바꾸면 customers만 고치는 관계형과 달리 문서들을 따로 고쳐야 합니다. 주문 당시 이름을 남기려는 의도라면 오히려 장점입니다.','주문 항목처럼 주문과 함께 생기고 함께 읽히는 데이터는 임베딩이 자연스럽고, 상품 원본처럼 여러 주문이 공유하는 데이터는 id로 참조합니다.'],answer:'문서 DB는 함께 읽고 함께 바뀌는 데이터를 JSON 같은 문서 하나에 모아 저장해 조인 없이 한 번에 읽습니다. 설계는 접근 패턴에서 시작해 임베딩과 참조를 고르고, 복사한 데이터를 어떻게 맞출지 정합니다. 속성이 제각각인 카탈로그나 콘텐츠처럼 문서 단위로 읽는 데이터에는 MongoDB를, 여러 데이터를 함께 맞춰야 하는 주문과 결제에는 관계형 DB를 쓰겠습니다.',follow:[['MongoDB는 스키마가 없으니 설계를 안 해도 되나요?','DB가 스키마를 강제하지 않을 뿐 데이터의 모양은 애플리케이션 코드가 가정합니다. 오히려 접근 패턴에 맞춘 설계가 더 중요하고 필요하면 스키마 검증(JSON Schema)을 켭니다.'],['MongoDB에도 트랜잭션이 있나요?','문서 하나에 대한 쓰기는 항상 원자적이고 4.0부터 복제 세트, 4.2부터 샤딩 환경에서 여러 문서 트랜잭션을 지원합니다. 다만 성능 비용이 있어 공식 문서도 데이터 모델로 해결할 수 있으면 그쪽을 권합니다.']],memory:'함께 읽는 것은 한 문서에, 공유하는 것은 id로. 스키마가 없다는 것은 코드가 스키마라는 뜻.',mistake:'문서 안의 배열을 끝없이 키우지 마세요. 댓글 수만 개를 게시글 문서 하나에 넣으면 문서 크기 한계(16MB)에 닿고 읽을 때마다 전부 가져옵니다.',quiz:{question:'게시글과 댓글을 문서 DB에 저장할 때 댓글이 수만 개까지 늘 수 있다면?',options:['게시글 문서의 배열에 모두 넣는다','댓글을 별도 컬렉션에 두고 게시글 id로 참조한다','댓글마다 게시글 전체를 복사한다'],correct:1,explanation:'따로 무한히 자라는 데이터는 임베딩하지 않고 참조합니다. 문서 크기 한계와 읽기 비용을 피할 수 있습니다.'},refs:['mongoModeling','mongoTx']}),
+l({id:'redis',category:3,title:'Redis: 메모리 위의 자료구조 서버',english:'In-memory Data Structure Store / Single-threaded Event Loop / Persistence (RDB · AOF)',hook:'캐시라면 Memcached로도 되는데 왜 다들 Redis를 쓸까?',definition:'Redis는 데이터를 메모리에 두고 네트워크로 명령을 받아 처리하는 키값 저장소입니다. 값으로 문자열만이 아니라 리스트, 해시, 집합, 정렬된 집합(점수 순 집합), 스트림 같은 자료구조를 담고 그 자료구조를 다루는 명령(INCR, LPUSH, ZADD 등)을 서버 안에서 원자적으로 실행합니다. 명령은 하나의 실행 스레드가 이벤트 루프로 차례차례 처리하므로 잠금 없이도 명령 하나하나가 섞이지 않습니다. 키마다 만료 시간을 줄 수 있어 캐시와 세션 저장소로 많이 쓰고, 카운터와 처리율 제한, 순위표, 분산 락, 간단한 큐로도 씁니다. 메모리에 있지만 스냅샷(RDB)과 명령 기록(AOF)으로 디스크에 남길 수 있고 복제와 클러스터로 늘릴 수 있습니다.',analogy:'Redis는 계산대 옆의 화이트보드와 같습니다. 서류 창고(DB)까지 가지 않고 바로 보고 고칠 수 있어 빠르지만 크기가 작고 지우개 한 번에 사라질 수 있습니다. 게다가 이 화이트보드에는 숫자 칸, 줄 세우기 칸, 순위표 칸이 미리 그려져 있어서 "3번 칸 숫자 하나 올려 줘", "점수 순으로 위에서 10명 보여 줘"처럼 부탁하면 담당자 한 명이 순서대로 처리해 줍니다.',steps:['클라이언트가 "INCR page:views" 같은 명령을 TCP로 보냅니다.','이벤트 루프가 준비된 연결에서 명령을 읽어 하나씩 차례로 실행합니다. 실행 중에는 다른 명령이 끼어들지 않습니다.','메모리 안의 자료구조를 바꾸고 결과를 돌려줍니다. 만료 시간이 지난 키는 지워집니다.','설정에 따라 변경을 AOF 파일에 덧붙이거나 주기적으로 스냅샷을 디스크에 저장하고 복제본에 전달합니다.'],scenario:'로그인 API에 같은 IP가 1초에 수백 번 요청하는 공격이 들어왔습니다. 서버가 여러 대라 각 서버의 메모리에 횟수를 세면 서버마다 따로 세어져 막을 수 없었습니다. Redis에 "rate:IP:분" 키로 INCR와 EXPIRE를 실행해 모든 서버가 같은 카운터를 공유하게 하자 1분에 10번을 넘는 요청을 정확히 막을 수 있었습니다. INCR는 원자적이라 동시에 들어온 요청도 정확히 한 번씩 세어집니다.',aws:'Amazon ElastiCache와 MemoryDB가 Redis 호환 엔진(Redis OSS, Valkey)을 관리형으로 제공합니다. MemoryDB는 변경을 여러 가용 영역에 기록해 Redis를 주 저장소로도 쓸 수 있게 합니다.',ncloud:'Cloud DB for Redis를 관리형으로 제공합니다. 메모리 크기, 만료·축출 정책, 복제 구성을 먼저 정합니다.',tradeoff:'Redis는 매우 빠르고 자료구조 명령이 풍부하지만 데이터 크기가 메모리에 묶이고 기본 설정의 영속성은 마지막 몇 초를 잃을 수 있습니다. 실행 스레드가 하나라 KEYS *처럼 오래 걸리는 명령 하나가 모든 요청을 멈춥니다. 잃으면 안 되는 원본은 DB에 두고 Redis는 빠르게 다시 만들 수 있는 데이터와 공유 카운터에 씁니다.',language:'Python · Redis 자료구조 명령을 흉내 내 보기',code:`import time
+
+store, expires = {}, {}
+
+def alive(key):
+    if key in expires and time.time() >= expires[key]:
+        store.pop(key, None); expires.pop(key, None)    # 만료된 키는 지운다
+    return key in store
+
+def incr(key):                       # INCR: 읽고 더하고 쓰기를 서버 안에서 한 번에
+    store[key] = (store[key] if alive(key) else 0) + 1
+    return store[key]
+
+def expire(key, seconds):
+    expires[key] = time.time() + seconds
+
+def zadd(key, member, score):        # 정렬된 집합: 점수와 함께 저장
+    store.setdefault(key, {})[member] = score
+
+def zrevrange(key, n):               # 점수 높은 순으로 n개
+    return sorted(store[key].items(), key=lambda kv: -kv[1])[:n]
+
+# 1) 처리율 제한: IP마다 1분에 3번까지
+for _ in range(5):
+    count = incr("rate:10.0.0.7")
+    if count == 1:
+        expire("rate:10.0.0.7", 60)
+    print("허용" if count <= 3 else "거절", count)
+
+# 2) 순위표
+zadd("rank", "하늘", 320); zadd("rank", "바다", 410); zadd("rank", "들판", 150)
+print(zrevrange("rank", 2))          # [('바다', 410), ('하늘', 320)]`,codeNotes:['incr는 읽기와 쓰기가 한 함수 안에서 끝납니다. 실제 Redis에서도 INCR는 한 명령이라 다른 클라이언트의 명령이 끼어들지 않습니다. 앱에서 GET 뒤에 SET을 하면 그 사이에 경쟁 상태가 생깁니다.','처음 센 순간에만 만료 시간을 걸어 1분이 지나면 키가 사라지고 다시 0부터 셉니다. 메모리를 아끼고 창(window)을 자연스럽게 만듭니다.','정렬된 집합은 실제 Redis에서 스킵 리스트로 구현되어 점수 순 조회가 정렬 없이 빠릅니다. 여기서는 sorted로 흉내만 냈습니다.'],answer:'Redis는 메모리 위에서 리스트, 해시, 정렬된 집합 같은 자료구조를 명령으로 다루는 키값 서버입니다. 하나의 실행 스레드가 명령을 차례로 처리해 INCR 같은 명령이 원자적이라 여러 서버가 공유하는 카운터, 처리율 제한, 순위표, 세션, 캐시에 씁니다. 메모리 한계와 영속성 수준을 알고 잃으면 안 되는 원본은 DB에 두며 오래 걸리는 명령을 피하겠습니다.',follow:[['Redis가 싱글 스레드인데 어떻게 그렇게 빠른가요?','데이터가 메모리에 있어 명령 하나가 마이크로초 단위로 끝나고, 3장 비동기 단원의 이벤트 루프로 수많은 연결을 한 스레드가 번갈아 처리합니다. 잠금과 문맥 교환 비용도 없습니다. 병목은 대개 CPU보다 네트워크라서 Redis 6부터는 네트워크 읽기와 쓰기에만 별도 스레드를 쓸 수 있습니다.'],['Redis 데이터는 서버가 꺼지면 사라지나요?','설정에 따라 다릅니다. RDB는 주기적으로 스냅샷을 남겨 마지막 스냅샷 이후를 잃을 수 있고, AOF는 명령을 기록해 보통 1초 이내의 손실로 줄입니다. 둘 다 끄면 순수한 캐시가 됩니다.']],memory:'메모리 위의 자료구조, 한 줄로 서서 처리하는 명령, 원본은 DB에.',mistake:'운영 Redis에서 KEYS *를 실행하지 마세요. 모든 키를 훑는 동안 실행 스레드가 막혀 다른 모든 요청이 멈춥니다. SCAN으로 나눠서 훑습니다.',quiz:{question:'여러 API 서버가 같은 사용자의 요청 횟수를 정확히 세려면?',options:['서버마다 메모리 변수로 센다','Redis에서 INCR로 공유 카운터를 센다','로그 파일을 매번 다시 읽는다'],correct:1,explanation:'서버마다 따로 세면 합계를 알 수 없습니다. Redis의 INCR는 원자적이라 동시에 들어온 요청도 정확히 한 번씩 셉니다.'},refs:['redisTypes','redisPersistence']}),
+l({id:'monitoring',category:6,title:'모니터링 도구: Prometheus와 Grafana',english:'Metrics Scraping / Time Series DB / PromQL / Dashboards / Alerting',hook:'서버 50대의 오류율을 한 화면에서 보고 새벽에 정말 필요할 때만 알림을 받으려면 무엇이 필요할까?',definition:'모니터링 도구는 앞 단원의 로그, 메트릭, 트레이스를 실제로 모으고 저장하고 보여 주고 알리는 소프트웨어입니다. 메트릭에서는 Prometheus가 사실상의 표준입니다. Prometheus는 각 서버가 /metrics 주소에 내놓은 숫자를 주기적으로 가져와(스크레이프) 이름과 라벨이 붙은 시계열로 시계열 DB에 저장하고, PromQL이라는 질의 언어로 "최근 5분간 초당 오류 수" 같은 값을 계산하며, 규칙에 맞으면 Alertmanager를 통해 알림을 보냅니다. Grafana는 Prometheus뿐 아니라 로그 저장소(Loki, Elasticsearch)와 트레이스 저장소(Tempo, Jaeger) 등 여러 데이터 원본을 한 대시보드에 그려 주는 시각화 도구입니다. 수집 쪽에서는 OpenTelemetry가 세 가지 신호를 같은 방식으로 내보내는 표준이 되고 있습니다.',analogy:'병원 중환자실을 떠올리세요. 환자마다 붙은 센서(앱의 /metrics)는 심박과 혈압을 내놓기만 하고, 간호사실의 기록 장치(Prometheus)가 몇 초마다 모든 센서의 값을 읽어 시간 순으로 기록합니다. 벽의 모니터(Grafana)는 여러 환자의 그래프를 한 화면에 보여 주고, 경보 장치(Alertmanager)는 "심박이 5분 넘게 40 아래"처럼 정해 둔 조건이 계속될 때만 당직 의사를 호출합니다. 한 번 튀었다고 깨우지 않습니다.',steps:['앱이 클라이언트 라이브러리로 요청 수, 오류 수, 응답 시간 분포 같은 메트릭을 /metrics에 내놓습니다.','Prometheus가 설정된 대상들을 15초 같은 간격으로 스크레이프해 (메트릭 이름, 라벨, 시각, 값)을 저장합니다.','PromQL로 rate(), sum by(), histogram_quantile() 같은 계산을 해서 오류율과 p99 지연을 구하고 Grafana가 그래프로 그립니다.','알림 규칙이 일정 시간 이상 참이면 Alertmanager가 중복을 묶고 담당자에게 Slack이나 호출로 보냅니다.'],scenario:'서버마다 접속해 로그를 grep하다가 장애를 고객 문의로 먼저 알게 되는 일이 반복되었습니다. 앱에 Prometheus 클라이언트를 붙여 경로와 상태 코드별 요청 수, 응답 시간 히스토그램을 내놓게 하고 Grafana에 네 가지 황금 신호 대시보드를 만들었습니다. "5분간 5xx 비율이 2%를 넘는 상태가 5분 계속되면" 알림을 보내게 하자 배포 직후 오류가 늘어난 것을 고객보다 먼저 알고 되돌릴 수 있었습니다. 대시보드에서 오류가 튄 구간을 누르면 같은 시간의 Loki 로그로 바로 넘어가게 연결했습니다.',aws:'Amazon Managed Service for Prometheus와 Amazon Managed Grafana가 관리형으로 제공되고, CloudWatch는 AWS 자원의 메트릭과 로그를 기본으로 모읍니다. AWS Distro for OpenTelemetry로 세 신호를 함께 수집할 수 있습니다.',ncloud:'Cloud Insight로 자원 메트릭과 알림을, Cloud Log Analytics로 로그를 수집합니다. 직접 운영한다면 Prometheus와 Grafana를 Kubernetes 위에 올리는 구성이 흔합니다.',tradeoff:'Prometheus는 단순하고 강력하지만 서버 한 대에 데이터를 저장해 오래 보관하거나 여러 클러스터를 합치려면 Thanos, Mimir 같은 장기 저장소가 필요합니다. 라벨에 사용자 ID처럼 값이 끝없는 것을 넣으면 시계열 수가 폭발해 메모리가 터집니다(카디널리티). 메트릭은 싸고 빠르지만 개별 요청을 설명하지 못하므로 로그와 트레이스를 함께 둡니다.',language:'Python · 카운터에서 초당 오류율을 계산하고 알림 판단하기',code:`# Prometheus는 15초마다 카운터 값을 가져와 (시각, 값)으로 저장합니다.
+# 카운터는 계속 커지기만 하므로 그 자체보다 '얼마나 빨리 늘었나'를 봅니다.
+requests = [(0, 1000), (15, 1150), (30, 1300), (45, 1450), (60, 1600)]
+errors   = [(0, 10),   (15, 11),   (30, 20),   (45, 32),   (60, 46)]
+
+def rate(samples):
+    (t0, v0), (t1, v1) = samples[0], samples[-1]
+    return (v1 - v0) / (t1 - t0)          # PromQL rate()의 핵심: 구간의 초당 증가량
+
+req_per_sec = rate(requests)
+err_per_sec = rate(errors)
+error_ratio = err_per_sec / req_per_sec
+print(f"요청 {req_per_sec:.1f}/s, 오류 {err_per_sec:.2f}/s, 오류율 {error_ratio:.1%}")
+
+# 알림 규칙: 오류율 > 2% 가 'for: 5m' 동안 계속될 때만 보낸다
+history = [0.004, 0.031, 0.035, 0.029, 0.033, 0.040]   # 1분 간격으로 계산한 오류율
+firing_minutes = 0
+for ratio in history:
+    firing_minutes = firing_minutes + 1 if ratio > 0.02 else 0
+    if firing_minutes >= 5:
+        print("알림 보냄: 오류율이 5분 넘게 2% 초과")
+        break`,codeNotes:['카운터는 서버가 재시작하지 않는 한 줄지 않는 누적값입니다. 값 자체보다 구간의 증가 속도(rate)를 보면 초당 요청 수와 오류 수가 됩니다. 실제 rate()는 재시작으로 0이 된 경우도 보정합니다.','오류율은 오류 속도를 요청 속도로 나눈 값입니다. 오류 수만 보면 트래픽이 늘 때마다 알림이 울립니다.','for 조건은 잠깐 튄 값으로 사람을 깨우지 않게 합니다. history의 두 번째 값부터 5분 연속 2%를 넘어서야 알림이 나갑니다.'],answer:'모니터링 도구는 메트릭, 로그, 트레이스를 모으고 저장하고 보여 주고 알립니다. Prometheus는 대상의 /metrics를 주기적으로 가져와 라벨이 붙은 시계열로 저장하고 PromQL로 오류율과 p99 지연을 계산해 알림 규칙을 평가하며, Grafana는 여러 데이터 원본을 한 대시보드에 보여 줍니다. 네 가지 황금 신호와 SLO 기준으로 대시보드와 알림을 만들고 라벨 카디널리티를 관리하며 로그와 트레이스로 이어지게 연결하겠습니다.',follow:[['Prometheus는 왜 서버가 보내지 않고 가져오는(pull) 방식인가요?','Prometheus가 대상 목록을 알고 직접 가져오므로 대상이 죽으면 스크레이프 실패로 바로 드러나고(up 지표), 대상이 수집 서버 주소를 몰라도 됩니다. 아주 짧게 끝나는 배치 작업처럼 가져갈 틈이 없는 경우에는 Pushgateway나 OpenTelemetry 수집기로 보냅니다.'],['로그도 Prometheus에 넣으면 안 되나요?','Prometheus는 숫자 시계열만 저장합니다. 로그는 Loki나 Elasticsearch 같은 로그 저장소에, 트레이스는 Tempo나 Jaeger에 두고 Grafana에서 같은 시간대와 라벨로 서로 오가게 연결합니다.']],memory:'앱은 내놓고 Prometheus는 가져가고 Grafana는 그리고 Alertmanager는 깨운다. 카운터는 rate로 본다.',mistake:'라벨에 사용자 ID, 요청 ID, 전체 URL처럼 값이 끝없는 것을 넣지 마세요. 라벨 조합마다 시계열이 하나씩 생겨 Prometheus의 메모리가 폭발합니다.',quiz:{question:'요청 카운터 http_requests_total로 초당 요청 수를 보려면?',options:['카운터 값을 그대로 그린다','rate(http_requests_total[5m])로 증가 속도를 계산한다','평균 응답 시간을 곱한다'],correct:1,explanation:'카운터는 누적값이라 계속 커지기만 합니다. 구간의 초당 증가량을 계산하는 rate()로 봅니다.'},refs:['promOverview','grafanaDocs']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
  1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'filesystem', 'linux', 'diagnosis'],
  0: ['internet', 'dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
  2: ['webserver', 'kit', 'rest', 'async', 'proxy', 'ratelimit'],
- 3: ['sqlbasics', 'normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
+ 3: ['sqlbasics', 'normalization', 'join', 'index', 'transaction', 'database-choice', 'documentdb', 'search', 'cache', 'redis', 'queue', 'replication', 'raft'],
  5: ['password', 'session', 'cors', 'validation', 'iam'],
  4: ['cloud', 'docker', 'vpc', 'lb', 'storage', 'kubernetes'],
- 6: ['git', 'pytest', 'cicd', 'observability', 'scale', 'recovery']
+ 6: ['git', 'pytest', 'cicd', 'observability', 'monitoring', 'scale', 'recovery']
 };
 const position = (x: Lesson) => { const i = sequence[x.category]?.indexOf(x.id) ?? -1; return i < 0 ? Infinity : i; };
 export const lessons = [...core, ...operatingSystem, ...expansion, ...additions].sort((a,b) => a.category-b.category || position(a)-position(b));

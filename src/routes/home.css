@@ -53,6 +53,21 @@
 .home .history .archive figcaption b{color:#fff}
 
 /* Problems: note on the left, two-ended rows on the right */
+.home .techmap{padding-block:40px 200px;display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.home .techmap-intro{grid-column:1/5;align-self:start;position:sticky;top:48px;display:grid;gap:24px}
+.home .techmap-intro h2{font-size:var(--step-head);letter-spacing:-.035em}
+.home .techmap-intro p{color:var(--muted)}
+.home .techmap-layers{grid-column:6/13;display:grid;gap:64px}
+.home .techmap-layer h3{font-size:var(--step-lead);font-weight:600;letter-spacing:-.02em;display:grid;gap:6px;margin-bottom:12px}
+.home .techmap-layer h3 span{font-size:var(--step-small);font-weight:400;color:var(--muted);letter-spacing:0}
+.home .techmap-layer ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line,var(--surface-2))}
+.home .techmap-layer a{display:grid;gap:6px;padding:18px 0;border-bottom:1px solid var(--line,var(--surface-2));text-decoration:none;transition:padding .25s var(--ease),background-color .25s}
+.home .techmap-layer a:hover{background:var(--surface);padding-inline:12px}
+.home .tool-name{font-weight:700;font-size:var(--step-body)}
+.home .tool-meta{font-size:var(--step-small);color:var(--muted);line-height:1.6}
+.home .tool-meta b{font-weight:600;color:var(--ink)}
+.home .tool-lesson{font-size:var(--step-small);color:var(--accent);font-weight:600}
+
 .home .problems{padding-block:180px 200px;display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
 .home .problems-intro{grid-column:1/5;align-self:start;position:sticky;top:48px;display:grid;gap:24px;justify-items:start}
 .home .problems-intro h2{font-size:var(--step-head);letter-spacing:-.035em}
@@ -86,7 +101,7 @@
  .home .contents-top h2,.home .contents-top p,.home .history-top h2,.home .history-top p{grid-column:1/-1}
  .home .facts{display:grid;grid-template-columns:1fr 1fr;row-gap:32px}
  .home .history-row{grid-template-columns:1fr 1fr}
- .home .problems-intro,.home .problem-list{grid-column:1/-1;position:static}
+ .home .problems-intro,.home .problem-list,.home .techmap-intro,.home .techmap-layers{grid-column:1/-1;position:static}
  .home .route-figure{grid-row:2;grid-column:1/-1}
  .home .contents-figure img,.home .contents-figure figcaption{grid-column:1/-1;grid-row:auto}
  .home .contents-figure figcaption{font-size:var(--step-body)}
