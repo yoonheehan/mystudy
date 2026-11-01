@@ -1231,5 +1231,29 @@ export const deeps:Record<string,LessonDeep>={
    ['Python · hashlib (scrypt)','https://docs.python.org/3/library/hashlib.html'],
    ['Password Hashing Competition','https://www.password-hashing.net/']
   ]
+ },
+ cloud:{
+  definition:'가상화는 하이퍼바이저가 물리 서버의 CPU, 메모리, 디스크, 네트워크를 나눠 여러 가상 머신에게 각자 독립된 컴퓨터처럼 보이게 하는 기술입니다. 지금의 CPU는 가상화 지원 기능이 있어 게스트 운영체제의 명령 대부분을 하드웨어에서 바로 실행하고 위험한 명령만 하이퍼바이저가 가로챕니다. 클라우드 업체는 이 가상 머신과 저장소, 네트워크를 API로 빌려 주고 리전과 가용 영역이라는 장애 경계를 제공합니다. NIST는 클라우드의 성질로 필요할 때 스스로 빌리기, 네트워크로 접근, 자원 공유, 빠른 확장과 축소, 사용량 측정을 꼽습니다.',
+  terms:[
+   ['하이퍼바이저','물리 서버 위에서 가상 머신들을 만들고 자원을 나눠 주는 소프트웨어입니다.'],
+   ['가상 머신','하이퍼바이저가 만든, 자기만의 운영체제를 돌리는 가상의 컴퓨터입니다.'],
+   ['리전','클라우드 업체가 데이터센터를 운영하는 지리적 지역입니다.'],
+   ['가용 영역(AZ)','한 리전 안의 독립된 전원과 네트워크를 가진 데이터센터 묶음입니다.'],
+   ['IaaS·PaaS·SaaS','인프라, 실행 플랫폼, 완성된 소프트웨어를 빌리는 서비스 모델입니다.'],
+   ['공동 책임 모델','업체와 고객이 보안과 운영을 어디까지 각자 책임지는지 나눈 약속입니다.']
+  ],
+  sections:[
+   {title:'가상 머신이 명령을 실행하는 방법',body:'1장 첫 단원에서 본 것처럼 CPU에는 사용자 모드와 커널 모드가 있습니다. 가상 머신 안의 운영체제는 자기가 커널 모드에서 하드웨어를 직접 다룬다고 믿지만 실제로는 하이퍼바이저가 그 아래에 있습니다.',list:['평범한 계산 명령은 가상 머신이 하드웨어에서 그대로 실행합니다. 그래서 가상화의 성능 손실이 작습니다.','장치를 다루거나 메모리 매핑을 바꾸는 민감한 명령은 CPU의 가상화 기능이 하이퍼바이저로 넘깁니다.','하이퍼바이저는 그 명령을 흉내 내거나 실제 장치에 대신 전달하고 가상 머신으로 돌아갑니다.','AWS의 Nitro처럼 네트워크와 디스크 처리를 전용 하드웨어로 넘겨 하이퍼바이저의 부담을 줄이는 방식도 있습니다.']},
+   {title:'가상 머신과 컨테이너',body:'가상 머신은 운영체제 전체를 따로 돌리므로 격리가 강하지만 무겁고 뜨는 데 수십 초가 걸립니다. 다음 단원의 컨테이너는 운영체제 커널을 함께 쓰고 보이는 것만 나누므로 가볍고 빠르지만 격리가 약합니다. 클라우드에서는 보통 가상 머신 위에 컨테이너를 올려 둘을 함께 씁니다. 업체의 가상 머신이 고객 사이를 격리하고 컨테이너가 한 고객 안의 앱들을 나눕니다.'},
+   {title:'어디에 둘지 정하기: 리전과 가용 영역',body:'리전은 사용자와의 거리(2장의 지연), 데이터를 어느 나라에 둬야 하는지에 대한 규정, 쓰려는 서비스가 그 리전에 있는지로 고릅니다. 리전 안에서는 가용 영역을 둘 이상 써야 장애 경계가 의미가 있습니다. 서버는 Auto Scaling 그룹으로 여러 가용 영역에 퍼뜨리고 DB는 다중 AZ로 다른 영역에 대기 복제본을 둡니다. 리전 전체 장애까지 대비하려면 다른 리전에 데이터를 복제하고 트래픽을 옮기는 절차를 따로 준비합니다.'},
+   {title:'얼마나 맡길지 고르기',body:'가상 서버(EC2)를 쓰면 운영체제 패치와 런타임 설치까지 직접 해야 하지만 자유도가 가장 큽니다. 관리형 컨테이너(ECS Fargate)나 PaaS는 서버 관리를 업체가 맡고 우리는 이미지나 코드만 올립니다. 서버리스 함수(Lambda)는 요청이 올 때만 실행되고 쓴 시간만큼 내지만 실행 시간 제한과 첫 호출 지연이 있습니다. 관리 부담, 비용, 트래픽 모양, 팀의 운영 경험을 함께 보고 고릅니다.'}
+  ],
+  sources:[
+   ['NIST SP 800-145 · The NIST Definition of Cloud Computing','https://csrc.nist.gov/pubs/sp/800/145/final'],
+   ['AWS · Global Infrastructure (Regions and Availability Zones)','https://docs.aws.amazon.com/whitepapers/latest/aws-overview/global-infrastructure.html'],
+   ['AWS · Well-Architected Reliability Pillar','https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html'],
+   ['AWS · Shared Responsibility Model','https://aws.amazon.com/compliance/shared-responsibility-model/'],
+   ['AWS · Nitro System','https://aws.amazon.com/ec2/nitro/']
+  ]
  }
 };

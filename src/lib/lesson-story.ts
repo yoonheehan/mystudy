@@ -1010,7 +1010,7 @@ export const stories: Record<string, LessonStory> = {
     '전통적인 회사 보안은 사내망 안은 믿고 밖만 막는 성벽 모델이었습니다. 2014년 구글은 BeyondCorp 논문에서 이 가정을 버렸습니다. 사내망에 있다는 이유만으로 믿지 않고 모든 요청마다 사용자와 기기를 확인합니다. 이것이 **제로 트러스트**라고 불리는 흐름입니다. 클라우드의 IAM, 서비스 사이의 mTLS, 짧은 수명의 자격 증명은 모두 "위치가 아니라 신원과 권한으로 판단한다"는 같은 방향에 있습니다.'
    ]}
   ],
-  to: '이 장에서 누가 무엇을 할 수 있는지 정하는 방법을 봤습니다. 다음 장에서는 이 서비스를 실제로 클라우드에 올립니다. 앱을 어떻게 포장하고, 네트워크를 어떻게 나누고, 트래픽을 어떻게 받는지 차례로 봅니다.',
+  to: '이 장에서 누가 무엇을 할 수 있는지 정하는 방법을 봤습니다. 다음 장에서는 이 서비스를 실제로 클라우드에 올립니다. 먼저 서버를 사지 않고 빌려 쓰는 일이 어떻게 가능해졌는지부터 봅니다.',
   books: [
    { title: 'API Security in Action', by: 'Neil Madden', where: '3장 Natter API 보안(접근 제어 목록), 8장 신원 기반 접근 제어(RBAC, ABAC)', note: '접근 제어 모델을 코드로 구현해 보며 역할과 속성 기반 제어를 비교합니다.', url: 'https://www.manning.com/books/api-security-in-action' },
    { title: 'Operating System Concepts (운영체제, 이른바 공룡책)', by: 'Abraham Silberschatz, Peter B. Galvin, Greg Gagne', where: '10판 17장 보호 (접근 행렬, 역할 기반 접근 제어)', note: '램슨의 접근 행렬에서 접근 제어 목록과 권한 목록으로 이어지는 흐름을 정리합니다.', url: 'https://os-book.com/OS10/index.html' }
@@ -1023,7 +1023,7 @@ export const stories: Record<string, LessonStory> = {
   ]
  },
  docker: {
-  from: '5장에서 누가 무엇을 할 수 있는지 정했습니다. 이 장에서는 지금까지 만든 서비스를 실제로 클라우드에 올립니다. 첫 질문은 "내 컴퓨터에서 돌던 앱을 다른 서버에서 똑같이 돌리려면 무엇을 옮겨야 하는가"입니다.',
+  from: '앞 단원에서 서버를 사지 않고 빌려 쓰는 방법을 봤습니다. 그런데 내 컴퓨터에서 돌던 앱을 빌린 서버에서 똑같이 돌리려면 무엇을 함께 옮겨야 할까요?',
   parts: [
    { heading: '내 컴퓨터에서는 되는데', paragraphs: [
     '개발자 노트북에서 잘 돌던 앱이 서버에서는 실패하는 일은 아주 오래된 문제입니다. Python 버전이 다르거나, 시스템 라이브러리가 빠졌거나, 설정 파일 경로가 다릅니다. 앱은 코드만으로 돌지 않고 그 아래의 런타임, 라이브러리, 운영체제 설정에 기대고 있기 때문입니다. 이 모두를 함께 옮기는 가장 확실한 방법은 컴퓨터를 통째로 옮기는 것입니다.',
@@ -1611,6 +1611,50 @@ export const stories: Record<string, LessonStory> = {
    { title: 'A Future-Adaptable Password Scheme', by: 'Niels Provos, David Mazières', where: 'USENIX Annual Technical Conference, 1999', note: 'bcrypt 논문입니다. 비용 값으로 하드웨어 발전을 따라가는 생각을 소개합니다.', url: 'https://www.usenix.org/legacy/events/usenix99/provos.html' },
    { title: 'NIST SP 800-63B · Digital Identity Guidelines: Authentication and Lifecycle Management', by: 'NIST', where: '2017', note: '비밀번호 길이, 주기적 변경, 유출 목록 대조, 다중 인증에 대한 현재 기준입니다.', url: 'https://pages.nist.gov/800-63-3/sp800-63b.html' },
    { title: 'OWASP · Password Storage Cheat Sheet', by: 'OWASP', where: '웹 문서', note: 'Argon2id, scrypt, bcrypt의 권장 비용 값을 정리한 실무 기준입니다.', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html' }
+  ]
+ },
+ cloud: {
+  question: '서버를 사지 않고 API 호출 몇 번으로 빌려 쓰는 일은 어떻게 가능해졌고 그 서버들은 실제로 어디에 있을까요?',
+  from: '5장에서 누가 무엇을 할 수 있는지 정하는 방법을 봤습니다. 이 장은 지금까지 만든 서비스를 실제로 클라우드에 올립니다. 그 전에 클라우드가 무엇이고 어떻게 가능해졌는지부터 봅니다.',
+  parts: [
+   { heading: '서버를 사던 시절', paragraphs: [
+    '2000년대 초까지 서비스를 시작하려면 서버를 사야 했습니다. 서버를 주문하고 받기까지 몇 주가 걸렸고 데이터센터의 랙 공간을 빌려 설치하고 네트워크 선을 연결해야 했습니다. 얼마나 살지도 고민이었습니다. 연말 특가 행사 때의 최대 사용량에 맞춰 사면 나머지 기간에는 서버 대부분이 놀았고 적게 사면 행사 날 서비스가 멈췄습니다.',
+    '컴퓨팅을 전기처럼 필요할 때 끌어다 쓰고 쓴 만큼 내자는 꿈은 1960년대 시분할 시대부터 있었습니다. 1장에서 본 CTSS처럼 한 컴퓨터를 여러 사람이 나눠 쓰는 경험이 그 꿈의 출발이었습니다. 하지만 그것이 현실이 되려면 서버 한 대를 서로 모르는 여러 고객이 안전하게 나눠 쓰게 하는 기술이 먼저 필요했습니다.'
+   ]},
+   { heading: '컴퓨터 안의 컴퓨터: 가상화', paragraphs: [
+    '1960년대 후반 IBM은 메인프레임 한 대 위에 여러 개의 가상 메인프레임을 띄우는 시스템을 만들었습니다. 1972년 VM/370에서는 사용자마다 자기 운영체제를 따로 돌릴 수 있었습니다. 이렇게 컴퓨터 안에 만든 가상의 컴퓨터를 **가상 머신**이라 하고 가상 머신들을 만들어 하드웨어를 나눠 주는 소프트웨어를 **하이퍼바이저**라고 합니다. 1974년 포펙과 골드버그는 어떤 CPU라야 효율적으로 가상화할 수 있는지 그 조건을 논문으로 정리했습니다.',
+    '원리는 1장 첫 단원과 프로세스 단원에서 본 것과 이어집니다. CPU에는 사용자 모드와 커널 모드가 있고 위험한 명령은 커널 모드에서만 실행됩니다. 가상 머신 안의 운영체제는 자기가 커널 모드에서 하드웨어를 다룬다고 믿지만 실제로는 그 아래에 하이퍼바이저가 있어서 민감한 명령이 나오면 가로채 대신 처리합니다. 운영체제가 프로세스에게 "자기만의 CPU와 메모리"라는 착각을 줬다면 하이퍼바이저는 운영체제에게 "자기만의 컴퓨터"라는 착각을 줍니다. 평범한 계산 명령은 하드웨어에서 그대로 실행되니 성능 손실도 작습니다.',
+    '문제는 PC와 서버에 쓰이는 x86 CPU가 포펙과 골드버그의 조건을 만족하지 않아 가로채야 할 명령을 다 가로챌 수 없었다는 점입니다. 1998년 설립된 VMware는 그런 명령을 실행 중에 바꿔 치는 영리한 방법으로 x86을 가상화했고 2003년 케임브리지의 Xen은 게스트 운영체제를 조금 고쳐 하이퍼바이저와 협력하게 했습니다. 2005~2006년 인텔과 AMD가 CPU에 가상화 지원 기능을 넣으면서 가상화는 모든 서버의 기본 기능이 되었습니다.'
+   ]},
+   { heading: '빌려 주는 거대한 데이터센터: AWS', paragraphs: [
+    '아마존은 2000년대 초 자기 쇼핑몰을 운영하며 서버와 저장소를 다루는 기술을 쌓았습니다. 2006년 3월 저장소 S3를, 8월 가상 서버 EC2를 공개했습니다. 신용카드 하나로 가입하고 API를 부르면 몇 분 만에 가상 서버가 생기고 시간 단위로 비용을 냈습니다. 서버를 사기 위해 몇 주를 기다리던 일이 몇 분으로 줄었고 연말 행사 날에만 서버를 늘렸다가 끝나면 줄일 수 있게 되었습니다.',
+    '2009년 버클리의 연구자들은 이 변화를 보고서로 정리하며 세 가지를 새롭다고 꼽았습니다. 필요하면 얼마든지 쓸 수 있을 것처럼 보이는 자원, 미리 사 둘 필요가 없는 것, 그리고 짧은 시간 단위로 쓴 만큼만 내는 것입니다. 2011년 미국 NIST는 빌리는 범위에 따라 가상 서버를 빌리는 **IaaS**, 실행 환경까지 빌리는 **PaaS**, 완성된 소프트웨어를 쓰는 **SaaS**로 나눴고 2014년 AWS Lambda는 서버를 아예 보이지 않게 하고 요청이 올 때만 함수를 실행하는 **서버리스**를 대중화했습니다.'
+   ]},
+   { heading: '서버는 실제로 어디에 있나: 리전과 가용 영역', paragraphs: [
+    '클라우드의 서버도 결국 어딘가의 건물 안에 있습니다. 업체는 서울, 도쿄, 버지니아처럼 세계 곳곳에 **리전**을 두고 한 리전 안에 서로 몇 킬로미터 이상 떨어져 전원과 냉방, 네트워크가 독립된 데이터센터 묶음을 여러 개 둡니다. 이것을 **가용 영역**이라고 합니다. 한 가용 영역이 정전이나 화재로 멈춰도 다른 가용 영역은 계속 돌아갑니다. 가용 영역끼리는 가까워서 지연이 짧으니 4장에서 본 동기 복제도 가능합니다.',
+    '중요한 점은 이 장애 경계를 고객이 직접 써야 효과가 있다는 것입니다. 서버와 DB를 한 가용 영역에만 두면 그 영역의 장애가 곧 서비스 장애입니다. 2017년 2월 AWS 직원이 미국 동부 리전에서 일부 서버를 내리는 명령을 실행하다 입력값을 잘못 넣어 S3가 몇 시간 동안 멈추자 그 리전의 S3에만 기대던 수많은 서비스가 함께 멈췄습니다. 이 단원의 그림이 같은 서비스를 한 가용 영역에 둘 때와 둘에 나눌 때 장애가 어떻게 다르게 번지는지 보여 줍니다.'
+   ]},
+   { heading: '빌린 만큼 남는 책임', paragraphs: [
+    '클라우드로 옮긴다고 모든 책임이 업체로 넘어가지는 않습니다. 업체는 건물, 하드웨어, 하이퍼바이저를 책임지고 고객은 그 위의 운영체제 패치, 네트워크 설정, 권한, 데이터를 책임집니다. 이것을 **공동 책임 모델**이라고 합니다. 5장 IAM 단원에서 본 사고들도 대부분 고객 쪽 설정 문제였습니다. 그리고 쓴 만큼 낸다는 말은 쓰는 동안 계속 낸다는 뜻이기도 합니다. 켜 두고 잊은 서버는 매달 비용으로 돌아옵니다.',
+    '이제 남은 질문은 빌린 서버 위에 우리 앱을 어떻게 올리고, 네트워크를 어떻게 나누고, 트래픽과 파일을 어떻게 다룰지입니다. 이 장의 나머지 단원이 컨테이너, VPC, 로드 밸런서, 스토리지, Kubernetes 순서로 그 질문에 답합니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: '클라우드에 올리면 업체가 알아서 장애를 막아 준다.', truth: '업체는 가용 영역이라는 장애 경계를 제공할 뿐입니다. 서버와 DB를 둘 이상의 가용 영역에 나눠 두는 설계는 고객이 직접 해야 합니다.' },
+   { belief: '가상 머신은 하드웨어를 흉내 내니 실제 서버보다 훨씬 느리다.', truth: '평범한 계산 명령은 하드웨어에서 그대로 실행되고 민감한 명령만 하이퍼바이저가 처리하므로 대부분의 작업에서 성능 차이는 작습니다.' },
+   { belief: '클라우드를 쓰면 보안도 업체 책임이다.', truth: '공동 책임 모델에 따라 운영체제, 네트워크 설정, IAM 권한, 데이터 보호는 고객의 책임입니다.' }
+  ],
+  to: '서버를 빌릴 수 있게 되었습니다. 그런데 내 노트북에서 돌던 앱이 빌린 서버에서는 Python 버전이나 라이브러리가 달라 실패할 수 있습니다. 앱과 그 실행 환경을 통째로 옮기는 방법이 다음 단원 컨테이너입니다.',
+  books: [
+   { title: 'The Datacenter as a Computer: Designing Warehouse-Scale Machines', by: 'Luiz André Barroso, Urs Hölzle, Parthasarathy Ranganathan', where: '3판 1장 소개, 2장 워크로드와 소프트웨어 인프라, 4장 데이터센터 기초', note: '구글 엔지니어들이 데이터센터 전체를 하나의 컴퓨터처럼 설계하는 관점을 설명합니다. 클라우드의 서버가 실제로 어떤 건물에서 어떻게 돌아가는지 볼 수 있습니다.', url: 'https://doi.org/10.1007/978-3-031-01761-2' },
+   { title: 'Operating Systems: Three Easy Pieces (운영체제: 아주 쉬운 세 가지 이야기)', by: 'Remzi H. Arpaci-Dusseau, Andrea C. Arpaci-Dusseau', where: '부록 가상 머신 모니터', note: '하이퍼바이저가 운영체제 아래에서 명령을 가로채는 원리를 1장의 제한된 직접 실행과 이어서 설명합니다.', url: 'https://pages.cs.wisc.edu/~remzi/OSTEP/' },
+   { title: 'AWS Well-Architected Framework · Reliability Pillar', by: 'AWS', where: '장애 경계와 다중 AZ 설계 절', note: '가용 영역과 리전을 써서 장애를 견디는 설계를 업체의 관점에서 정리한 문서입니다.', url: 'https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html' }
+  ],
+  papers: [
+   { title: 'Formal Requirements for Virtualizable Third Generation Architectures', by: 'Gerald J. Popek, Robert P. Goldberg', where: 'Communications of the ACM, 1974', note: '어떤 CPU가 효율적으로 가상화될 수 있는지 조건을 정리한 고전입니다.', url: 'https://doi.org/10.1145/361011.361073' },
+   { title: 'Xen and the Art of Virtualization', by: 'Paul Barham 외', where: 'SOSP, 2003', note: '게스트 운영체제와 협력해 x86을 빠르게 가상화한 Xen 논문입니다. 초기 EC2가 Xen 위에서 돌았습니다.', url: 'https://doi.org/10.1145/945445.945462' },
+   { title: 'A View of Cloud Computing', by: 'Michael Armbrust 외', where: 'Communications of the ACM, 2010', note: '버클리의 「Above the Clouds」 보고서를 정리한 글입니다. 클라우드가 무엇이 새로운지 짚습니다.', url: 'https://doi.org/10.1145/1721654.1721672' },
+   { title: 'Summary of the Amazon S3 Service Disruption in the Northern Virginia (US-EAST-1) Region', by: 'AWS', where: '2017', note: '명령어 입력 실수 하나가 S3 장애로 번진 과정과 재발 방지책입니다.', url: 'https://aws.amazon.com/message/41926/' }
   ]
  }
 };

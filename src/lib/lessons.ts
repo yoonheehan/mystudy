@@ -42,6 +42,7 @@ export const sources = {
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ nistCloud: { name: 'NIST SP 800-145 · Cloud Computing', url: 'https://csrc.nist.gov/pubs/sp/800/145/final' },
  passwordStorage: { name: 'OWASP · Password Storage', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html' },
  pySqlite: { name: 'Python · sqlite3', url: 'https://docs.python.org/3/library/sqlite3.html' },
  rfc9112: { name: 'RFC 9112 · HTTP/1.1', url: 'https://www.rfc-editor.org/rfc/rfc9112' },
@@ -598,7 +599,21 @@ salt_a, hash_a = hash_password("correct horse")
 salt_b, hash_b = hash_password("correct horse")      # 같은 비밀번호, 다른 솔트
 print("해시가 같은가:", hash_a == hash_b)              # False
 print("맞는 비밀번호:", verify("correct horse", salt_a, hash_a))
-print("틀린 비밀번호:", verify("correct h0rse", salt_a, hash_a))`,codeNotes:['같은 비밀번호도 솔트가 다르면 해시가 완전히 달라집니다. 그래서 유출된 DB에서 같은 비밀번호를 쓰는 사람을 찾을 수 없고 미리 계산한 표도 쓸 수 없습니다.','n=2**14는 scrypt의 비용 값입니다. 숫자를 늘려 가며 실행 시간이 어떻게 변하는지 재 보세요. 운영에서는 로그인 한 번이 수십~수백 ms가 되도록 정합니다.','hmac.compare_digest는 앞에서부터 다른 글자를 찾는 즉시 멈추지 않아 비교 시간으로 정답을 추측하는 공격을 막습니다. 실무에서는 argon2-cffi나 bcrypt 라이브러리가 솔트와 비용을 한 문자열에 담아 관리해 줍니다.'],answer:'비밀번호는 되돌릴 수 없는 해시로 저장하고 사용자마다 다른 솔트를 섞어 같은 비밀번호도 다른 해시가 되게 하겠습니다. 해시 함수는 bcrypt, scrypt, Argon2처럼 일부러 느리고 메모리를 쓰는 것을 골라 유출되더라도 대량 대입을 어렵게 하고 비교는 상수 시간으로 합니다. 로그인 경로에는 속도 제한과 다중 인증을 더하고 유출된 비밀번호 목록과 대조하는 정책도 검토합니다.',follow:[['SHA-256으로 해시하면 안 되나요?','SHA-256은 빠르게 계산하도록 설계되어 GPU로 초당 수십억 개를 맞춰 볼 수 있습니다. 비밀번호에는 일부러 느리고 메모리를 많이 쓰는 함수가 필요합니다.'],['비밀번호를 주기적으로 바꾸게 하는 것이 좋은가요?','NIST SP 800-63B는 이유 없는 주기적 변경을 요구하지 말라고 권합니다. 사람들이 예측 가능한 변형(Password1, Password2)을 쓰게 될 뿐입니다. 대신 유출 목록에 있는 비밀번호를 막고 유출이 의심될 때 바꾸게 합니다.']],memory:'저장하지 말고 해시로, 모두 다르게 솔트로, 맞춰 보기 힘들게 느리게. 비밀번호 하나에 기대지 않는다.',mistake:'비밀번호를 암호화(되돌릴 수 있는 방식)하거나 MD5, SHA-1, SHA-256 같은 빠른 해시로 저장하지 마세요.',quiz:{question:'비밀번호 해시에 사용자마다 다른 솔트를 섞는 가장 큰 이유는?',options:['해시를 더 짧게 만들려고','같은 비밀번호라도 해시가 달라져 미리 계산한 표와 일괄 대입을 막으려고','비밀번호를 나중에 복원하려고'],correct:1,explanation:'솔트가 다르면 같은 비밀번호도 다른 해시가 되어 한 번의 계산으로 여러 계정을 맞출 수 없습니다.'},refs:['passwordStorage','auth']})
+print("틀린 비밀번호:", verify("correct h0rse", salt_a, hash_a))`,codeNotes:['같은 비밀번호도 솔트가 다르면 해시가 완전히 달라집니다. 그래서 유출된 DB에서 같은 비밀번호를 쓰는 사람을 찾을 수 없고 미리 계산한 표도 쓸 수 없습니다.','n=2**14는 scrypt의 비용 값입니다. 숫자를 늘려 가며 실행 시간이 어떻게 변하는지 재 보세요. 운영에서는 로그인 한 번이 수십~수백 ms가 되도록 정합니다.','hmac.compare_digest는 앞에서부터 다른 글자를 찾는 즉시 멈추지 않아 비교 시간으로 정답을 추측하는 공격을 막습니다. 실무에서는 argon2-cffi나 bcrypt 라이브러리가 솔트와 비용을 한 문자열에 담아 관리해 줍니다.'],answer:'비밀번호는 되돌릴 수 없는 해시로 저장하고 사용자마다 다른 솔트를 섞어 같은 비밀번호도 다른 해시가 되게 하겠습니다. 해시 함수는 bcrypt, scrypt, Argon2처럼 일부러 느리고 메모리를 쓰는 것을 골라 유출되더라도 대량 대입을 어렵게 하고 비교는 상수 시간으로 합니다. 로그인 경로에는 속도 제한과 다중 인증을 더하고 유출된 비밀번호 목록과 대조하는 정책도 검토합니다.',follow:[['SHA-256으로 해시하면 안 되나요?','SHA-256은 빠르게 계산하도록 설계되어 GPU로 초당 수십억 개를 맞춰 볼 수 있습니다. 비밀번호에는 일부러 느리고 메모리를 많이 쓰는 함수가 필요합니다.'],['비밀번호를 주기적으로 바꾸게 하는 것이 좋은가요?','NIST SP 800-63B는 이유 없는 주기적 변경을 요구하지 말라고 권합니다. 사람들이 예측 가능한 변형(Password1, Password2)을 쓰게 될 뿐입니다. 대신 유출 목록에 있는 비밀번호를 막고 유출이 의심될 때 바꾸게 합니다.']],memory:'저장하지 말고 해시로, 모두 다르게 솔트로, 맞춰 보기 힘들게 느리게. 비밀번호 하나에 기대지 않는다.',mistake:'비밀번호를 암호화(되돌릴 수 있는 방식)하거나 MD5, SHA-1, SHA-256 같은 빠른 해시로 저장하지 마세요.',quiz:{question:'비밀번호 해시에 사용자마다 다른 솔트를 섞는 가장 큰 이유는?',options:['해시를 더 짧게 만들려고','같은 비밀번호라도 해시가 달라져 미리 계산한 표와 일괄 대입을 막으려고','비밀번호를 나중에 복원하려고'],correct:1,explanation:'솔트가 다르면 같은 비밀번호도 다른 해시가 되어 한 번의 계산으로 여러 계정을 맞출 수 없습니다.'},refs:['passwordStorage','auth']}),
+l({id:'cloud',category:4,title:'클라우드와 가상화',english:'Virtualization / Region · Availability Zone / IaaS · PaaS · Serverless',hook:'서버를 사지 않고 몇 분 만에 빌려 쓸 수 있게 된 비결은 무엇일까?',definition:'클라우드는 서버, 저장소, 네트워크 같은 컴퓨팅 자원을 직접 사지 않고 필요할 때 API로 빌려 쓰고 쓴 만큼 비용을 내는 방식입니다. 그 바탕에는 가상화가 있습니다. 하이퍼바이저라는 소프트웨어가 물리 서버 한 대를 여러 가상 머신으로 나눠 각 가상 머신이 자기만의 CPU, 메모리, 디스크를 가진 컴퓨터처럼 보이게 합니다. 클라우드 업체는 전 세계에 리전을 두고 각 리전 안에 전원과 네트워크가 독립된 데이터센터 묶음인 가용 영역(AZ)을 여러 개 둡니다. 무엇을 빌리느냐에 따라 가상 서버를 빌리는 IaaS, 실행 환경까지 빌리는 PaaS, 함수 단위로 실행만 맡기는 서버리스로 나뉩니다.',analogy:'자가용을 사는 대신 렌터카를 빌리는 것과 비슷합니다. 큰 차고(데이터센터)에 차(물리 서버)가 가득하고 렌터카 회사는 한 대의 큰 차를 칸막이로 나눠 여러 손님에게 각자 자기 차처럼 쓰게 해 줍니다(가상화). 지점(리전)이 도시마다 있고 한 도시 안에도 서로 떨어진 주차장(가용 영역)이 여러 곳이라 한 주차장이 침수돼도 다른 곳의 차를 탈 수 있습니다. 차만 빌릴지(IaaS), 기사까지 부를지(PaaS), 택시처럼 탈 때만 낼지(서버리스)를 고릅니다.',steps:['사용자의 위치와 규정을 고려해 리전을 고르고 VPC 안에 서버를 둘 가용 영역을 정합니다.','API나 콘솔로 가상 서버, DB, 저장소를 만들고 필요하면 몇 분 만에 늘리거나 줄입니다.','한 가용 영역이 멈춰도 서비스가 이어지도록 서버와 DB를 둘 이상의 가용 영역에 나눠 둡니다.','쓴 만큼 비용이 나가므로 사용량을 감시하고 쓰지 않는 자원은 정리합니다.'],scenario:'첫 서비스를 서버 한 대와 DB 하나로 한 가용 영역에 올렸다가 그 가용 영역의 전원 장애로 몇 시간 동안 서비스가 멈췄습니다. 서버를 두 가용 영역에 나눠 로드 밸런서 뒤에 두고 DB를 Multi-AZ로 바꾸자 다음 장애 때는 몇 분 안에 다른 가용 영역으로 넘어갔습니다. 비용은 조금 늘었지만 장애 시간은 크게 줄었습니다.',aws:'EC2는 Nitro 기반의 가상 서버이고 리전마다 여러 가용 영역이 있습니다. 운영 서비스는 최소 두 가용 영역에 나눠 배치하고 RDS Multi-AZ, ALB, Auto Scaling 그룹으로 한 가용 영역의 장애를 견디게 합니다. 서버를 직접 관리하기 싫다면 ECS Fargate나 Lambda를 검토합니다.',ncloud:'리전과 존(Zone)을 골라 Server를 만들고 운영 서비스는 둘 이상의 존에 나눠 Load Balancer 뒤에 둡니다. 관리형 DB의 고가용성 옵션과 Cloud Functions 같은 서버리스 상품도 검토합니다.',tradeoff:'클라우드는 초기 구매 없이 바로 시작하고 필요한 만큼 늘릴 수 있지만 사용량이 늘수록 비용이 계속 쌓이고 업체의 서비스와 장애에 기대게 됩니다. 여러 가용 영역에 나누면 견고해지지만 비용과 영역 사이 데이터 전송료가 늘어납니다. 서버리스는 운영이 가장 쉽지만 실행 시간 제한과 첫 호출 지연이 있습니다.',language:'Python · 가용 영역을 나누면 가용성이 얼마나 오를까',code:`# 각 가용 영역(AZ)이 1년 중 99.9% 동안 정상이라고 가정합니다(독립적으로 고장).
+az_availability = 0.999
+hours_per_year = 24 * 365
+
+def downtime_hours(availability):
+    return round((1 - availability) * hours_per_year, 2)
+
+one_az = az_availability
+two_az = 1 - (1 - az_availability) ** 2      # 두 AZ가 동시에 멈출 때만 서비스 중단
+print("AZ 1개:", one_az, "→ 연간 중단", downtime_hours(one_az), "시간")
+print("AZ 2개:", round(two_az, 6), "→ 연간 중단", downtime_hours(two_az), "시간")
+
+# 비용은 대략 두 배가 됩니다. 시간당 100원짜리 서버라면
+print("연간 비용:", 100 * hours_per_year, "원 →", 2 * 100 * hours_per_year, "원")`,codeNotes:['두 가용 영역이 서로 독립적으로 고장 난다는 가정 아래 둘 다 동시에 멈출 확률은 0.001 × 0.001입니다. 실제로는 배포 실수나 리전 전체 장애처럼 함께 멈추는 원인도 있어 이보다 덜 좋아집니다.','숫자를 바꿔 보세요. 99%짜리 두 개와 99.9%짜리 하나 중 무엇이 나은지, 세 개로 늘리면 얼마나 나아지는지 계산할 수 있습니다.','가용성 숫자는 비용과 함께 봐야 합니다. 모든 서비스가 같은 수준의 가용성을 필요로 하지는 않습니다.'],answer:'클라우드는 가상화 위에서 컴퓨팅 자원을 API로 빌려 쓰고 쓴 만큼 내는 방식입니다. 하이퍼바이저가 물리 서버를 여러 가상 머신으로 나누고 업체는 리전마다 전원과 네트워크가 독립된 가용 영역을 여러 개 둡니다. 운영 서비스는 최소 두 가용 영역에 나눠 배치해 한 영역의 장애를 견디게 하고, 관리 부담과 비용을 따져 IaaS, PaaS, 서버리스 중에서 고르겠습니다.',follow:[['가용 영역과 리전은 어떻게 다른가요?','리전은 서울, 도쿄처럼 지리적으로 떨어진 지역이고 가용 영역은 한 리전 안에서 수 킬로미터 이상 떨어져 전원과 네트워크가 독립된 데이터센터 묶음입니다. 가용 영역 사이는 지연이 짧아 동기 복제가 가능하고 리전 사이는 지연이 길어 보통 비동기로 복제합니다.'],['클라우드를 쓰면 보안은 업체가 다 책임지나요?','아닙니다. 공동 책임 모델에 따라 업체는 데이터센터, 하드웨어, 하이퍼바이저를 책임지고 고객은 운영체제 패치, 네트워크 설정, IAM 권한, 데이터 암호화를 책임집니다. 5장의 IAM 사고들은 대부분 고객 쪽 설정 문제였습니다.']],memory:'사지 말고 빌리고, 한 곳에 몰지 말고 나눠 두고, 쓴 만큼 낸다.',mistake:'"클라우드에 올렸으니 장애가 없다"고 생각하지 마세요. 한 가용 영역에만 두면 그 영역의 장애가 곧 서비스 장애입니다.',quiz:{question:'운영 서비스를 한 가용 영역의 장애에도 견디게 하는 가장 기본적인 방법은?',options:['더 큰 서버로 바꾼다','서버와 DB를 둘 이상의 가용 영역에 나눠 배치한다','서버를 한 대 더 같은 가용 영역에 둔다'],correct:1,explanation:'가용 영역은 전원과 네트워크가 독립되어 있어 나눠 두면 한 영역이 멈춰도 다른 영역이 서비스를 이어 갑니다.'},refs:['nistCloud','iam']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
@@ -607,7 +622,7 @@ const sequence: Record<number, string[]> = {
  2: ['webserver', 'kit', 'rest', 'async', 'proxy', 'ratelimit'],
  3: ['sqlbasics', 'normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
  5: ['password', 'session', 'cors', 'validation', 'iam'],
- 4: ['docker', 'vpc', 'lb', 'storage', 'kubernetes'],
+ 4: ['cloud', 'docker', 'vpc', 'lb', 'storage', 'kubernetes'],
  6: ['git', 'pytest', 'cicd', 'observability', 'scale', 'recovery']
 };
 const position = (x: Lesson) => { const i = sequence[x.category]?.indexOf(x.id) ?? -1; return i < 0 ? Infinity : i; };
