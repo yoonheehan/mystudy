@@ -23,6 +23,13 @@ node build
 
 운영 배포는 아래 Vercel 배포 설정을 사용합니다. 로컬 LAN 개발 서버는 기존 `npm run dev`로 실행합니다.
 
+```sh
+npm test             # 단원·내용·연습 문제 데이터 검사 (Python 필요, 네트워크 불필요)
+npm run check:links  # 인용한 출처 URL이 아직 열리는지 확인 (네트워크 필요)
+```
+
+`npm test`는 `test:lessons`(단원 본문과 Python 문법), `test:content`(역사·동작 원리·단계 그림 데이터, 알고리즘 노트와 연습 문제 연결), `test:practice`(문제·채점·해설)를 차례로 실행합니다. `check:links`는 자동 요청을 막는 사이트(w3.org 등)를 실패가 아닌 경고로 보여 주고 DOI는 Crossref에서 확인합니다. GitHub Actions가 push와 PR마다 `npm run check`, `npm test`, `npm run build`를 돌리고 매주 월요일에 링크를 검사합니다.
+
 ## 학습
 
 - `/`는 두 대분류와 통합 진도를 보여주는 학습 홈입니다.

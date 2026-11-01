@@ -11,7 +11,10 @@
     "prebuild": "node scripts/prepare-python.mjs",
     "prepreview": "node scripts/prepare-python.mjs",
     "test:practice": "node scripts/check-practice.mjs",
-    "test:lessons": "node scripts/check-lessons.mjs"
+    "test:lessons": "node scripts/check-lessons.mjs",
+    "test:content": "node scripts/check-content.mjs",
+    "test": "npm run test:lessons && npm run test:content && npm run test:practice",
+    "check:links": "node scripts/check-links.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-vercel": "^6.3.4",
