@@ -895,5 +895,274 @@ export const stories: Record<string, LessonStory> = {
    { title: 'Impossibility of Distributed Consensus with One Faulty Process', by: 'Michael J. Fischer, Nancy A. Lynch, Michael S. Paterson', where: 'Journal of the ACM, 1985', note: 'FLP 불가능성 논문입니다.', url: 'https://doi.org/10.1145/3149.214121' },
    { title: 'The Chubby Lock Service for Loosely-Coupled Distributed Systems', by: 'Mike Burrows', where: 'OSDI, 2006', note: 'Paxos를 실제로 구현하며 겪은 어려움을 적은 논문입니다.', url: 'https://www.usenix.org/legacy/event/osdi06/tech/burrows.html' }
   ]
+ },
+ session: {
+  from: '4장에서 데이터를 저장하고 지키는 방법을 봤다. 이제 그 데이터에 접근하는 사람이 누구인지 묻는다. 그런데 2장에서 본 것처럼 HTTP는 요청 사이에 아무것도 기억하지 않는다.',
+  parts: [
+   { heading: '기억하지 않는 프로토콜 위에서 로그인하기', paragraphs: [
+    'HTTP는 무상태로 설계되었다. 서버는 요청 하나에 답하고 나면 그 클라이언트를 잊는다. 문서를 보여 주는 데는 이것이 장점이었다. 하지만 1994년 넷스케이프가 온라인 쇼핑을 준비하면서 문제가 생겼다. 장바구니에 담은 물건을 다음 페이지에서도 기억해야 하는데 서버는 다음 요청이 같은 사람에게서 왔는지 알 길이 없었다.',
+    '넷스케이프의 루 몬툴리는 서버가 응답에 작은 값을 실어 보내면 브라우저가 저장해 두었다가 같은 사이트에 요청할 때마다 자동으로 붙여 보내는 방법을 만들었다. 이것이 **쿠키**다. 1997년 RFC 2109로 처음 표준이 되었고 지금 규격은 2011년의 RFC 6265다. 무상태 프로토콜 위에 상태를 얹는 가장 단순한 장치였다.'
+   ]},
+   { heading: '열쇠만 맡기고 장부는 서버에: 세션', paragraphs: [
+    '쿠키에 사용자 정보를 그대로 넣으면 사용자가 값을 고칠 수 있다. 그래서 흔한 방식은 서버가 로그인한 사용자의 정보를 자기 쪽 저장소에 두고 쿠키에는 그 기록을 찾는 예측할 수 없는 열쇠, **세션 ID**만 넣는 것이다. 요청이 오면 서버는 쿠키의 세션 ID로 저장소를 찾아 누구인지 안다. 로그아웃하거나 계정이 정지되면 서버 쪽 기록을 지우면 끝이다.',
+    '이 열쇠를 훔치면 로그인한 것과 같다. 2010년 Firesheep이라는 브라우저 확장은 카페의 공용 Wi-Fi에서 평문으로 오가는 다른 사람의 세션 쿠키를 클릭 한 번으로 가로채 보였다. 큰 사이트들이 로그인 페이지뿐 아니라 모든 페이지를 HTTPS로 옮기기 시작한 계기 중 하나다. 쿠키에 HttpOnly(스크립트가 읽지 못하게), Secure(HTTPS로만), SameSite(다른 사이트 요청에 붙지 않게) 같은 속성이 생긴 것도 열쇠를 지키기 위해서다.'
+   ]},
+   { heading: '서버가 기억하지 않는 토큰: JWT', paragraphs: [
+    '서버가 여러 대가 되자 세션 저장소를 모두가 함께 봐야 했다. 서비스가 여러 개로 나뉘면 서비스마다 세션 저장소를 조회하는 것도 부담이었다. 그래서 사용자 정보를 토큰 안에 담고 서버가 비밀 키로 **서명**해서 위조를 막는 방식이 퍼졌다. 2015년 RFC 7519로 표준이 된 **JWT**가 대표적이다. 서버는 저장소를 보지 않고 서명만 확인하면 누구인지 안다.',
+    '대신 토큰은 한 번 발급하면 만료 전까지 회수하기 어렵다. 서버가 아무것도 기억하지 않으니 "이 토큰은 이제 무효"라고 알릴 곳이 없다. 그래서 JWT는 수명을 짧게 하고 오래가는 갱신 토큰을 따로 두거나 결국 차단 목록을 서버에 두게 된다. 무상태의 장점과 즉시 회수의 필요 사이에서 고르는 문제다. 2012년의 OAuth 2.0(RFC 6749)은 다른 서비스에 내 권한 일부를 위임하는 방법을 정했는데 이것도 결국 토큰을 누가, 얼마 동안, 무엇에 쓸 수 있는지 정하는 약속이다.'
+   ]},
+   { heading: '무엇을 고를까', paragraphs: [
+    '브라우저를 쓰는 일반 웹 서비스라면 HttpOnly 쿠키에 세션 ID를 넣는 서버 세션이 가장 단순하고 안전한 출발점이다. 즉시 로그아웃과 권한 회수가 쉽다. 여러 서비스가 함께 사용자를 확인해야 하거나 모바일 앱과 외부 파트너가 API를 부른다면 짧은 수명의 토큰이 맞을 수 있다. 어느 쪽이든 열쇠는 HTTPS로만 보내고, 짧게 쓰고, 회수할 방법을 미리 정해 둔다.'
+   ]}
+  ],
+  to: '쿠키는 브라우저가 자동으로 붙여 보낸다. 그런데 다른 사이트의 페이지가 우리 사이트로 요청을 보내도 쿠키가 붙는다면 어떻게 될까? 다음 단원 CORS와 CSRF가 브라우저가 출처 사이에 그은 경계를 다룬다.',
+  books: [
+   { title: 'API Security in Action', by: 'Neil Madden', where: '4장 세션 쿠키 인증, 5장 현대적 토큰 기반 인증, 6장 자체 포함 토큰과 JWT', note: '세션과 토큰 방식을 같은 예제로 구현해 보며 장단점을 비교합니다. 이 장 전체의 기본 교과서입니다.', url: 'https://www.manning.com/books/api-security-in-action' },
+   { title: 'The Tangled Web', by: 'Michal Zalewski', where: '9장 콘텐츠 격리 로직 (쿠키의 보안 모델)', note: '쿠키가 어떻게 생겨났고 왜 지금처럼 복잡한 규칙을 갖게 되었는지 역사 순으로 설명합니다.', url: 'https://nostarch.com/tangledweb' }
+  ],
+  papers: [
+   { title: 'RFC 6265 · HTTP State Management Mechanism', by: 'A. Barth', where: 'IETF, 2011', note: '현재 쿠키 규격입니다. 앞부분에 쿠키의 역사와 보안상 한계가 정리되어 있습니다.', url: 'https://www.rfc-editor.org/rfc/rfc6265' },
+   { title: 'RFC 7519 · JSON Web Token (JWT)', by: 'M. Jones, J. Bradley, N. Sakimura', where: 'IETF, 2015', note: 'JWT의 구조와 클레임을 정의합니다.', url: 'https://www.rfc-editor.org/rfc/rfc7519' },
+   { title: 'OWASP · Session Management Cheat Sheet', by: 'OWASP', where: '웹 문서', note: '세션 ID 생성, 쿠키 속성, 만료와 회수의 실무 기준입니다.', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html' }
+  ]
+ },
+ cors: {
+  from: '앞 단원에서 브라우저가 쿠키를 자동으로 붙여 보낸다고 했다. 이 편리함은 그대로 위험이 된다. 내가 연 다른 사이트의 스크립트가 은행 사이트로 요청을 보내면 어떻게 될까?',
+  parts: [
+   { heading: '자바스크립트와 함께 생긴 벽: 동일 출처 정책', paragraphs: [
+    '1995년 넷스케이프가 브라우저에 자바스크립트를 넣자 곧바로 질문이 생겼다. 한 탭에서 연 악성 페이지의 스크립트가 다른 탭에 열린 은행 페이지의 내용을 읽을 수 있다면? 사용자의 쿠키로 로그인된 화면을 남이 읽는 셈이다. 그래서 넷스케이프는 스크립트가 자기와 같은 **출처**(스킴, 호스트, 포트가 모두 같은 곳)의 문서와 데이터만 읽을 수 있게 했다. 이것이 **동일 출처 정책**이다.',
+    '이 정책은 브라우저 보안의 기둥이 되었지만 규칙은 처음부터 완벽하게 설계된 것이 아니라 문제가 생길 때마다 덧붙여졌다. 이미지와 스크립트, 폼 전송은 다른 출처로도 보낼 수 있었다. 웹이 처음부터 다른 사이트의 자원을 링크하고 불러오는 구조였기 때문이다. 막은 것은 응답을 "읽는" 일이었다.'
+   ]},
+   { heading: '보내는 것은 막지 못했다: CSRF', paragraphs: [
+    '읽기는 막았지만 보내기는 막지 못했다는 틈에서 공격이 나왔다. 사용자가 은행에 로그인한 채로 악성 사이트를 열면 그 사이트에 숨겨진 폼이 은행으로 송금 요청을 보낸다. 브라우저는 은행 쿠키를 자동으로 붙이고 은행은 진짜 사용자의 요청으로 믿는다. 공격자는 응답을 읽을 수 없지만 송금은 이미 일어났다. 이것이 **사이트 간 요청 위조**(CSRF)다.',
+    '2008년 바스, 잭슨, 미첼은 논문 「Robust Defenses for Cross-Site Request Forgery」에서 방어 방법을 체계적으로 분석했다. 서버가 예측할 수 없는 토큰을 폼에 넣고 요청마다 확인하는 **CSRF 토큰**, 요청의 Origin 헤더를 확인하는 방법이 대표적이다. 2016년부터 브라우저는 쿠키에 **SameSite** 속성을 붙일 수 있게 했고 2020년 크롬은 속성이 없는 쿠키를 Lax로 다뤄 다른 사이트에서 시작된 POST에는 쿠키가 붙지 않게 했다. 25년 동안 열려 있던 틈이 기본값 하나로 상당 부분 닫힌 것이다.'
+   ]},
+   { heading: '벽에 문을 내다: CORS', paragraphs: [
+    '2000년대 들어 Ajax로 화면이 API를 직접 부르기 시작하자 이번에는 동일 출처 정책이 너무 엄격해졌다. shop.example.com의 화면이 api.example.com을 부르는 것은 같은 회사인데도 출처가 달라 막혔다. 개발자들은 JSONP 같은 편법을 썼다.',
+    '그래서 서버가 "이 출처는 내 응답을 읽어도 된다"고 명시적으로 허락하는 장치가 만들어졌다. 2014년 W3C 권고가 된 **CORS**다. 브라우저는 다른 출처의 응답에 Access-Control-Allow-Origin 헤더가 있어야 스크립트에게 보여 준다. PUT이나 사용자 정의 헤더처럼 예전에는 다른 출처로 보낼 수 없던 요청은 본 요청 전에 OPTIONS로 먼저 물어보는 **사전 요청**을 한다. 예전 서버들이 예상하지 못한 요청을 갑자기 받지 않게 하려는 배려다. 이 단원의 그림이 그 과정을 보여 준다.'
+   ]},
+   { heading: 'CORS는 서버를 지키지 않는다', paragraphs: [
+    '자주 하는 오해가 있다. CORS는 브라우저가 사용자를 지키기 위한 장치이지 서버를 지키는 장치가 아니다. curl이나 서버 프로그램은 CORS를 신경 쓰지 않고 어떤 요청이든 보낸다. 그래서 CORS 설정을 엄격하게 했다고 API가 안전해지지 않는다. 인증과 인가는 여전히 서버가 해야 한다. 반대로 Access-Control-Allow-Origin에 요청의 Origin을 그대로 돌려주면서 자격 증명까지 허용하면 아무 사이트나 사용자의 로그인으로 API를 읽을 수 있게 된다. 허용 목록은 정확히 적는다.'
+   ]}
+  ],
+  to: '브라우저의 경계는 사용자를 지킨다. 하지만 서버로 들어오는 요청은 브라우저가 아닌 곳에서도 온다. 서버는 들어오는 모든 값을 어떻게 다뤄야 할까? 다음 단원 입력 검증과 비밀 관리가 이 질문을 다룬다.',
+  books: [
+   { title: 'The Tangled Web', by: 'Michal Zalewski', where: '9장 콘텐츠 격리 로직, 16장 새로 나오는 보안 기능(CORS)', note: '동일 출처 정책이 어떻게 덧붙여지며 자랐는지, 그 틈에서 어떤 공격이 나왔는지 역사 순으로 설명합니다.', url: 'https://nostarch.com/tangledweb' },
+   { title: 'API Security in Action', by: 'Neil Madden', where: '4장 세션 쿠키 인증(CSRF 방어), 5장 CORS', note: 'CSRF 토큰과 SameSite, CORS 설정을 직접 구현해 보며 설명합니다.', url: 'https://www.manning.com/books/api-security-in-action' }
+  ],
+  papers: [
+   { title: 'Robust Defenses for Cross-Site Request Forgery', by: 'Adam Barth, Collin Jackson, John C. Mitchell', where: 'ACM CCS, 2008', note: 'CSRF 방어 방법을 체계적으로 분석하고 Origin 헤더를 제안한 논문입니다.', url: 'https://doi.org/10.1145/1455770.1455782' },
+   { title: 'Fetch Standard (CORS 프로토콜)', by: 'WHATWG', where: '살아 있는 표준', note: '지금의 CORS 규칙은 Fetch 표준 안에 정의되어 있습니다.', url: 'https://fetch.spec.whatwg.org/' },
+   { title: 'SameSite cookies explained', by: 'web.dev', where: '웹 문서', note: 'SameSite 속성과 기본값 변경의 배경을 설명합니다.', url: 'https://web.dev/articles/samesite-cookies-explained' }
+  ]
+ },
+ validation: {
+  from: '앞 단원의 브라우저 경계는 사용자를 지켰지만 서버로 오는 요청은 어디서든 올 수 있다. 3장 첫 단원에서 "클라이언트를 믿지 마라"고 했던 원칙을 이번에는 공격자의 눈으로 다시 본다.',
+  parts: [
+   { heading: '데이터가 명령이 되는 순간', paragraphs: [
+    '1998년 해커 잡지 Phrack 54호에 rain.forest.puppy라는 이름의 글이 실렸다. 웹 폼에 입력한 값이 그대로 SQL 문에 이어 붙여지는 서버에서 따옴표와 SQL 조각을 입력하면 DB가 그것을 명령으로 실행한다는 내용이었다. 이것이 **SQL 인젝션**으로 알려진 공격의 초기 기록이다. 사용자 이름 칸에 \' OR \'1\'=\'1을 넣으면 비밀번호 확인이 무력해지는 식이다.',
+    '이 공격의 뿌리는 데이터와 명령이 같은 문자열 안에 섞인다는 데 있다. 프로그래머는 입력을 "값"으로 생각했지만 문자열을 이어 붙이는 순간 DB는 그것을 "코드"로 읽는다. 셸 명령, HTML, 파일 경로에서도 같은 일이 일어난다. HTML에 사용자 입력을 그대로 넣으면 그 안의 스크립트가 다른 사용자의 브라우저에서 실행된다(XSS).'
+   ]},
+   { heading: '걸러 내기보다 섞지 않기', paragraphs: [
+    '처음에는 위험한 문자를 걸러 내는 방법을 많이 썼다. 따옴표를 지우거나 앞에 역슬래시를 붙이는 식이다. 하지만 DB마다, 문자 인코딩마다 위험한 문자가 달라 빠짐없이 막기 어려웠다. 근본적인 해법은 데이터와 명령을 아예 다른 통로로 보내는 것이다. **매개변수화된 쿼리**는 SQL의 모양을 먼저 보내고 값은 따로 보내서 DB가 값을 절대 명령으로 해석하지 않게 한다. HTML도 템플릿 엔진이 출력할 때 자동으로 이스케이프한다. 막는 기준을 "나쁜 것을 찾아내기"에서 "애초에 섞지 않기"로 바꾼 것이다.',
+    '2003년부터 OWASP는 가장 흔한 웹 취약점 열 가지를 정리해 발표해 왔고 인젝션은 오랫동안 그 맨 위에 있었다. 지금은 프레임워크와 ORM이 기본으로 막아 주기 때문에 순위가 내려갔지만 문자열로 쿼리를 직접 만드는 순간 다시 열린다.'
+   ]},
+   { heading: '들어오는 값은 모양부터 확인한다', paragraphs: [
+    '인젝션을 막는 것과 별개로 서버는 들어오는 값이 기대한 모양인지 확인해야 한다. 수량은 1에서 99 사이의 정수인지, 이메일은 정해진 길이 안인지, 모르는 필드가 섞여 있지 않은지. 허용할 것을 정해 두고 나머지를 거절하는 **허용 목록** 방식이 기본이다. 거절할 것을 나열하면 언제나 빠뜨린 것이 생긴다. Pydantic 같은 스키마 도구가 이 일을 경계에서 한 번에 처리한다.',
+    '모르는 필드를 그냥 무시하지 않으면 생기는 사고도 있다. 회원 정보 수정 요청에 is_admin: true를 슬쩍 넣었는데 서버가 받은 값을 모델에 통째로 넣으면 관리자가 된다. 그래서 바꿀 수 있는 필드를 명시적으로 고른다.'
+   ]},
+   { heading: '코드에 적힌 비밀', paragraphs: [
+    '입력 다음으로 자주 새는 것은 비밀 자체다. DB 비밀번호나 API 키를 코드에 적어 두면 저장소에 접근할 수 있는 모든 사람과 그 저장소의 모든 복제본이 비밀을 갖게 된다. 공개 저장소에 실수로 올라간 키를 자동으로 찾아 쓰는 봇이 있어서 올린 지 몇 분 만에 클라우드 비용 폭탄을 맞는 일도 흔하다. 2016년 Uber의 대규모 유출도 개발자들의 코드 저장소에 남아 있던 클라우드 자격 증명에서 시작되었다.',
+    '2011년 Heroku가 정리한 **Twelve-Factor App**은 설정, 특히 비밀은 코드가 아니라 환경에 두라고 권했다. 지금은 AWS Secrets Manager나 Vault 같은 비밀 저장소에 두고 실행할 때 꺼내 쓰며 정기적으로 바꾼다. 이미 커밋한 비밀은 이력에서 지우는 것보다 먼저 폐기하고 새로 발급하는 것이 순서다.'
+   ]}
+  ],
+  to: '비밀을 코드에서 꺼내 비밀 저장소에 두었다. 그렇다면 그 저장소에는 누가 접근할 수 있을까? 클라우드의 모든 자원에 대해 누가 무엇을 할 수 있는지 정하는 문제, 다음 단원 IAM과 최소 권한이 이 질문을 다룬다.',
+  books: [
+   { title: 'API Security in Action', by: 'Neil Madden', where: '2장 안전한 API 개발 (인젝션, 입력 검증, 출력 인코딩)', note: '인젝션이 왜 생기고 매개변수화와 검증으로 어떻게 막는지 예제로 설명합니다.', url: 'https://www.manning.com/books/api-security-in-action' },
+   { title: 'The Tangled Web', by: 'Michal Zalewski', where: '4~6장 HTML, CSS, 브라우저 측 스크립트', note: '데이터와 코드가 섞이는 지점이 웹 곳곳에 왜 그렇게 많은지 설명합니다.', url: 'https://nostarch.com/tangledweb' }
+  ],
+  papers: [
+   { title: 'NT Web Technology Vulnerabilities', by: 'rain.forest.puppy', where: 'Phrack 54호, 1998', note: 'SQL 인젝션의 초기 기록으로 자주 인용되는 글입니다.', url: 'https://phrack.org/issues/54/8.html' },
+   { title: 'OWASP · SQL Injection Prevention Cheat Sheet', by: 'OWASP', where: '웹 문서', note: '매개변수화된 쿼리를 1순위 방어로 두는 이유를 설명합니다.', url: 'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html' },
+   { title: 'The Twelve-Factor App · III. Config', by: 'Adam Wiggins 외 (Heroku)', where: '웹 문서, 2011', note: '설정과 비밀을 코드 밖에 두라는 원칙입니다.', url: 'https://12factor.net/config' },
+   { title: 'OWASP · Secrets Management Cheat Sheet', by: 'OWASP', where: '웹 문서', note: '비밀 저장, 교체, 유출 대응의 실무 기준입니다.', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html' }
+  ]
+ },
+ iam: {
+  from: '앞 단원에서 비밀을 코드에서 꺼내 저장소에 두었다. 이제 그 저장소를 포함한 클라우드의 모든 자원에 누가 무엇을 할 수 있는지 정하는 문제로 넘어간다.',
+  parts: [
+   { heading: '누가, 무엇에, 무엇을 할 수 있나', paragraphs: [
+    '1장 Linux 단원에서 파일마다 소유자와 그룹, rwx 비트로 권한을 정하는 방식을 봤다. 1971년 버틀러 램슨은 보호 문제를 더 일반적인 모양으로 정리했다. 행에는 **주체**(사용자, 프로그램), 열에는 **객체**(파일, 장치), 칸에는 허용된 동작을 적은 **접근 행렬**이다. 모든 보호 시스템은 이 행렬을 어떻게 저장하고 확인하느냐의 문제로 볼 수 있다. 열 단위로 저장하면 객체마다의 접근 제어 목록이 되고 행 단위로 저장하면 주체가 들고 다니는 권한 목록이 된다.',
+    '사람과 객체가 많아지자 칸 하나하나를 관리할 수 없게 되었다. 1992년 미국 NIST의 페라이올로와 쿤은 사람에게 직접 권한을 주지 말고 직무에 해당하는 **역할**에 권한을 묶은 뒤 사람에게 역할을 주자고 제안했다. 역할 기반 접근 제어(RBAC)다. 사람이 부서를 옮기면 역할만 바꾸면 된다.'
+   ]},
+   { heading: '클라우드의 모든 API 호출에 권한을', paragraphs: [
+    '클라우드에서는 서버를 만들고, 디스크를 지우고, DB를 내리는 모든 일이 API 호출이다. 그러니 모든 호출마다 "이 주체가 이 자원에 이 동작을 해도 되는가"를 판단해야 한다. AWS는 2010년 미리보기를 거쳐 2011년 **IAM**을 정식으로 내놓았다. 사용자와 역할에 JSON으로 쓴 정책을 붙여 어떤 동작을 어떤 자원에 허용할지 적는다. 명시적으로 허용하지 않은 것은 모두 거부되고 명시적인 거부는 어떤 허용보다 우선한다.',
+    '특히 중요한 것은 사람이 아니라 프로그램이 쓰는 권한이다. 서버에 오래가는 액세스 키를 넣어 두면 그 키가 새는 순간 끝이다. 그래서 EC2나 Lambda에는 **역할**을 붙여 몇 시간짜리 임시 자격 증명을 자동으로 받아 쓰게 한다. 키를 코드나 설정 파일에 둘 이유가 없어진다.'
+   ]},
+   { heading: '넓은 권한이 만든 사고', paragraphs: [
+    '1975년 살처와 슈뢰더의 최소 권한 원칙은 클라우드에서 더 절실해졌다. 2019년 Capital One의 고객 정보 유출이 대표적이다. 공격자는 잘못 설정된 웹 방화벽을 속여 서버가 EC2 메타데이터 서비스에 요청하게 만들고 그 서버에 붙은 역할의 임시 자격 증명을 얻었다. 그 역할이 수많은 S3 버킷을 읽을 수 있었기 때문에 피해가 컸다. 역할에 꼭 필요한 버킷만 허용했다면 피해는 훨씬 작았을 것이다.',
+    '이 사건 뒤 AWS는 메타데이터 서비스에 세션 토큰을 요구하는 IMDSv2를 내놓았다. 하지만 근본적인 교훈은 같다. 권한은 일을 하는 데 필요한 만큼만, 필요한 기간만 준다. 그리고 어떤 권한이 실제로 쓰이는지 기록을 보고 쓰이지 않는 권한을 걷어 낸다.'
+   ]},
+   { heading: '벽 안은 안전하다는 가정의 끝', paragraphs: [
+    '전통적인 회사 보안은 사내망 안은 믿고 밖만 막는 성벽 모델이었다. 2014년 구글은 BeyondCorp 논문에서 이 가정을 버렸다. 사내망에 있다는 이유만으로 믿지 않고 모든 요청마다 사용자와 기기를 확인한다. 이것이 **제로 트러스트**라고 불리는 흐름이다. 클라우드의 IAM, 서비스 사이의 mTLS, 짧은 수명의 자격 증명은 모두 "위치가 아니라 신원과 권한으로 판단한다"는 같은 방향에 있다.'
+   ]}
+  ],
+  to: '이 장에서 누가 무엇을 할 수 있는지 정하는 방법을 봤다. 다음 장에서는 이 서비스를 실제로 클라우드에 올린다. 앱을 어떻게 포장하고, 네트워크를 어떻게 나누고, 트래픽을 어떻게 받는지 차례로 본다.',
+  books: [
+   { title: 'API Security in Action', by: 'Neil Madden', where: '3장 Natter API 보안(접근 제어 목록), 8장 신원 기반 접근 제어(RBAC, ABAC)', note: '접근 제어 모델을 코드로 구현해 보며 역할과 속성 기반 제어를 비교합니다.', url: 'https://www.manning.com/books/api-security-in-action' },
+   { title: 'Operating System Concepts (운영체제, 이른바 공룡책)', by: 'Abraham Silberschatz, Peter B. Galvin, Greg Gagne', where: '10판 17장 보호 (접근 행렬, 역할 기반 접근 제어)', note: '램슨의 접근 행렬에서 접근 제어 목록과 권한 목록으로 이어지는 흐름을 정리합니다.', url: 'https://os-book.com/OS10/index.html' }
+  ],
+  papers: [
+   { title: 'Protection', by: 'Butler W. Lampson', where: 'ACM SIGOPS Operating Systems Review, 1974 (1971년 발표)', note: '접근 행렬로 보호 문제를 정리한 논문입니다.', url: 'https://doi.org/10.1145/775265.775268' },
+   { title: 'The Protection of Information in Computer Systems', by: 'Jerome H. Saltzer, Michael D. Schroeder', where: 'Proceedings of the IEEE, 1975', note: '최소 권한을 포함한 보호 설계 원칙입니다.', url: 'https://doi.org/10.1109/PROC.1975.9939' },
+   { title: 'BeyondCorp: A New Approach to Enterprise Security', by: 'Rory Ward, Betsy Beyer', where: ';login:, 2014', note: '사내망을 믿지 않는 제로 트러스트 설계를 소개한 글입니다.', url: 'https://research.google/pubs/beyondcorp-a-new-approach-to-enterprise-security/' },
+   { title: 'Role-Based Access Control', by: 'NIST', where: '프로젝트 페이지 (Ferraiolo & Kuhn, 1992부터)', note: 'RBAC의 출발과 표준화 과정을 정리한 페이지입니다.', url: 'https://csrc.nist.gov/projects/role-based-access-control' }
+  ]
+ },
+ docker: {
+  from: '5장에서 누가 무엇을 할 수 있는지 정했다. 이 장에서는 지금까지 만든 서비스를 실제로 클라우드에 올린다. 첫 질문은 "내 컴퓨터에서 돌던 앱을 다른 서버에서 똑같이 돌리려면 무엇을 옮겨야 하는가"다.',
+  parts: [
+   { heading: '내 컴퓨터에서는 되는데', paragraphs: [
+    '개발자 노트북에서 잘 돌던 앱이 서버에서는 실패하는 일은 아주 오래된 문제다. Python 버전이 다르거나, 시스템 라이브러리가 빠졌거나, 설정 파일 경로가 다르다. 앱은 코드만으로 돌지 않고 그 아래의 런타임, 라이브러리, 운영체제 설정에 기대고 있기 때문이다. 이 모두를 함께 옮기는 가장 확실한 방법은 컴퓨터를 통째로 옮기는 것이다.',
+    '2000년대에는 실제로 그렇게 했다. VMware와 Xen 같은 **가상 머신**은 하드웨어를 흉내 내어 서버 한 대에 운영체제 여러 개를 띄웠다. 하지만 가상 머신마다 운영체제 전체가 들어가니 이미지가 수 기가바이트이고 부팅에 몇십 초가 걸렸다. 앱 하나를 옮기려고 운영체제까지 옮기는 것은 무거웠다.'
+   ]},
+   { heading: '운영체제는 함께 쓰고 보이는 것만 나누기', paragraphs: [
+    '다른 길도 오래전부터 있었다. 1979년 Version 7 Unix의 chroot는 프로세스에게 파일 시스템의 일부만 보이게 했다. 2000년 FreeBSD의 jail은 프로세스 묶음에게 자기만의 파일 시스템, 네트워크 주소, root 사용자를 주었고 2004년 Solaris Zones도 비슷한 일을 했다. 운영체제의 커널은 하나를 함께 쓰되 프로세스가 볼 수 있는 세상만 나누는 것이다.',
+    'Linux에서는 이 기능이 두 조각으로 들어왔다. **네임스페이스**는 프로세스 ID, 네트워크, 마운트 지점, 사용자 같은 것을 프로세스 묶음마다 따로 보이게 하고 1장에서 본 **cgroup**(2008, 구글 엔지니어들이 시작)은 CPU와 메모리 사용량을 제한한다. 이 둘을 합치면 커널은 하나인데 프로세스는 자기만의 작은 컴퓨터 안에 있는 것처럼 느낀다. 이것이 **컨테이너**다. 가상 머신과 달리 운영체제를 새로 부팅하지 않으니 몇십 밀리초 만에 뜬다.'
+   ]},
+   { heading: 'Docker가 바꾼 것은 기술이 아니라 손잡이', paragraphs: [
+    '네임스페이스와 cgroup은 2013년에도 이미 있었지만 쓰기가 어려웠다. 그해 3월 dotCloud의 솔로몬 하익스는 PyCon의 5분짜리 발표에서 **Docker**를 처음 보여 줬다. Docker가 새로 만든 것은 커널 기능이 아니라 사용법이었다. Dockerfile 몇 줄로 앱과 그 의존성을 담은 **이미지**를 만들고 docker run 한 줄로 어디서든 같은 이미지를 실행한다.',
+    '특히 이미지를 **층**으로 쌓은 설계가 영리했다. 운영체제 기본 파일, Python, 라이브러리, 앱 코드가 각각 층이 되고 바뀌지 않은 층은 다시 만들지도, 다시 내려받지도 않는다. 그래서 Dockerfile에서 자주 바뀌는 코드 복사를 의존성 설치보다 뒤에 두면 빌드가 빨라진다. 이 단원의 그림이 이 층을 보여 준다. 2015년에는 여러 회사가 모여 이미지와 실행 형식을 OCI라는 공통 표준으로 정했다. 그래서 Docker로 만든 이미지를 다른 도구로도 실행할 수 있다.'
+   ]},
+   { heading: '컨테이너는 가볍지만 벽은 얇다', paragraphs: [
+    '컨테이너는 커널을 함께 쓰기 때문에 가상 머신보다 격리가 약하다. 커널의 취약점 하나가 모든 컨테이너에 영향을 줄 수 있다. 그래서 컨테이너 안에서 root로 실행하지 않고, 필요한 권한만 주고, 이미지는 작게 만들어 공격할 거리를 줄인다. 그리고 컨테이너는 언제든 지워지고 새로 만들어진다고 가정한다. 데이터는 컨테이너 안이 아니라 볼륨이나 외부 저장소에 두고 설정과 비밀은 5장에서 본 것처럼 실행할 때 환경으로 넣는다.'
+   ]}
+  ],
+  to: '앱을 이미지로 포장했다. 이제 이 컨테이너를 클라우드의 어디에 둘지 정해야 한다. 공개할 것과 숨길 것을 나누는 클라우드 안의 네트워크, 다음 단원 VPC가 이 질문을 다룬다.',
+  books: [
+   { title: 'Docker Deep Dive', by: 'Nigel Poulton', where: '이미지, 컨테이너, Dockerfile로 앱 컨테이너화 장', note: '이미지 층과 컨테이너 실행을 처음부터 손으로 따라 해 보며 설명하는 입문서입니다.' },
+   { title: 'Operating Systems: Three Easy Pieces (운영체제: 아주 쉬운 세 가지 이야기)', by: 'Remzi H. Arpaci-Dusseau, Andrea C. Arpaci-Dusseau', where: '부록 가상 머신 모니터', note: '가상 머신이 하드웨어를 흉내 내는 방법을 설명합니다. 컨테이너와 무엇이 다른지 비교할 때 봅니다.', url: 'https://pages.cs.wisc.edu/~remzi/OSTEP/' }
+  ],
+  papers: [
+   { title: 'Jails: Confining the omnipotent root', by: 'Poul-Henning Kamp, Robert N. M. Watson', where: 'SANE Conference, 2000', note: 'FreeBSD jail을 소개한 논문입니다. 커널을 나눠 쓰며 격리하는 생각의 출발점 중 하나입니다.' },
+   { title: 'Linux man-pages · namespaces(7)', by: 'Michael Kerrisk 외', where: '공식 매뉴얼', note: '컨테이너를 이루는 네임스페이스 종류와 동작을 설명합니다.', url: 'https://man7.org/linux/man-pages/man7/namespaces.7.html' },
+   { title: 'Open Container Initiative · About', by: 'OCI', where: '웹 문서', note: '이미지와 실행 형식의 공통 표준이 생긴 배경입니다.', url: 'https://opencontainers.org/about/overview/' }
+  ]
+ },
+ vpc: {
+  from: '앞 단원에서 앱을 컨테이너 이미지로 포장했다. 이제 이 서버들을 클라우드 안 어디에 둘지, 무엇은 인터넷에 열고 무엇은 숨길지 정한다.',
+  parts: [
+   { heading: '모두가 한 동네에 살던 초기 클라우드', paragraphs: [
+    '2006년 AWS가 EC2를 처음 내놓았을 때 모든 고객의 서버는 하나의 거대한 평평한 네트워크에 놓였다. 서버마다 공인 주소와 사설 주소가 무작위로 붙었고 다른 고객의 서버와 같은 주소 공간을 썼다. 보안 그룹으로 접근을 막을 수는 있었지만 회사의 사내망처럼 내 서버들만의 네트워크를 설계할 수는 없었다. 기업들이 사내 시스템을 클라우드로 옮기기 망설인 큰 이유였다.'
+   ]},
+   { heading: '클라우드 안에 내 네트워크를 그리다', paragraphs: [
+    '2009년 AWS는 **VPC**를 내놓았다. 고객이 클라우드 안에 논리적으로 격리된 자기만의 네트워크를 만들고 주소 범위, 서브넷, 경로를 직접 정한다. 실제로는 수많은 고객이 같은 물리 장비를 쓰지만 소프트웨어가 패킷마다 어느 고객의 네트워크인지 표시하고 분리한다. 2007년 카사도 등의 Ethane 연구에서 시작된 **소프트웨어 정의 네트워크**의 생각, 즉 네트워크의 규칙을 장비가 아니라 중앙의 소프트웨어가 정한다는 생각이 대규모로 쓰인 사례다. 시간이 지나 VPC가 기본이 되었고 AWS는 2023년 옛 평평한 네트워크(EC2-Classic)를 완전히 닫았다.',
+    'VPC의 주소 범위는 2장 NAT 단원의 사설 주소에서 고르고 10.0.0.0/16처럼 **CIDR**로 적는다. 1993년 RFC 1519가 도입한 CIDR은 주소를 A, B, C 클래스 단위로만 나눠 주던 낭비를 없애려고 /뒤의 숫자로 네트워크 부분의 길이를 자유롭게 정하게 한 방식이다. /16은 앞 16비트가 네트워크라 주소 65,536개, /24는 256개다.'
+   ]},
+   { heading: '서브넷과 경로: 공개와 비공개는 이름이 아니라 길로 정해진다', paragraphs: [
+    'VPC 안은 **서브넷**으로 나눈다. 서브넷마다 **라우팅 테이블**이 있어서 목적지 주소마다 패킷을 어디로 보낼지 정한다. 인터넷으로 가는 경로(0.0.0.0/0)가 인터넷 게이트웨이를 향하면 그 서브넷은 인터넷과 직접 통할 수 있고 이것을 공용 서브넷이라 부른다. 그 경로가 NAT 게이트웨이를 향하면 안에서 밖으로 나갈 수만 있는 사설 서브넷이다. 이름표가 아니라 경로가 공개 여부를 정한다.',
+    '그래서 흔한 구성은 이렇다. 로드 밸런서만 공용 서브넷에 두고 앱 서버와 DB는 사설 서브넷에 둔다. 앱이 외부 API를 부를 때는 NAT 게이트웨이를 거쳐 나간다. 경로와는 별개로 보안 그룹이 "누가 이 서버의 어느 포트로 들어올 수 있는가"를 정한다. 길이 있어도 출입 명단에 없으면 못 들어오고 명단에 있어도 길이 없으면 못 간다. 이 단원의 그림이 패킷 하나가 경로를 따라가는 과정을 보여 준다.'
+   ]},
+   { heading: '처음에 정하면 바꾸기 어려운 것', paragraphs: [
+    'VPC 설계에서 나중에 가장 후회하는 것은 주소 범위다. 나중에 다른 VPC나 회사 사내망과 연결하려면 주소 범위가 겹치지 않아야 하는데 모든 팀이 10.0.0.0/16을 쓰면 연결할 수 없다. 서브넷도 가용 영역마다 나눠 두어야 한 데이터센터가 멈춰도 다른 곳에서 서비스를 이어 갈 수 있다. 네트워크는 서비스가 커진 뒤에 바꾸기 가장 어려운 부분이라 처음부터 여유 있게 그린다.'
+   ]}
+  ],
+  to: '앱 서버를 사설 서브넷에 여러 대 두었다. 그렇다면 인터넷에서 온 요청은 그중 어느 서버로 가야 할까? 한 대가 죽으면? 다음 단원 로드 밸런서가 이 질문을 다룬다.',
+  books: [
+   { title: 'Computer Networking: A Top-Down Approach (컴퓨터 네트워킹: 하향식 접근)', by: 'James F. Kurose, Keith W. Ross', where: '4장 네트워크 계층: 데이터 평면 (CIDR, 포워딩), 5장 제어 평면 (SDN)', note: 'CIDR와 라우팅 테이블, 소프트웨어 정의 네트워크를 설명합니다. VPC를 이루는 개념의 바탕입니다.' },
+   { title: 'Amazon VPC User Guide', by: 'AWS', where: '서브넷, 라우팅 테이블, 보안 그룹 장', note: '실제 클라우드에서 이 개념들이 어떻게 구현되는지 확인할 때 봅니다.', url: 'https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html' }
+  ],
+  papers: [
+   { title: 'Ethane: Taking Control of the Enterprise', by: 'Martin Casado, Michael J. Freedman, Justin Pettit 외', where: 'SIGCOMM, 2007', note: '중앙 소프트웨어가 네트워크 규칙을 정하는 SDN의 출발점이 된 연구입니다.', url: 'https://doi.org/10.1145/1282380.1282382' },
+   { title: 'Network Virtualization in Multi-tenant Datacenters', by: 'Teemu Koponen 외', where: 'NSDI, 2014', note: '여러 고객이 같은 물리망 위에서 각자의 가상 네트워크를 쓰는 방법을 설명합니다.', url: 'https://www.usenix.org/conference/nsdi14/technical-sessions/presentation/koponen' },
+   { title: 'RFC 4632 · Classless Inter-domain Routing (CIDR)', by: 'V. Fuller, T. Li', where: 'IETF, 2006 (처음 규격은 1993년 RFC 1519)', note: 'CIDR 표기와 주소 할당 방식을 정의합니다.', url: 'https://www.rfc-editor.org/rfc/rfc4632' }
+  ]
+ },
+ lb: {
+  from: '앞 단원에서 앱 서버를 사설 서브넷에 여러 대 두었다. 이제 인터넷에서 온 요청을 그 서버들에 나눠 주고 고장 난 서버를 피하는 방법을 본다.',
+  parts: [
+   { heading: '서버 한 대의 두 가지 한계', paragraphs: [
+    '서버가 한 대면 두 가지 한계가 있다. 처리할 수 있는 양에 끝이 있고 그 서버가 죽으면 서비스 전체가 멈춘다. 서버를 여러 대 두면 둘 다 해결될 것 같지만 그러려면 누군가 요청을 나눠 주고 죽은 서버를 알아채야 한다.',
+    '가장 오래된 방법은 2장의 DNS를 이용하는 것이다. 이름 하나에 IP 주소 여러 개를 등록해 두면 클라이언트마다 다른 주소를 받는다(DNS 라운드 로빈). 간단하지만 앞에서 본 것처럼 DNS 답은 캐시되므로 죽은 서버의 주소를 TTL 동안 계속 받게 되고 서버별 부하도 고려하지 못한다.'
+   ]},
+   { heading: '앞에 서서 나눠 주는 장비', paragraphs: [
+    '1990년대 후반 웹 사이트들이 커지자 서버 앞에서 요청을 받아 나눠 주는 전용 장비가 나왔다. 1996년 시스코의 LocalDirector, 1997년 F5의 BIG-IP 같은 **로드 밸런서**다. 오픈소스로는 1998년 장원쑹이 시작한 Linux Virtual Server가 커널 안에서 패킷을 나눠 줬다. 로드 밸런서는 뒤의 서버들에 주기적으로 요청을 보내 살아 있는지 확인하고(**헬스 체크**) 응답하지 않는 서버에는 더 이상 요청을 보내지 않는다.',
+    '로드 밸런서는 어느 층에서 판단하느냐에 따라 나뉜다. **L4**는 2장의 TCP 연결 단위로 주소와 포트만 보고 나눈다. 빠르고 어떤 프로토콜이든 다룰 수 있다. **L7**은 HTTP 요청을 열어 보고 경로나 헤더에 따라 나눈다. /api는 API 서버로, /images는 다른 곳으로 보내는 식이다. 3장의 리버스 프록시가 바로 L7 로드 밸런서 역할을 한다.'
+   ]},
+   { heading: '로드 밸런서 자신이 한 대라면', paragraphs: [
+    '로드 밸런서를 두면 이번에는 로드 밸런서가 단일 장애 지점이 된다. 그래서 로드 밸런서도 여러 대 둔다. 2009년 AWS의 ELB 같은 관리형 로드 밸런서는 여러 가용 영역에 걸쳐 스스로 늘어나고 줄어든다. 구글은 2016년 논문에서 일반 서버 여러 대가 함께 하나의 로드 밸런서처럼 동작하는 Maglev를 공개했다. 서버가 늘거나 줄어도 같은 연결은 같은 백엔드로 가도록 4장에서 본 일관 해싱을 응용했다.',
+    '『Site Reliability Engineering』은 로드 밸런싱을 두 장에 걸쳐 다룬다. 사용자를 가장 가까운 데이터센터로 보내는 프런트엔드 단계와 데이터센터 안에서 서버마다의 부하를 고르게 맞추는 단계다. 단순히 차례로 나눠 주는 라운드 로빈보다 진행 중인 요청이 적은 서버에 보내는 방식이 느린 서버를 피하는 데 낫다는 점도 설명한다.'
+   ]},
+   { heading: '헬스 체크와 배포가 만나는 곳', paragraphs: [
+    '헬스 체크는 배포와도 맞물린다. 새 버전 서버를 띄우면 헬스 체크가 통과한 뒤에야 요청을 받고 옛 서버를 내릴 때는 먼저 로드 밸런서에서 빼고 진행 중인 요청이 끝나기를 기다린다(**연결 드레이닝**). 헬스 체크를 너무 깊게 만들어 DB까지 확인하면 DB가 잠깐 느릴 때 모든 서버가 동시에 빠져 서비스가 통째로 사라진다. 이 단원의 그림이 서버 하나가 헬스 체크에 실패해 빠지는 과정을 보여 준다.'
+   ]}
+  ],
+  to: '로드 밸런서로 요청을 여러 서버에 나눴다. 그런데 사용자가 올린 사진 같은 파일은 어느 서버에 저장해야 할까? 서버는 언제든 바뀌는데. 다음 단원 스토리지와 CDN이 이 질문을 다룬다.',
+  books: [
+   { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '19장 프런트엔드 로드 밸런싱, 20장 데이터센터 로드 밸런싱', note: 'DNS부터 데이터센터 안의 부하 분배 알고리즘까지 구글의 경험으로 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://sre.google/sre-book/load-balancing-frontend/' },
+   { title: 'Release It!, 2nd Edition', by: 'Michael T. Nygard', where: '9장 상호 연결 (로드 밸런싱, 헬스 체크)', note: '헬스 체크를 어떻게 설계해야 장애를 키우지 않는지 실무 관점에서 설명합니다.', url: 'https://pragprog.com/titles/mnee2/release-it-second-edition/' }
+  ],
+  papers: [
+   { title: 'Maglev: A Fast and Reliable Software Network Load Balancer', by: 'Daniel E. Eisenbud 외', where: 'NSDI, 2016', note: '일반 서버로 만든 구글의 L4 로드 밸런서입니다. 일관 해싱을 응용한 부분이 4장과 이어집니다.', url: 'https://www.usenix.org/conference/nsdi16/technical-sessions/presentation/eisenbud' },
+   { title: 'Linux Virtual Server', by: 'Wensong Zhang', where: '프로젝트 사이트, 1998~', note: 'Linux 커널 안에서 동작하는 L4 로드 밸런서 프로젝트입니다.', url: 'http://www.linuxvirtualserver.org/' }
+  ]
+ },
+ storage: {
+  from: '앞 단원에서 요청을 여러 서버에 나눴다. 서버는 언제든 늘어나고 사라지는데 사용자가 올린 사진은 어디에 저장해야 할까?',
+  parts: [
+   { heading: '서버의 디스크에 저장하면 생기는 일', paragraphs: [
+    '앱 서버의 로컬 디스크에 사진을 저장하면 그 서버로 온 요청만 사진을 찾을 수 있다. 로드 밸런서가 다음 요청을 다른 서버로 보내면 사진이 없다. 서버가 교체되면 사진도 사라진다. 여러 서버가 같은 파일을 보려면 저장소를 서버 밖으로 꺼내야 한다.',
+    '1984년 Sun의 **NFS**는 원격 서버의 디스크를 내 컴퓨터의 폴더처럼 붙여 쓰게 했다. 파일 시스템의 모양을 그대로 유지했으니 프로그램을 고칠 필요가 없었다. 하지만 폴더와 잠금, 수정 같은 파일 시스템의 약속을 여러 서버에 걸쳐 지키기는 어려웠고 규모가 커지면 그 약속이 병목이 되었다.'
+   ]},
+   { heading: '수정은 포기하고 무한히 늘리기: 객체 스토리지', paragraphs: [
+    '2003년 구글은 GFS 논문에서 수천 대의 값싼 서버로 거대한 파일을 저장하는 방법을 공개했다. 고장은 예외가 아니라 일상이라고 보고 모든 데이터를 여러 서버에 복제했다. 2006년 3월 AWS는 S3를 내놓으며 한 걸음 더 나아갔다. 폴더도, 파일 중간을 고치는 기능도 없다. 키 하나에 바이트 덩어리(**객체**) 하나를 통째로 넣고 통째로 꺼낼 뿐이다.',
+    '이렇게 약속을 줄이자 저장소를 사실상 무한히 늘릴 수 있게 되었다. 객체를 고치려면 새로 통째로 쓰고 이름은 그저 키라서 4장에서 본 샤딩처럼 키로 나눠 수많은 서버에 흩어 놓을 수 있다. 오랫동안 S3는 덮어쓴 직후 잠깐 옛 값이 보일 수 있는 최종 일관성을 택했고 2020년 12월에야 모든 쓰기 직후 읽기에서 최신 값을 보장하는 강한 일관성으로 바꿨다. 4장 복제 단원의 선택이 저장소에서도 그대로 나타난 것이다.'
+   ]},
+   { heading: '서버를 거치지 않고 올리고 받기', paragraphs: [
+    '큰 파일을 앱 서버를 거쳐 올리면 앱 서버가 그 바이트를 모두 받아 다시 보내야 한다. 3장에서 본 것처럼 느린 클라이언트가 워커를 붙잡는 문제가 그대로 생긴다. 그래서 앱 서버는 "이 키에 10분 동안 올릴 수 있다"는 서명된 URL(**사전 서명 URL**)만 만들어 주고 브라우저가 S3로 직접 올린다. 앱 서버는 권한만 판단하고 무거운 전송은 저장소가 맡는다. 이 단원의 그림이 이 흐름을 보여 준다.'
+   ]},
+   { heading: '사용자 가까이에 복사본을: CDN', paragraphs: [
+    '저장소가 서울에 있으면 미국 사용자는 사진 한 장마다 태평양을 건너 왕복해야 한다. 1998년 MIT의 톰 레이턴과 대니 르윈이 세운 Akamai는 세계 곳곳에 서버를 두고 콘텐츠를 사용자 가까운 곳에 복사해 두는 **CDN**을 만들었다. 서버마다 어떤 콘텐츠를 맡을지 나누는 데 4장에서 본 일관 해싱 연구가 쓰였다. 2010년 Akamai의 논문은 이 네트워크가 수만 대의 서버로 어떻게 동작하는지 설명한다.',
+    'CDN은 4장의 캐시를 지구 규모로 넓힌 것이다. 그래서 같은 문제를 안고 있다. 파일을 바꿨는데 CDN에 옛 파일이 남는다. 그래서 정적 파일은 이름에 버전이나 해시를 넣어(app.3f9a.js) 바뀌면 아예 다른 키가 되게 하고 오래 캐시하게 한다. 로그인한 사용자의 개인 응답이 CDN에 캐시되지 않도록 Cache-Control도 정확히 붙인다.'
+   ]}
+  ],
+  to: '앱은 컨테이너로, 네트워크는 VPC로, 트래픽은 로드 밸런서로, 파일은 객체 스토리지로 정리했다. 이제 컨테이너 수십 개를 여러 서버에 배치하고 죽으면 다시 띄우는 일을 누가 할까? 다음 단원 Kubernetes가 이 질문을 다룬다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '10장 일괄 처리 (분산 파일 시스템), 5장 복제', note: 'GFS와 HDFS 같은 분산 파일 시스템, 그리고 객체 저장소의 복제와 일관성 선택을 설명합니다.', url: 'https://dataintensive.net/' },
+   { title: 'High Performance Browser Networking', by: 'Ilya Grigorik', where: '1장 지연과 대역폭, 10장 웹 성능 입문', note: '빛의 속도가 만드는 지연 때문에 CDN이 왜 필요한지 숫자로 보여 줍니다.', url: 'https://hpbn.co/' }
+  ],
+  papers: [
+   { title: 'The Google File System', by: 'Sanjay Ghemawat, Howard Gobioff, Shun-Tak Leung', where: 'SOSP, 2003', note: '값싼 서버 수천 대로 만든 분산 저장소의 고전입니다.', url: 'https://doi.org/10.1145/945445.945450' },
+   { title: 'The Akamai Network: A Platform for High-Performance Internet Applications', by: 'Erik Nygren, Ramesh K. Sitaraman, Jennifer Sun', where: 'ACM SIGOPS Operating Systems Review, 2010', note: '대표적인 CDN의 구조와 동작을 설명한 논문입니다.', url: 'https://doi.org/10.1145/1842733.1842736' },
+   { title: 'Amazon S3 now delivers strong read-after-write consistency', by: 'AWS', where: 'AWS 소식, 2020년 12월', note: 'S3가 최종 일관성에서 강한 일관성으로 바뀐 발표입니다.', url: 'https://aws.amazon.com/about-aws/whats-new/2020/12/amazon-s3-now-delivers-strong-read-after-write-consistency-automatically-for-all-applications/' }
+  ]
+ },
+ kubernetes: {
+  from: '앞 단원까지 앱을 포장하고, 네트워크를 나누고, 트래픽과 파일을 정리했다. 이제 컨테이너 수십, 수백 개를 여러 서버에 배치하고 계속 살아 있게 하는 일을 본다.',
+  parts: [
+   { heading: '컨테이너가 많아지면 생기는 일', paragraphs: [
+    'Docker로 컨테이너 하나를 띄우는 일은 쉬워졌다. 하지만 서비스가 컨테이너 수십 개로 이뤄지면 질문이 쏟아진다. 어느 서버에 자리가 남았는가? 컨테이너가 죽으면 누가 다시 띄우는가? 새 버전으로 바꿀 때 서비스를 끊지 않으려면? 서버 한 대가 통째로 죽으면 그 위의 컨테이너는? 사람이 일일이 할 수 없는 일들이다.'
+   ]},
+   { heading: '구글이 10년 넘게 쓴 답: Borg', paragraphs: [
+    '구글은 2000년대 초부터 Borg라는 내부 시스템으로 이 문제를 풀어 왔다. 엔지니어는 "이 프로그램을 이만큼의 CPU와 메모리로 100개 실행하라"고 적어 제출하고 Borg가 수만 대의 서버 중 자리를 찾아 배치하고 죽으면 다시 띄웠다. 검색, Gmail, 배치 작업이 같은 서버들에 촘촘히 섞여 돌았다. 2015년 공개된 Borg 논문은 이 경험을 처음으로 자세히 밝혔다.',
+    '2014년 구글은 Borg의 교훈을 담은 오픈소스 **Kubernetes**를 공개했고 2015년 1.0을 내며 새로 만든 CNCF에 기증했다. 2016년 번스 등은 「Borg, Omega, and Kubernetes」에서 Borg를 운영하며 배운 것 중 무엇을 Kubernetes에 그대로 가져오고 무엇을 바꿨는지 정리했다.'
+   ]},
+   { heading: '명령하지 말고 원하는 상태를 적어라', paragraphs: [
+    'Kubernetes의 핵심 생각은 **선언적 관리**다. "컨테이너 하나 더 띄워라"라고 명령하는 대신 "이 이미지의 파드가 3개 있어야 한다"는 **원하는 상태**를 적어 제출한다. 그러면 **컨트롤러**들이 실제 상태를 계속 지켜보다가 원하는 상태와 다르면 맞춘다. 파드가 죽어 2개가 되면 하나를 더 만들고 4개가 되면 하나를 지운다.',
+    '이 방식이 강한 이유는 실패에 있다. 명령은 중간에 실패하거나 놓치면 상태가 어긋난 채로 남는다. 원하는 상태를 비교하는 루프는 무엇이 실패했든 다음 확인에서 바로잡는다. 모든 상태는 API 서버를 거쳐 4장의 Raft로 복제되는 etcd에 저장되므로 컨트롤러가 죽었다 살아나도 이어서 일한다. 이 단원의 그림이 노드 하나가 죽었을 때 사람 손 없이 파드가 다시 3개가 되는 과정을 보여 준다.'
+   ]},
+   { heading: '이 장에서 본 것들이 한곳에', paragraphs: [
+    'Kubernetes는 이 장의 다른 단원을 하나로 묶는다. 컨테이너 이미지를 실행하고, 파드마다 가상 네트워크 주소를 주고, Service로 바뀌는 파드들 앞에 고정된 이름을 주어 로드 밸런싱하고, 준비된 파드에만 트래픽을 보내며, 1장의 cgroup으로 CPU와 메모리를 나눈다. 그만큼 배울 것과 운영할 것이 많다. 서비스가 몇 개뿐이고 팀이 작다면 ECS나 Cloud Run처럼 더 단순한 관리형 서비스가 나은 경우도 많다.'
+   ]}
+  ],
+  to: '이 장에서 서비스를 클라우드에 올리는 과정을 봤다. 마지막 장에서는 이 서비스를 계속 바꾸고 지켜보며 운영하는 일을 본다. 첫 단계는 여러 사람이 함께 코드를 바꾸는 방법, Git이다.',
+  books: [
+   { title: 'Kubernetes: Up and Running', by: 'Brendan Burns, Joe Beda, Kelsey Hightower, Lachlan Evenson', where: '3판 1장 소개, 5~10장 파드, 레이블, 서비스, ReplicaSet, Deployment', note: 'Kubernetes를 만든 사람들이 쓴 입문서입니다. 왜 선언적 관리인지부터 설명합니다.' },
+   { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '2장 구글의 프로덕션 환경 (Borg)', note: 'Borg 위에서 서비스가 어떻게 돌아가는지 운영자의 시선으로 소개합니다.', url: 'https://sre.google/sre-book/production-environment/' }
+  ],
+  papers: [
+   { title: 'Large-scale cluster management at Google with Borg', by: 'Abhishek Verma 외', where: 'EuroSys, 2015', note: 'Kubernetes의 원형이 된 Borg의 설계와 교훈입니다.', url: 'https://doi.org/10.1145/2741948.2741964' },
+   { title: 'Borg, Omega, and Kubernetes', by: 'Brendan Burns, Brian Grant, David Oppenheimer, Eric Brewer, John Wilkes', where: 'Communications of the ACM, 2016', note: '세 시스템을 거치며 무엇을 배우고 바꿨는지 정리한 글입니다. 짧고 읽기 쉽습니다.', url: 'https://doi.org/10.1145/2890784' }
+  ]
  }
 };
