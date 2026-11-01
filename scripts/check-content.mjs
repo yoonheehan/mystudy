@@ -114,6 +114,23 @@ const order=chapterOrder.flatMap(c=>lessons.filter(l=>l.category===c).map(l=>l.i
 for(const id of ids)check(stories[id],`${id}: missing story`);
 for(const [id,story] of Object.entries(stories))if(story.from){const prev=order[order.indexOf(id)-1];check(stories[prev]?.to,`${id}: story starts from the previous lesson, but '${prev}' has no closing hand-off`);}
 
+// Chapter references: "N장에서 본" only looks back, "N장에서 볼" only ahead, and "N장 X 단원" names a lesson in chapter N.
+const chapterOf=id=>chapterOrder.indexOf(lessons.find(l=>l.id===id).category)+1;
+const allText=(o,out=[])=>{if(typeof o==='string')out.push(o);else if(o&&typeof o==='object')Object.values(o).forEach(x=>allText(x,out));return out;};
+const squash=s=>s.replace(/[\s·:,()]/g,'').toLowerCase();
+for(const id of ids){
+ const n=chapterOf(id);
+ for(const t of allText([lessons.find(l=>l.id===id),histories[id],deeps[id],diagrams[id],stories[id]])){
+  for(const m of t.matchAll(/(\d)장에서 (본|볼)/g))check(m[2]==='본'?+m[1]<=n:+m[1]>=n,`${id} (${n}장): '${m[0]}' points the wrong way`);
+  for(const m of t.matchAll(/(\d)장 ((?:[^\s.,'"]+ ){1,3})단원/g)){
+   const words=m[2].trim().split(' ').filter(w=>!/^(뒤의|앞의|첫|마지막)$/.test(w));
+   if(!words.length)continue;
+   const named=lessons.filter(l=>words.every(w=>squash(l.title+l.english+l.id).includes(squash(w))));
+   check(!named.length||named.some(l=>chapterOf(l.id)===+m[1]),`${id}: '${m[0]}' but that lesson is in ${named.map(l=>chapterOf(l.id)+'장').join(', ')}`);
+  }
+ }
+}
+
 // Every story opens with a key question and closes with misconceptions to correct.
 for(const id of ids)if(stories[id])check(stories[id].question&&(stories[id].misconceptions||[]).length>=2,`${id}: story needs a key question and at least 2 misconceptions`);
 

@@ -43,5 +43,16 @@ for(const [id,extra] of Object.entries({...deepening,...backtonyDeepening})){
  assert.equal(run.status,0,id+' supplementary example: '+run.stderr);
  console.log(id+': supplementary Python example executed with assertions passed.');
 }
+// A context output written as "printed text · explanation" must match what the example really prints.
+let printed=0;
+for(const [id,context] of Object.entries(contexts)){
+ if(!context.python||!context.output?.includes(' · '))continue;
+ const run=spawnSync('python',['-X','utf8','-I','-c',context.python],{encoding:'utf8',timeout:10000});
+ assert.equal(run.status,0,id+' context example: '+run.stderr);
+ const actual=run.stdout.replace(/\r/g,'').trim().split('\n').join(' ');
+ assert.equal(actual,context.output.split(' · ')[0],id+' context output differs from what the example prints');
+ printed++;
+}
+console.log(printed+' context examples print exactly what their explanation says.');
 fs.writeFileSync('artifacts/process_demo.py',contexts.process.python);
 
