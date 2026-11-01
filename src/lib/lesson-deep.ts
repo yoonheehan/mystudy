@@ -864,7 +864,7 @@ export const deeps:Record<string,LessonDeep>={
    ['Python · threading','https://docs.python.org/3/library/threading.html'],
    ['Python · asyncio synchronization primitives','https://docs.python.org/3/library/asyncio-sync.html'],
    ['Linux man-pages · pthreads','https://man7.org/linux/man-pages/man7/pthreads.7.html'],
-   ['Reeves, What Really Happened on Mars? (1997)','https://www.cs.cornell.edu/courses/cs614/1999sp/papers/pathfinder.html']
+   ['Reeves, What Really Happened on Mars? (1997)','https://web.archive.org/web/20240421112140/https://www.cs.cornell.edu/courses/cs614/1999sp/papers/pathfinder.html']
   ]
  },
  scheduling:{

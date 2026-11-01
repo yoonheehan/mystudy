@@ -235,3 +235,8 @@
 .story-reading{padding-left:1.2em}
 .story-reading li{margin:12px 0;line-height:1.6}
 .story-reading span{color:var(--muted);font-size:var(--step-small)}
+/* Once a lesson opens with its story, the definition and timeline below are folded recaps */
+.recap{margin-top:8px}
+.recap>summary{font-weight:600}
+.recap[open]>summary{margin-bottom:12px}
+.story-reading a{margin-left:6px}

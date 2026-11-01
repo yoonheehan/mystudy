@@ -1019,7 +1019,7 @@ export const histories:Record<string,LessonHistory>={
   sources:[
    ['Dijkstra, EWD 123 · Cooperating Sequential Processes','https://www.cs.utexas.edu/~EWD/transcriptions/EWD01xx/EWD123.html'],
    ['Hoare, Monitors: An Operating System Structuring Concept (CACM, 1974)','https://doi.org/10.1145/355620.361161'],
-   ['Reeves, What Really Happened on Mars? (1997)','https://www.cs.cornell.edu/courses/cs614/1999sp/papers/pathfinder.html'],
+   ['Reeves, What Really Happened on Mars? (1997)','https://web.archive.org/web/20240421112140/https://www.cs.cornell.edu/courses/cs614/1999sp/papers/pathfinder.html'],
    ['PEP 703 · Making the Global Interpreter Lock Optional','https://peps.python.org/pep-0703/'],
    ['Python · threading','https://docs.python.org/3/library/threading.html']
   ]
