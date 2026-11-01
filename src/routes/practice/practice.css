@@ -160,3 +160,10 @@
  .ws-cases summary .ws-figure{display:none}
 }
 @media (prefers-reduced-motion:reduce){.ws-strip li.now{animation:none}.ws *{transition:none!important}}
+
+.ws-editorial{margin-top:24px}
+.ws-editorial h3{margin-bottom:8px}
+.ws-editorial ol,.ws-editorial ul{margin:0;padding-left:1.3em;font-size:14px;line-height:1.7}
+.ws-editorial li{margin:4px 0}
+.ws-ref{padding:12px 14px;border-radius:8px;background:var(--frame);font:13px/1.6 ui-monospace,Consolas,monospace;white-space:pre;overflow-x:auto;word-break:normal}
+.ws-ref code{padding:0;background:none;border:0;font:inherit}

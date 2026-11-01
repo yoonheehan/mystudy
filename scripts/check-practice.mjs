@@ -7,6 +7,9 @@ function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(
 const {problems}=load(path.join(root,'practice/problems.ts'));
 const {casesFor,references}=load(path.join(root,'server/practice-cases.ts'));
 const {scoreSubmission,updateBest,grade}=load(path.join(root,'practice/scoring.ts'));
+const {editorials}=load(path.join(root,'practice/editorials.ts'));
+for(const p of problems){const ed=editorials[p.id];assert.ok(ed,p.id+' editorial');assert.ok(ed.idea&&ed.why&&ed.steps.length&&ed.mistakes.length,p.id+' editorial fields');assert.match(ed.code,/^(from |import |def solution)/m,p.id+' editorial code');}
+assert.equal(Object.keys(editorials).length,problems.length);
 assert.equal(problems.length,24);assert.equal(new Set(problems.map(p=>p.id)).size,24);
 for(const level of ['입문','중급','도전'])assert.equal(problems.filter(p=>p.level===level).length,8);
 const oracles={

@@ -2,6 +2,7 @@
  import { onMount, onDestroy } from 'svelte';
  import { problems, getProblem, starter, type Problem } from '$lib/practice/problems';
  import { HINT_COST, RETRY_DELAY, scoreSubmission, updateBest, grade } from '$lib/practice/scoring';
+ import { editorials } from '$lib/practice/editorials';
  import '$lib/styles/notebook.css';
  import './practice.css';
  type History={time:number;score:number;passed:number;total:number;hints:number;round:number;accepted:boolean;language:string};
@@ -90,6 +91,7 @@
     <h3>입출력 예</h3>{#each problem.examples as example,i}<div class="ws-sample"><p class="ws-sample-title">예시 {i+1}</p><pre>입력: {JSON.stringify(example.input,null,2)}
 출력: {JSON.stringify(example.output)}</pre><p>{example.explanation}</p></div>{/each}
     <div class="ws-hints"><div class="ws-row"><h3>단계별 힌트</h3><span class="ws-figure">{record?.hints||0}/3 · 누적 −{HINT_COST[record?.hints||0]}점</span></div>{#each problem.hints as hint,i}{#if i<(record?.hints||0)}<div class="ws-hint"><p class="ws-sample-title">힌트 {i+1}</p><p>{hint}</p></div>{/if}{/each}<button class="ws-btn" disabled={running||!record||record.hints>=3} onclick={revealHint}>{record?.hints===3?'힌트를 모두 열었습니다':`힌트 ${(record?.hints||0)+1} 열기 · 추가 −${HINT_COST[(record?.hints||0)+1]-HINT_COST[record?.hints||0]}점`}</button><p class="ws-note">연 힌트는 이 회차에 저장되어 새로고침해도 남습니다.</p></div>
+    {#if editorials[problem.id]}{@const ed=editorials[problem.id]}<div class="ws-editorial"><h3>풀이 해설</h3>{#if record&&(record.history.length>0||record.hints>=3||record.accepted)}<details class="ws-more"><summary>해설 펼치기</summary><p><strong>{ed.idea}</strong></p><ol>{#each ed.steps as s}<li>{s}</li>{/each}</ol><p class="ws-sample-title">왜 맞을까</p><p>{ed.why}</p><p class="ws-sample-title">기준 풀이 · Python</p><pre class="ws-ref"><code>{ed.code}</code></pre><p class="ws-sample-title">자주 하는 실수</p><ul>{#each ed.mistakes as m}<li>{m}</li>{/each}</ul></details>{:else}<p class="ws-note">한 번 제출하거나 힌트 3개를 모두 열면 해설이 열립니다. 먼저 스스로 풀어 보세요.</p>{/if}</div>{/if}
     {#if problem.theory}<a class="ws-link" href={"/algorithm.html?lesson="+encodeURIComponent(problem.theory)} data-sveltekit-reload>그림으로 원리 복습 · {problem.theory}</a>{/if}
    </section>
    <div class="ws-work">

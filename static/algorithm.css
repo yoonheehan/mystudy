@@ -188,3 +188,20 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:16px;ma
 .js .rise{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
 .js .rise.seen{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.cell.hot{transform:none}.js .rise{opacity:1;transform:none}}
+
+/* Why it works: correctness, cost, history, fit, related practice */
+.deep h3{font-size:var(--step-lead);letter-spacing:-.02em;margin:48px 0 12px}
+.deep h3:first-of-type{margin-top:8px}
+#deep>p,.deep-list,.deep-history{max-width:46rem}
+.deep-history{list-style:none;padding:0;margin:0;border-top:1px solid var(--surface-2)}
+.deep-history li{display:grid;grid-template-columns:7rem minmax(0,1fr);gap:24px;padding:18px 0;border-bottom:1px solid var(--surface-2)}
+.deep-history b{font-variant-numeric:tabular-nums;color:var(--accent)}
+.deep-history p{margin:0}
+.deep-history a{color:var(--muted);font-size:var(--step-small);text-underline-offset:3px;white-space:nowrap}
+.deep-list{padding-left:1.2em;margin:0}
+.deep-list li{margin:8px 0;line-height:1.7}
+.deep-problems{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-width:46rem}
+.deep-problems a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 18px;background:var(--surface);text-decoration:none;font-weight:600;transition:background-color .2s}
+.deep-problems a:hover{background:var(--accent-pale)}
+.deep-problems small{color:var(--muted);font-weight:400;font-size:var(--step-small)}
+@media (max-width:720px){.deep-history li{grid-template-columns:1fr;gap:4px}.deep-history a{white-space:normal}}
