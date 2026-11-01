@@ -471,5 +471,429 @@ export const stories: Record<string, LessonStory> = {
    { title: 'Ajax: A New Approach to Web Applications', by: 'Jesse James Garrett', where: 'Adaptive Path 에세이, 2005 (웹 아카이브)', note: 'Ajax라는 이름을 처음 붙인 글입니다.', url: 'https://web.archive.org/web/20050222032831/http://www.adaptivepath.com/publications/essays/archives/000385.php' },
    { title: 'HTML Standard · Server-sent events', by: 'WHATWG', where: '살아 있는 표준', note: 'EventSource와 이벤트 스트림 형식을 정의합니다.', url: 'https://html.spec.whatwg.org/multipage/server-sent-events.html' }
   ]
+ },
+ kit: {
+  from: '2장에서 요청이 서버의 문 앞까지 오는 길을 따라왔다. 이 장에서는 문 안으로 들어가 서버가 요청을 받아 처리하는 과정을 본다. 첫 질문은 "무엇을 브라우저에 맡기고 무엇을 서버가 해야 하는가"다.',
+  parts: [
+   { heading: '문서를 돌려주던 서버가 프로그램을 실행하기까지', paragraphs: [
+    '초기 웹 서버는 디스크에 있는 HTML 파일을 그대로 돌려줬다. 하지만 검색 결과나 방명록처럼 요청마다 내용이 달라지는 페이지가 필요해지자 1993년 NCSA의 웹 서버는 요청이 오면 외부 프로그램을 실행하고 그 출력을 응답으로 보내는 방법을 넣었다. 이것이 **CGI**다. 웹 서버와 프로그램 사이의 약속만 정했기 때문에 Perl이든 C든 어떤 언어로도 동적 페이지를 만들 수 있었다.',
+    'CGI는 요청마다 프로세스를 새로 띄웠다. 1장에서 본 것처럼 프로세스를 만드는 일은 비싸서 사용자가 늘자 버티지 못했다. 그래서 프로그램을 계속 띄워 두고 요청을 넘기는 방식들이 나왔다. Python에서는 2003년 PEP 333이 웹 서버와 Python 앱 사이의 표준 약속 **WSGI**를 정했다. gunicorn 같은 서버가 요청을 받아 WSGI 함수 하나를 부르면 Flask나 Django 같은 프레임워크가 그 안에서 일을 나눈다.'
+   ]},
+   { heading: '브라우저에서도 코드가 돌기 시작하다', paragraphs: [
+    '1995년 넷스케이프 브라우저에 자바스크립트가 들어오면서 화면 쪽에서도 코드를 실행할 수 있게 되었다. 입력값이 비었는지 서버에 보내기 전에 바로 알려 줄 수 있으니 사용자 경험이 훨씬 좋아졌다. 그러자 자연스러운 유혹이 생겼다. 가격 계산이나 할인 적용 같은 일도 브라우저에서 해 버리면 서버가 편하지 않을까?',
+    '여기에는 근본적인 함정이 있다. 브라우저는 사용자의 컴퓨터에서 돌고 사용자는 그 코드를 마음대로 바꿀 수 있다. 개발자 도구를 열면 자바스크립트를 고칠 수 있고 브라우저 없이 직접 HTTP 요청을 만들어 보낼 수도 있다. 서버 입장에서 요청은 "누군가 보낸 바이트"일 뿐 우리가 만든 화면에서 왔다는 보장이 없다. 그래서 보안 분야에는 오래된 원칙이 있다. **클라이언트를 믿지 마라.**'
+   ]},
+   { heading: '경계를 긋는 원칙', paragraphs: [
+    '이 원칙을 지키는 방법은 일을 나누는 기준을 분명히 하는 것이다. 브라우저의 검사는 사용자를 돕기 위한 것이고 진짜 판단은 서버가 한다. 서버는 요청이 오면 누가 보냈는지 확인하고(**인증**), 형식이 맞는지 보고(**검증**), 이 사람이 이 일을 해도 되는지 판단하고(**인가**), 업무 규칙을 서버가 가진 데이터로 다시 적용한 뒤, 화면에 필요한 만큼만 돌려준다. 이 단원의 그림이 주문 요청 하나가 이 단계를 지나는 모습을 보여 준다. 브라우저가 보낸 가격 100원은 무시되고 DB의 가격으로 다시 계산된다.',
+    '응답에도 같은 경계가 있다. 서버가 DB 행을 통째로 돌려주면 화면에 보이지 않는 필드, 예를 들어 다른 사용자의 이메일이나 내부 메모도 함께 브라우저로 간다. 화면에 안 보여도 응답을 열어 보면 다 보인다. 그래서 응답은 필요한 필드만 골라 만든다.'
+   ]},
+   { heading: '요청 처리의 층을 나누다', paragraphs: [
+    '2000년대 중반 Ruby on Rails(2004)와 Django(2005) 같은 프레임워크는 요청 처리의 흐름을 정형화했다. URL에 맞는 함수를 찾는 **라우팅**, 모든 요청에 공통으로 적용할 인증·로깅 같은 일을 맡는 **미들웨어**, 그리고 실제 업무 로직이다. 이 구조 덕분에 개발자는 매번 같은 검사를 새로 쓰지 않고 한 곳에서 일관되게 적용할 수 있었다.',
+    '최근에는 업무 규칙을 웹 프레임워크와 DB에서 떼어 내 독립된 층으로 두는 설계도 많이 쓴다. 웹에서 들어온 요청이든 배치 작업이든 같은 규칙을 거치게 하고 규칙만 따로 테스트할 수 있게 하려는 것이다. 『Architecture Patterns with Python』은 이런 설계를 Python으로 설명한다. 어떤 구조를 쓰든 출발점은 같다. 경계 밖에서 온 것은 검사한 뒤에만 안으로 들인다.'
+   ]}
+  ],
+  to: '서버가 요청을 처리하는 순서는 정했다. 그렇다면 요청 자체는 어떤 모양이어야 할까? 같은 요청이 두 번 오면 어떻게 될까? 다음 단원 REST와 멱등성이 API를 설계하는 원칙을 다룬다.',
+  books: [
+   { title: 'Architecture Patterns with Python (파이썬으로 살펴보는 아키텍처 패턴)', by: 'Harry Percival, Bob Gregory', where: '1부 도메인 모델링, 서비스 계층', note: '업무 규칙을 웹 프레임워크와 DB에서 떼어 내 경계를 긋는 방법을 Flask 예제로 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://www.cosmicpython.com/' },
+   { title: 'The Tangled Web', by: 'Michal Zalewski', where: '1~3장 웹의 역사와 URL, HTTP', note: '웹이 어떻게 지금의 모양이 되었고 그 과정에서 어떤 보안 가정이 생겼는지를 역사 순으로 설명합니다. 5장 인증 단원에서도 다시 씁니다.', url: 'https://nostarch.com/tangledweb' }
+  ],
+  papers: [
+   { title: 'PEP 333 · Python Web Server Gateway Interface v1.0', by: 'Phillip J. Eby', where: 'Python, 2003 (Python 3용은 PEP 3333)', note: 'WSGI를 정한 문서입니다. 앞부분의 동기 설명에서 왜 표준 약속이 필요했는지 볼 수 있습니다.', url: 'https://peps.python.org/pep-0333/' },
+   { title: 'RFC 3875 · The Common Gateway Interface (CGI) Version 1.1', by: 'D. Robinson, K. Coar', where: 'IETF, 2004', note: '1990년대부터 쓰이던 CGI를 뒤늦게 문서로 정리한 규격입니다.', url: 'https://www.rfc-editor.org/rfc/rfc3875' },
+   { title: 'OWASP Top Ten', by: 'OWASP', where: '웹 문서', note: '클라이언트를 믿어서 생기는 대표적인 취약점들이 정리되어 있습니다.', url: 'https://owasp.org/www-project-top-ten/' }
+  ]
+ },
+ rest: {
+  from: '앞 단원에서 서버가 요청을 처리하는 순서를 정했다. 이번에는 요청 자체를 어떤 모양으로 설계할지, 그리고 네트워크가 실패할 때 같은 요청이 두 번 오면 어떻게 할지를 본다.',
+  parts: [
+   { heading: '원격 함수를 부르듯이: RPC', paragraphs: [
+    '다른 컴퓨터의 기능을 쓰는 가장 자연스러운 생각은 그것을 함수처럼 부르는 것이다. 1984년 버렐과 넬슨은 논문 「Implementing Remote Procedure Calls」에서 **RPC**를 체계적으로 구현했다. 프로그래머는 평범한 함수를 부르는 것처럼 코드를 쓰고 라이브러리가 인자를 메시지로 바꿔 보내고 결과를 받아 돌려준다.',
+    '편리했지만 원격 호출은 지역 함수와 근본적으로 다르다. 네트워크가 끊기면 함수가 실행됐는지조차 알 수 없다. 요청이 가다가 사라졌을 수도 있고 서버가 실행한 뒤 응답이 사라졌을 수도 있다. 1990년대 후반의 CORBA와 SOAP은 이 차이를 숨기려고 점점 복잡해졌다.'
+   ]},
+   { heading: '웹이 잘 동작한 이유를 정리하다: REST', paragraphs: [
+    '2000년 HTTP 규격 작성에 참여한 로이 필딩은 박사 논문에서 반대 방향의 질문을 던졌다. 웹은 왜 이렇게 크게 자랄 수 있었을까? 그는 웹의 설계에서 몇 가지 제약을 뽑아 **REST**라고 불렀다. 모든 것을 URL로 가리키는 **자원**으로 보고 자원에 대한 동작은 GET, PUT, DELETE 같은 정해진 몇 개의 메서드로만 한다. 서버는 요청 사이에 클라이언트 상태를 기억하지 않고 응답은 캐시할 수 있는지 스스로 밝힌다.',
+    '이 제약들의 목적은 중간 장비가 요청의 의미를 이해하게 하는 것이었다. GET이 데이터를 바꾸지 않는다는 약속이 있으면 프록시와 CDN은 응답을 마음 놓고 캐시하고 브라우저는 실패한 GET을 알아서 다시 보낼 수 있다. 메서드의 의미가 정해져 있으니 서버 코드를 몰라도 요청을 다룰 수 있는 것이다.'
+   ]},
+   { heading: '같은 요청이 두 번 오는 문제: 멱등성', paragraphs: [
+    'HTTP 규격은 메서드마다 **멱등성**을 정해 두었다. 같은 요청을 한 번 보내든 여러 번 보내든 서버의 최종 상태가 같으면 멱등하다. GET, PUT, DELETE는 멱등하다. "이 주문의 주소를 서울로 바꿔라"는 두 번 해도 결과가 같다. 반면 POST는 멱등하지 않다. "주문을 하나 만들어라"를 두 번 하면 주문이 두 개 생긴다.',
+    '이 구분이 중요한 것은 앞에서 본 RPC의 근본 문제 때문이다. 응답을 못 받은 클라이언트는 요청이 처리됐는지 알 수 없다. 멱등한 요청이면 그냥 다시 보내면 된다. 멱등하지 않은 요청을 다시 보내면 결제가 두 번 될 수 있다. 네트워크 너머에서 "정확히 한 번" 실행을 보장하기는 매우 어렵기 때문에 실무에서는 "여러 번 실행돼도 한 번 실행한 것과 같게" 만드는 쪽을 택한다.'
+   ]},
+   { heading: '결제 API가 찾은 답: 멱등 키', paragraphs: [
+    'POST를 멱등하게 만드는 방법으로 널리 쓰이는 것이 **멱등 키**다. 클라이언트가 요청마다 고유한 키를 만들어 헤더에 붙이고 서버는 처음 보는 키면 처리한 뒤 결과를 키와 함께 저장한다. 같은 키로 다시 오면 다시 처리하지 않고 저장해 둔 결과를 돌려준다. Stripe는 2017년 글에서 결제 API에 이 방식을 쓰는 이유와 방법을 자세히 설명했고 지금은 IETF에서 Idempotency-Key 헤더로 표준화가 진행 중이다. 이 단원의 그림이 응답이 사라진 결제 요청을 같은 키로 재시도하는 과정을 보여 준다.'
+   ]}
+  ],
+  to: '하나의 요청을 어떻게 설계할지는 정했다. 그런데 서버는 동시에 수천 개의 요청을 받는다. 대부분의 요청은 DB나 외부 API의 응답을 기다리며 시간을 보낸다. 기다리는 동안 서버는 무엇을 해야 할까? 다음 단원 비동기와 이벤트 루프가 이 질문을 다룬다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '4장 부호화와 발전 (서비스를 통한 데이터플로: REST와 RPC)', note: 'RPC가 원격 호출의 차이를 숨기려다 겪은 문제와 REST의 접근을 비교합니다. 이 책은 4장 데이터 단원들의 기본 교과서이기도 합니다.', url: 'https://dataintensive.net/' },
+   { title: 'RESTful Web APIs', by: 'Leonard Richardson, Mike Amundsen, Sam Ruby', where: '1~3장 웹과 HTTP 메서드의 의미', note: '자원과 메서드의 의미, 멱등성과 안전한 메서드를 실무 API 설계 관점에서 설명합니다.' }
+  ],
+  papers: [
+   { title: 'Implementing Remote Procedure Calls', by: 'Andrew D. Birrell, Bruce Jay Nelson', where: 'ACM Transactions on Computer Systems, 1984', note: 'RPC를 체계적으로 구현한 논문입니다. 실패했을 때 무엇을 보장할지 고민한 부분이 이 단원과 이어집니다.', url: 'https://doi.org/10.1145/2080.357392' },
+   { title: 'Architectural Styles and the Design of Network-based Software Architectures', by: 'Roy T. Fielding', where: '박사 학위 논문, 2000', note: '5장이 REST입니다. 각 제약이 어떤 장점을 위해 있는지 설명합니다.', url: 'https://ics.uci.edu/~fielding/pubs/dissertation/top.htm' },
+   { title: 'Designing robust and predictable APIs with idempotency', by: 'Brandur Leach (Stripe)', where: 'Stripe 블로그, 2017', note: '멱등 키를 결제 API에 적용한 이유와 방법을 설명한 글입니다.', url: 'https://stripe.com/blog/idempotency' }
+  ]
+ },
+ async: {
+  from: '앞 단원까지 요청 하나를 어떻게 처리하고 설계할지 봤다. 이제 동시에 들어오는 수천 개의 요청을 어떻게 감당할지로 넘어간다.',
+  parts: [
+   { heading: '서버는 대부분의 시간을 기다린다', paragraphs: [
+    '주문 조회 요청 하나를 처리하는 데 50ms가 걸린다고 하자. 그중 CPU가 실제로 계산하는 시간은 1ms도 안 되고 나머지는 DB의 응답이 네트워크를 건너오기를 기다리는 시간이다. 서버의 일은 대부분 기다림이다. 그렇다면 기다리는 동안 다른 요청을 처리할 수 있다면 같은 서버로 훨씬 많은 요청을 받을 수 있다.',
+    '1장의 방식대로라면 요청마다 스레드를 하나씩 주면 된다. 한 스레드가 DB를 기다리는 동안 스케줄러가 다른 스레드를 실행한다. 이 방식은 잘 동작했지만 연결이 수천, 수만 개가 되자 문제가 드러났다. 스레드마다 스택 메모리가 필요하고 스레드가 많아질수록 문맥 교환 비용도 커졌다.'
+   ]},
+   { heading: '만 개의 연결이라는 숙제: C10K', paragraphs: [
+    '1999년 댄 케겔은 「The C10K problem」이라는 글에서 질문을 던졌다. 하드웨어는 충분히 빨라졌는데 왜 서버 한 대가 동시 연결 만 개를 감당하지 못할까? 그는 스레드를 연결마다 쓰는 대신 스레드 하나가 여러 연결을 돌보는 방식을 정리했다. 핵심은 운영체제에게 "이 소켓들 중 읽을 데이터가 생긴 것이 있으면 알려 달라"고 묻는 것이다.',
+    '이 질문을 위한 시스템 콜이 점점 발전했다. 1983년 BSD의 select는 소켓 목록을 매번 통째로 넘겨야 해서 연결이 많으면 느렸다. 2000년 FreeBSD의 kqueue와 2002년 Linux의 **epoll**은 관심 있는 소켓을 커널에 등록해 두고 준비된 것만 돌려받게 해서 연결 수가 늘어도 느려지지 않았다. 2004년 이고르 시소예프가 만든 nginx가 이 방식으로 적은 메모리로 엄청난 연결을 처리하며 널리 퍼졌다.'
+   ]},
+   { heading: '이벤트 루프와 그 대가', paragraphs: [
+    '이런 서버의 중심에는 **이벤트 루프**가 있다. 루프는 준비된 일을 하나씩 실행하고 할 일이 없으면 운영체제에 준비된 소켓을 묻고 기다린다. 일들은 기다려야 하는 지점에서 스스로 차례를 내놓는다. 1장의 선점형 스케줄러와 달리 일이 자발적으로 양보하므로 **협력형 멀티태스킹**이라고 부른다.',
+    '대가도 분명했다. 일 하나가 양보하지 않고 오래 계산하거나 블로킹 함수를 부르면 루프 전체가 멈춘다. 초기에는 "이 작업이 끝나면 이 함수를 불러 달라"는 콜백을 겹겹이 넘기는 방식으로 코드를 짜서 흐름을 읽기 어려웠다. 학계에서도 논쟁이 이어졌다. 1996년 오스터하우트가 "스레드는 대부분 나쁜 생각"이라고 발표하자 2003년 폰 베렌 등은 「Why Events Are a Bad Idea」로 반박했다. 2001년 웰시의 SEDA처럼 둘을 섞는 설계도 나왔다.'
+   ]},
+   { heading: 'async와 await: 기다림을 평범한 코드처럼', paragraphs: [
+    '콜백의 불편을 줄인 것이 **코루틴**이다. 함수가 중간에 멈췄다가 나중에 그 자리에서 이어 갈 수 있으면 기다림을 콜백으로 쪼갤 필요 없이 위에서 아래로 읽히는 코드로 쓸 수 있다. 2009년 Node.js가 자바스크립트로 이벤트 루프 서버를 대중화했고 Python은 2014년 PEP 3156으로 표준 라이브러리에 asyncio를, 2015년 PEP 492로 async와 await 문법을 넣었다.',
+    'await는 "여기서 기다릴 테니 그동안 다른 일을 하라"고 루프에 차례를 돌려주는 표시다. 그래서 await 없이 오래 걸리는 코드, 예를 들어 time.sleep이나 동기 DB 드라이버 호출은 여전히 루프 전체를 멈춘다. 이 단원의 그림 마지막 단계가 바로 그 장면이다. 비동기는 기다림이 많은 일을 싸게 만드는 도구이지 계산을 빠르게 하는 도구가 아니다. 계산이 많은 일은 1장에서 본 것처럼 프로세스를 여러 개 쓴다.'
+   ]}
+  ],
+  to: '이벤트 루프로 한 서버가 많은 연결을 감당하게 되었다. 그런데 실제 서비스에서는 앱 서버 앞에 nginx 같은 프록시를 하나 더 둔다. 왜 그럴까? 다음 단원 리버스 프록시와 타임아웃이 이 질문을 다룬다.',
+  books: [
+   { title: 'Fluent Python, 2nd Edition (전문가를 위한 파이썬)', by: 'Luciano Ramalho', where: '19장 Python의 동시성 모델, 21장 비동기 프로그래밍', note: '스레드, 프로세스, asyncio를 같은 문제로 비교하고 await가 루프에 무엇을 하는지 설명합니다.' },
+   { title: 'The Linux Programming Interface (리눅스 API의 모든 것)', by: 'Michael Kerrisk', where: '63장 대체 I/O 모델 (select, poll, epoll)', note: 'select에서 epoll로 넘어간 이유를 시스템 콜 수준에서 설명합니다.', url: 'https://man7.org/tlpi/' }
+  ],
+  papers: [
+   { title: 'The C10K problem', by: 'Dan Kegel', where: '웹 글, 1999~', note: '연결 만 개를 감당하는 서버 설계를 정리한 글입니다. 이벤트 기반 서버의 출발점으로 자주 인용됩니다.', url: 'http://www.kegel.com/c10k.html' },
+   { title: 'SEDA: An Architecture for Well-Conditioned, Scalable Internet Services', by: 'Matt Welsh, David Culler, Eric Brewer', where: 'SOSP, 2001', note: '이벤트와 스레드를 단계별로 섞어 과부하에도 견디는 서버 구조를 제안했습니다.', url: 'https://doi.org/10.1145/502034.502057' },
+   { title: 'Why Events Are a Bad Idea (for High-Concurrency Servers)', by: 'Rob von Behren, Jeremy Condit, Eric Brewer', where: 'HotOS, 2003', note: '이벤트 기반이 꼭 낫지는 않다는 반론입니다. 양쪽 주장을 함께 읽으면 선택의 기준이 보입니다.', url: 'https://www.usenix.org/conference/hotos-ix/why-events-are-bad-idea-high-concurrency-servers' },
+   { title: 'PEP 3156 · Asynchronous IO Support Rebooted: the "asyncio" Module', by: 'Guido van Rossum', where: 'Python, 2012', note: 'asyncio를 설계한 문서입니다.', url: 'https://peps.python.org/pep-3156/' }
+  ]
+ },
+ proxy: {
+  from: '앞 단원에서 이벤트 루프로 한 서버가 많은 연결을 감당하게 되었다. 그런데 대부분의 서비스는 앱 서버를 인터넷에 바로 노출하지 않고 앞에 프록시를 둔다.',
+  parts: [
+   { heading: '느린 손님이 직원을 붙잡는 문제', paragraphs: [
+    'gunicorn의 동기 워커는 요청 하나를 처리하는 동안 다른 요청을 받지 못한다. 그런데 휴대폰으로 접속한 사용자는 요청을 천천히 보내고 응답도 천천히 받아 간다. 앱이 10ms 만에 응답을 만들어도 느린 네트워크로 그 응답을 다 보내는 데 몇 초가 걸리면 그동안 워커는 아무것도 못 한다. 손님이 메뉴를 고르는 내내 요리사가 옆에 서 있는 꼴이다.',
+    '그래서 앞에 nginx 같은 **리버스 프록시**를 둔다. nginx는 앞 단원의 이벤트 루프 방식이라 느린 연결 수천 개를 적은 비용으로 붙잡아 둘 수 있다. 사용자의 요청을 끝까지 다 받은 뒤 앱에 한 번에 넘기고 앱의 응답도 한 번에 받아 두었다가 사용자에게 천천히 보낸다. 앱 워커는 빠른 내부 네트워크로 일만 하고 바로 다음 요청으로 넘어간다.'
+   ]},
+   { heading: '문 앞에 모인 여러 역할', paragraphs: [
+    '프록시가 앱 앞에 서자 여러 일이 자연스럽게 그쪽으로 모였다. TLS 암호화를 풀고(**TLS 종료**), 이미지와 CSS 같은 정적 파일을 직접 내주고, 요청을 여러 앱 서버에 나눠 보내고, 경로에 따라 다른 서비스로 보낸다. 2004년 공개된 nginx와 2001년부터 개발된 HAProxy가 이 역할의 대표가 되었다.',
+    '대신 앱은 사용자를 직접 보지 못하게 되었다. 앱에게 요청을 보낸 것은 프록시이므로 접속 주소가 모두 프록시의 주소로 보인다. 그래서 프록시는 원래 사용자의 주소를 X-Forwarded-For 헤더에 적어 넘기고 HTTPS였는지는 X-Forwarded-Proto로 알린다. 2014년 RFC 7239는 이를 Forwarded 헤더로 표준화했다. 이 헤더는 누구나 위조할 수 있으므로 앱은 믿을 수 있는 프록시가 붙인 값만 써야 한다.'
+   ]},
+   { heading: '기다림에 끝을 두는 이유: 타임아웃', paragraphs: [
+    '프록시와 앱 사이에도 기다림이 있다. 앱이 응답하지 않으면 프록시는 언제까지 기다려야 할까? 끝없이 기다리면 느린 요청이 쌓여 프록시의 자원도 바닥나고 사용자는 결국 떠난다. 그래서 모든 기다림에 **타임아웃**을 둔다. nginx는 업스트림의 응답을 기본 60초 기다리고 gunicorn은 30초 동안 응답하지 않는 워커를 죽인다.',
+    '타임아웃의 결과는 상태 코드로 드러난다. 프록시가 앱의 응답을 기다리다 포기하면 **504** Gateway Timeout, 앱이 연결을 끊거나 잘못된 응답을 주면 **502** Bad Gateway다. 이 단원의 그림처럼 앱의 타임아웃(30초)이 프록시의 타임아웃(60초)보다 짧으면 앱 쪽이 먼저 끊어서 사용자는 504가 아니라 502를 본다. 숫자 하나로 어느 층에서 문제가 생겼는지 짐작할 수 있다.'
+   ]},
+   { heading: '실패가 번지는 것을 막기', paragraphs: [
+    '타임아웃을 늘리면 문제가 사라질 것 같지만 대개 더 나빠진다. DB가 느려져 요청이 오래 걸리면 대기 중인 요청이 쌓이고 쌓인 요청이 다시 DB를 더 느리게 만든다. 한 서비스의 느림이 그 서비스를 부르는 모든 서비스로 번지는 것을 **연쇄 장애**라고 한다. 구글의 『Site Reliability Engineering』은 한 장 전체를 이 문제에 쓴다.',
+    '마이클 나이가드는 『Release It!』에서 이런 실패를 막는 안정성 패턴들을 정리했다. 모든 외부 호출에 타임아웃을 두고, 계속 실패하는 대상에는 잠시 요청을 끊는 **서킷 브레이커**를 두고, 자원을 나눠 한쪽의 실패가 전체를 삼키지 못하게 하는 것이다. 공통된 생각은 하나다. 실패는 반드시 일어나니 빨리, 작게 실패하게 만든다.'
+   ]}
+  ],
+  to: '타임아웃과 서킷 브레이커는 느린 의존성으로부터 서버를 지킨다. 그렇다면 반대로 요청을 너무 많이 보내는 클라이언트로부터는 어떻게 지킬까? 다음 단원 속도 제한과 백오프가 이 질문을 다룬다.',
+  books: [
+   { title: 'Release It!, 2nd Edition', by: 'Michael T. Nygard', where: '4장 안정성 안티패턴, 5장 안정성 패턴 (타임아웃, 서킷 브레이커, 격벽)', note: '실제 장애 사례에서 출발해 타임아웃과 서킷 브레이커가 왜 필요한지 설명합니다. 이 단원과 다음 단원의 기본 교과서입니다.', url: 'https://pragprog.com/titles/mnee2/release-it-second-edition/' },
+   { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '22장 연쇄 장애 다루기', note: '구글이 겪은 연쇄 장애의 원인과 대책을 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://sre.google/sre-book/addressing-cascading-failures/' }
+  ],
+  papers: [
+   { title: 'RFC 7239 · Forwarded HTTP Extension', by: 'A. Petersson, M. Nilsson', where: 'IETF, 2014', note: 'X-Forwarded-For 같은 비표준 헤더를 대신하는 Forwarded 헤더를 정의합니다.', url: 'https://www.rfc-editor.org/rfc/rfc7239' },
+   { title: 'RFC 9110 · HTTP Semantics (502, 504)', by: 'R. Fielding, M. Nottingham, J. Reschke (편)', where: 'IETF, 2022', note: '502와 504의 정확한 의미를 정의합니다.', url: 'https://www.rfc-editor.org/rfc/rfc9110' }
+  ]
+ },
+ ratelimit: {
+  from: '앞 단원에서 타임아웃과 서킷 브레이커로 느린 의존성으로부터 서버를 지켰다. 이번에는 반대 방향, 요청을 너무 많이 보내는 쪽으로부터 서버와 다른 사용자를 지키는 방법을 본다.',
+  parts: [
+   { heading: '자원은 함께 쓰는 것', paragraphs: [
+    '서버의 CPU, DB 연결, 메모리는 모든 사용자가 함께 쓴다. 한 사용자의 프로그램이 버그로 초당 수천 번 요청을 보내면 그 사용자 하나 때문에 모두가 느려진다. 공격이 아니어도 그렇다. 장애가 복구되는 순간 수만 개의 앱이 동시에 재시도하는 것만으로도 막 살아난 서버가 다시 쓰러진다. 그래서 서버는 입구에서 누가 얼마나 보내는지 세고 정해진 양을 넘으면 거절해야 한다.'
+   ]},
+   { heading: '통신망에서 빌려 온 양동이', paragraphs: [
+    '이 생각은 웹보다 통신망에서 먼저 쓰였다. 1980년대 통신망은 들쭉날쭉하게 들어오는 트래픽을 회선이 감당할 수 있는 속도로 다듬어야 했다. 그래서 바닥에 구멍 난 양동이처럼 일정한 속도로만 내보내는 **리키 버킷**과 일정한 속도로 채워지는 허용량을 꺼내 쓰는 **토큰 버킷**이 쓰였다.',
+    '토큰 버킷이 API에 잘 맞는 이유는 두 숫자로 두 가지를 동시에 정하기 때문이다. 채우는 속도는 길게 봤을 때의 평균을, 버킷 크기는 잠깐 몰리는 양(버스트)을 정한다. 사용자가 페이지를 열 때 요청 몇 개가 한꺼번에 가는 것은 허용하고 그 뒤로는 평균 속도를 넘지 못하게 한다. 이 단원의 그림이 버킷 크기 5, 초당 1개인 버킷에 요청 7개가 몰리는 장면을 보여 준다.'
+   ]},
+   { heading: '거절하는 방법도 약속이 필요하다', paragraphs: [
+    '거절할 때 500 오류를 돌려주면 클라이언트는 서버가 고장 났다고 생각하고 바로 다시 보낸다. 그래서 2012년 RFC 6585는 "너무 많이 보냈다"는 뜻의 **429** Too Many Requests를 정했고 서버는 Retry-After 헤더로 언제 다시 와도 되는지 알려 줄 수 있다. 상태 코드 하나로 클라이언트의 행동이 달라진다.',
+    '서버가 여러 대면 세는 방법도 정해야 한다. 서버마다 따로 세면 빠르지만 네 대면 한도가 네 배가 되고 Redis 같은 공유 저장소에서 세면 정확하지만 요청마다 Redis를 한 번 더 부른다. 2017년 Stripe와 Cloudflare는 대규모 서비스에서 이 균형을 어떻게 잡는지 공개했다.'
+   ]},
+   { heading: '재시도가 장애를 키우지 않게', paragraphs: [
+    '클라이언트 쪽에도 책임이 있다. 실패했을 때 바로 같은 간격으로 재시도하면 실패한 모든 클라이언트가 같은 순간에 몰린다. 그래서 간격을 1초, 2초, 4초처럼 늘리는 **지수 백오프**를 쓴다. 2015년 AWS의 마크 브루커는 여기에 무작위 값을 섞는 **지터**가 없으면 재시도들이 여전히 같은 순간에 몰린다는 것을 시뮬레이션으로 보였다.',
+    '『Site Reliability Engineering』의 과부하 처리 장은 한 걸음 더 나아가 클라이언트가 스스로 거절률을 보고 요청을 줄이는 방법을 소개한다. 서버가 거절하는 데도 비용이 들기 때문이다. 결국 과부하는 서버 혼자 막을 수 없고 서버와 클라이언트가 함께 지키는 약속이다.'
+   ]}
+  ],
+  to: '이 장에서 요청이 서버 안에서 처리되는 과정을 봤다. 요청을 처리하는 동안 서버는 거의 언제나 데이터를 읽고 쓴다. 다음 장에서는 그 데이터를 어떻게 저장하고 찾고 지키는지 본다.',
+  books: [
+   { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '21장 과부하 다루기, 22장 연쇄 장애 다루기', note: '서버 쪽 거절과 클라이언트 쪽 스스로 줄이기를 함께 설계하는 방법을 설명합니다.', url: 'https://sre.google/sre-book/handling-overload/' },
+   { title: 'Release It!, 2nd Edition', by: 'Michael T. Nygard', where: '5장 안정성 패턴 (부하 차단, 배압)', note: '거절을 설계의 일부로 다루는 방법을 실무 사례로 설명합니다.', url: 'https://pragprog.com/titles/mnee2/release-it-second-edition/' }
+  ],
+  papers: [
+   { title: 'RFC 6585 · Additional HTTP Status Codes', by: 'M. Nottingham, R. Fielding', where: 'IETF, 2012', note: '429 Too Many Requests를 정의합니다.', url: 'https://www.rfc-editor.org/rfc/rfc6585' },
+   { title: 'Exponential Backoff And Jitter', by: 'Marc Brooker', where: 'AWS Architecture Blog, 2015', note: '지터가 왜 필요한지 시뮬레이션으로 보여 주는 글입니다.', url: 'https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/' },
+   { title: 'Scaling your API with rate limiters', by: 'Paul Tarjan (Stripe)', where: 'Stripe 블로그, 2017', note: '요청 제한, 동시성 제한, 부하 차단을 함께 쓰는 방법입니다.', url: 'https://stripe.com/blog/rate-limiters' }
+  ]
+ },
+ normalization: {
+  from: '3장에서 서버가 요청을 처리하는 과정을 봤다. 요청을 처리하는 동안 서버는 거의 언제나 데이터를 읽고 쓴다. 이 장은 그 데이터를 어떤 모양으로 저장할지에서 시작한다.',
+  parts: [
+   { heading: '데이터가 프로그램에 묶여 있던 시절', paragraphs: [
+    '1960년대의 데이터베이스는 데이터를 포인터로 이어진 나무나 그물 모양으로 저장했다. IBM의 IMS가 대표적이다. 프로그램은 "고객 레코드에서 첫 번째 주문 레코드로 가서 다음 주문으로 넘어가라"처럼 길을 따라가며 데이터를 읽었다. 빠르긴 했지만 데이터의 저장 구조가 바뀌면 그 길을 따라가던 모든 프로그램을 고쳐야 했다. 새로운 질문을 하려면 새 길을 만들어야 했다.'
+   ]},
+   { heading: '코드의 관계형 모델', paragraphs: [
+    '1970년 IBM의 연구원 에드거 코드는 논문 「A Relational Model of Data for Large Shared Data Banks」에서 전혀 다른 생각을 내놓았다. 데이터를 수학의 **관계**, 즉 행과 열로 된 표로만 표현하고 표 사이의 연결은 포인터가 아니라 값(키)으로 한다. 프로그램은 데이터가 디스크에 어떻게 놓였는지 몰라도 "무엇을 원하는지"만 말하면 되고 길을 찾는 일은 데이터베이스가 맡는다.',
+    '이 생각은 처음에 너무 느려서 실용적이지 않다는 비판을 받았다. 하지만 IBM의 System R과 버클리의 Ingres가 1970년대에 실제로 구현해 보였고 System R 팀이 만든 질의 언어 SEQUEL은 이후 **SQL**이 되었다. 1979년 Oracle이 첫 상용 관계형 DB를 내놓았고 관계형 모델은 이후 40년 넘게 데이터 저장의 표준이 되었다.'
+   ]},
+   { heading: '같은 사실을 두 번 적으면 생기는 일', paragraphs: [
+    '표로 저장하면 어떤 열을 어느 표에 둘지 정해야 한다. 주문 표에 고객 이름과 주소를 함께 적으면 한 번에 읽기 편하다. 그런데 한 고객이 주문을 열 번 하면 주소가 열 번 적힌다. 고객이 이사하면 열 군데를 모두 고쳐야 하고 하나라도 놓치면 같은 고객의 주소가 두 개가 된다. 이런 문제를 **갱신 이상**이라고 한다. 고객을 등록하려면 주문이 있어야 하는 삽입 이상, 마지막 주문을 지우면 고객 정보도 사라지는 삭제 이상도 같은 뿌리에서 나온다.',
+    '코드는 1971년 이 문제를 체계적으로 다루는 **정규화**를 제시했다. 핵심 질문은 "이 값은 무엇에 의해 결정되는가"다. 주소는 주문이 아니라 고객에 의해 결정된다. 그렇다면 주소는 고객 표에 한 번만 두고 주문 표에는 고객을 가리키는 키만 둔다. 이렇게 값이 결정되는 관계(**함수 종속**)를 따라 표를 나눠 가는 단계를 제1, 제2, 제3 정규형 같은 이름으로 정리했다.'
+   ]},
+   { heading: '나누지 말아야 할 때', paragraphs: [
+    '정규화는 같은 사실을 한 곳에만 두라는 원칙이지 무엇이든 나누라는 원칙이 아니다. 주문 당시의 가격은 상품의 현재 가격과 다른 사실이다. 상품 가격이 오른 뒤에도 지난 주문의 금액은 그대로여야 하니 주문 항목에 그 시점의 가격을 따로 적는 것이 맞다. 이 단원의 그림이 이 차이를 보여 준다.',
+    '반대로 읽기 성능을 위해 일부러 같은 값을 여러 곳에 두는 **반정규화**도 있다. 조회가 압도적으로 많은 화면이라면 매번 표를 합치는 비용보다 중복을 관리하는 비용이 쌀 수 있다. 중요한 것은 중복이 의도한 것인지, 그리고 원본이 어디인지 아는 것이다.'
+   ]}
+  ],
+  to: '정규화로 데이터를 여러 표에 나눴다. 하지만 화면에는 고객 이름과 주문을 함께 보여 줘야 한다. 나눈 표를 다시 합치는 방법이 다음 단원 JOIN이다.',
+  books: [
+   { title: 'Database System Concepts (데이터베이스 시스템)', by: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan', where: '7판 2장 관계형 모델 소개, 7장 관계형 데이터베이스 설계(정규화)', note: '함수 종속과 정규형을 예제와 함께 차근차근 설명하는 표준 교과서입니다. 이 장 전체의 기본 교과서입니다.', url: 'https://www.db-book.com/' },
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '2장 데이터 모델과 질의 언어', note: '계층형 모델에서 관계형, 문서형 모델로 이어지는 역사와 각 모델이 잘 맞는 경우를 비교합니다.', url: 'https://dataintensive.net/' }
+  ],
+  papers: [
+   { title: 'A Relational Model of Data for Large Shared Data Banks', by: 'E. F. Codd', where: 'Communications of the ACM, 1970', note: '관계형 모델을 처음 제안한 논문입니다. 앞부분에서 당시 DB의 문제를 설명하는 대목이 이 단원의 출발점입니다.', url: 'https://doi.org/10.1145/362384.362685' },
+   { title: 'SEQUEL: A Structured English Query Language', by: 'Donald D. Chamberlin, Raymond F. Boyce', where: 'ACM SIGFIDET Workshop, 1974', note: 'SQL의 원형이 된 질의 언어를 소개한 논문입니다.', url: 'https://doi.org/10.1145/800296.811515' }
+  ]
+ },
+ join: {
+  from: '앞 단원에서 같은 사실을 한 곳에만 두려고 데이터를 여러 표로 나눴다. 이제 나눈 표를 질문에 맞게 다시 합치는 방법을 본다.',
+  parts: [
+   { heading: '나눈 만큼 합쳐야 한다', paragraphs: [
+    '정규화된 데이터베이스에서 "고객별 주문 목록"을 보려면 고객 표와 주문 표를 공통된 키로 이어야 한다. 이것이 **조인**이다. 코드의 관계형 모델에서 조인은 두 관계를 결합하는 연산으로 처음부터 정의되어 있었다. 데이터를 나누는 대신 질문할 때 합칠 수 있게 한 것이 관계형 모델의 핵심 거래였다.',
+    'SQL의 JOIN은 원하는 결과를 선언할 뿐 어떻게 합칠지는 말하지 않는다. 그 방법은 데이터베이스가 고른다. 이 점이 계층형 DB와 가장 크게 다른 부분이다. 프로그래머가 길을 따라가는 대신 DB가 가장 싼 길을 찾는다.'
+   ]},
+   { heading: '짝이 없는 행을 어떻게 할까', paragraphs: [
+    '조인에서 자주 헷갈리는 것은 짝이 없는 행이다. 주문을 한 번도 하지 않은 고객은 결과에 나와야 할까? **INNER JOIN**은 양쪽 모두 짝이 있는 행만 남기므로 그 고객은 사라진다. **LEFT JOIN**은 왼쪽 표의 모든 행을 남기고 짝이 없으면 오른쪽 열을 NULL로 채운다. 어느 쪽이 맞는지는 기술이 아니라 질문이 정한다. "주문한 고객 목록"인지 "모든 고객과 그 주문"인지에 따라 다르다.',
+    'NULL은 "값이 없음"을 뜻하는 특별한 표시라 평범한 값처럼 비교되지 않는다. 그래서 LEFT JOIN 뒤에 오른쪽 표의 조건을 WHERE에 쓰면 NULL로 채운 행이 조건에서 걸러져 INNER JOIN처럼 동작한다. COUNT(*)는 NULL로 채운 행도 한 줄로 센다. 이 단원의 그림이 이런 함정들을 차례로 보여 준다.'
+   ]},
+   { heading: 'DB는 어떻게 합칠 방법을 고를까', paragraphs: [
+    '두 표를 합치는 방법은 여러 가지다. 한쪽 표의 행마다 다른 표를 훑는 **중첩 루프**, 한쪽으로 해시 표를 만들고 다른 쪽을 대 보는 **해시 조인**, 양쪽을 정렬해 나란히 걷는 **병합 조인**이다. 어느 것이 빠른지는 표의 크기와 인덱스, 조건에 따라 달라진다.',
+    '1979년 IBM System R 팀의 셀린저 등은 논문 「Access Path Selection in a Relational Database Management System」에서 표마다의 통계로 각 방법의 비용을 추정해 가장 싼 계획을 고르는 **비용 기반 최적화**를 제시했다. 지금 PostgreSQL과 MySQL의 옵티마이저도 같은 생각 위에 있다. EXPLAIN으로 DB가 고른 계획을 볼 수 있고 계획이 이상하면 대개 통계가 오래되었거나 인덱스가 없는 경우다.'
+   ]},
+   { heading: '애플리케이션에서 만나는 조인 문제', paragraphs: [
+    'ORM을 쓰면 조인을 직접 쓰지 않아 놓치는 문제가 있다. 주문 100개를 가져온 뒤 각 주문의 고객을 하나씩 따로 조회하면 쿼리가 101번 나간다. 이것을 **N+1 문제**라고 한다. 조인 한 번이나 IN 조건 한 번으로 가져오면 될 일을 네트워크 왕복 100번으로 하는 셈이다. 그래서 ORM의 쿼리 로그를 켜고 실제로 몇 번의 쿼리가 나가는지 확인하는 습관이 중요하다.'
+   ]}
+  ],
+  to: '조인이 빠르려면 DB가 짝을 빨리 찾아야 한다. 수백만 행에서 원하는 행을 어떻게 빨리 찾을까? 다음 단원 인덱스가 이 질문을 다룬다.',
+  books: [
+   { title: 'Database System Concepts (데이터베이스 시스템)', by: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan', where: '7판 4장 중급 SQL(조인 표현식), 15장 질의 처리, 16장 질의 최적화', note: '조인의 종류와 조인 알고리즘의 비용 계산, 비용 기반 최적화를 순서대로 다룹니다.', url: 'https://www.db-book.com/' },
+   { title: 'SQL Performance Explained (Use The Index, Luke)', by: 'Markus Winand', where: '4장 조인 연산', note: '중첩 루프, 해시, 병합 조인과 N+1 문제를 실행 계획과 함께 설명합니다. 같은 내용을 웹에서 무료로 읽을 수 있습니다.', url: 'https://use-the-index-luke.com/' }
+  ],
+  papers: [
+   { title: 'Access Path Selection in a Relational Database Management System', by: 'P. Griffiths Selinger, M. M. Astrahan, D. D. Chamberlin, R. A. Lorie, T. G. Price', where: 'SIGMOD, 1979', note: '비용 기반 옵티마이저의 출발점이 된 논문입니다.', url: 'https://doi.org/10.1145/582095.582099' },
+   { title: 'A Relational Model of Data for Large Shared Data Banks', by: 'E. F. Codd', where: 'Communications of the ACM, 1970', note: '조인을 포함한 관계 연산이 처음 정의된 논문입니다.', url: 'https://doi.org/10.1145/362384.362685' }
+  ]
+ },
+ index: {
+  from: '앞 단원에서 조인이 빠르려면 DB가 짝을 빨리 찾아야 한다고 했다. 이번에는 수백만 행 중 원하는 행을 빨리 찾는 방법, 인덱스를 본다.',
+  parts: [
+   { heading: '처음부터 끝까지 읽는 비용', paragraphs: [
+    '인덱스가 없으면 DB는 원하는 행을 찾으려고 표 전체를 처음부터 끝까지 읽는다. 이것을 **순차 스캔**이라고 한다. 행이 천 개면 문제없지만 천만 개면 디스크에서 수 기가바이트를 읽어야 한다. 디스크는 메모리보다 훨씬 느리고 특히 예전의 회전 디스크는 원하는 위치로 헤드를 옮기는 데만 몇 밀리초가 걸렸다. 그래서 DB 설계의 오랜 목표는 "디스크를 몇 번 읽느냐"를 줄이는 것이었다.'
+   ]},
+   { heading: '디스크를 위해 설계된 나무: B-tree', paragraphs: [
+    '책의 색인처럼 값을 정렬해 두고 찾으면 빠르다. 정렬된 배열은 이진 탐색으로 빨리 찾지만 값을 넣고 뺄 때마다 뒤를 모두 밀어야 한다. 이진 탐색 트리는 넣고 빼기는 쉽지만 노드 하나에 값이 하나라 깊이가 깊어지고 노드마다 디스크를 한 번씩 읽어야 한다.',
+    '1972년 보잉 연구소의 바이어와 매크레이트는 논문 「Organization and Maintenance of Large Ordered Indexes」에서 **B-tree**를 제시했다. 노드 하나를 디스크 블록 하나 크기로 만들고 그 안에 키를 수백 개씩 넣는다. 한 노드에서 수백 갈래로 갈라지니 나무가 아주 얕다. 키가 수억 개여도 서너 단계면 원하는 값에 닿는다. 넣고 뺄 때도 노드를 나누거나 합쳐 균형을 유지한다. 반세기가 지난 지금도 거의 모든 관계형 DB의 기본 인덱스가 B-tree, 정확히는 잎에만 데이터 위치를 두는 B+tree다. 이 단원의 그림이 이 나무를 따라 내려가는 과정을 보여 준다.'
+   ]},
+   { heading: '인덱스가 있어도 안 쓰는 이유', paragraphs: [
+    '인덱스는 공짜가 아니다. 값을 넣거나 고칠 때마다 표뿐 아니라 인덱스도 고쳐야 하니 쓰기가 느려지고 디스크도 더 쓴다. 그리고 인덱스로 찾은 뒤에는 표에서 실제 행을 다시 읽어야 한다. 조건에 맞는 행이 전체의 상당 부분이라면 인덱스를 따라 여기저기 읽는 것보다 표를 순서대로 다 읽는 편이 빠르다.',
+    '그래서 DB는 매번 비용을 계산해 인덱스를 쓸지 정한다. 앞 단원의 비용 기반 옵티마이저가 하는 일이다. 인덱스를 만들었는데 쓰지 않는다면 옵티마이저가 틀렸다기보다 조건이 너무 많은 행에 걸리거나, 컬럼에 함수를 씌워 인덱스의 정렬 순서를 쓸 수 없거나, 여러 컬럼 인덱스의 앞 컬럼을 조건에 쓰지 않은 경우가 많다. EXPLAIN으로 계획을 확인하는 것이 출발점이다.'
+   ]},
+   { heading: '쓰기를 위한 다른 나무', paragraphs: [
+    'B-tree는 읽기에 강하지만 쓰기마다 디스크의 여러 곳을 고쳐야 한다. 쓰기가 아주 많은 시스템을 위해 1996년 오닐 등은 쓰기를 메모리에 모았다가 정렬된 파일로 한꺼번에 내려쓰고 나중에 합치는 LSM-tree를 제안했다. Bigtable, Cassandra, RocksDB가 이 방식을 쓴다. 읽기와 쓰기 중 무엇을 아낄지에 따라 자료구조가 달라지는 것이다. 이 차이는 뒤의 DB 선택 단원에서 다시 만난다.'
+   ]}
+  ],
+  to: '인덱스로 원하는 행을 빨리 찾게 되었다. 그런데 두 요청이 같은 행을 동시에 고치려 하면 어떻게 될까? 다음 단원 트랜잭션이 이 질문을 다룬다.',
+  books: [
+   { title: 'SQL Performance Explained (Use The Index, Luke)', by: 'Markus Winand', where: '1장 인덱스의 구조, 2장 WHERE 절', note: 'B-tree가 디스크에서 어떻게 생겼는지부터 인덱스를 못 쓰는 조건까지 개발자 관점에서 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://use-the-index-luke.com/' },
+   { title: 'Database System Concepts (데이터베이스 시스템)', by: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan', where: '7판 14장 인덱싱', note: 'B+tree의 삽입과 삭제, 해시 인덱스, LSM-tree를 정리합니다.', url: 'https://www.db-book.com/' },
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '3장 저장소와 검색', note: '로그 파일 하나에서 시작해 해시 인덱스, LSM-tree, B-tree로 발전하는 과정을 이야기처럼 설명합니다.', url: 'https://dataintensive.net/' }
+  ],
+  papers: [
+   { title: 'Organization and Maintenance of Large Ordered Indexes', by: 'R. Bayer, E. McCreight', where: 'Acta Informatica, 1972', note: 'B-tree를 제시한 논문입니다.', url: 'https://doi.org/10.1007/BF00288683' },
+   { title: 'Access Path Selection in a Relational Database Management System', by: 'P. Griffiths Selinger 외', where: 'SIGMOD, 1979', note: '인덱스를 쓸지 말지 비용으로 판단하는 옵티마이저의 출발점입니다.', url: 'https://doi.org/10.1145/582095.582099' }
+  ]
+ },
+ transaction: {
+  from: '앞 단원에서 원하는 행을 빨리 찾는 방법을 봤다. 이제 여러 요청이 같은 데이터를 동시에 고칠 때, 그리고 고치는 도중에 서버가 죽을 때 데이터를 어떻게 지킬지 본다.',
+  parts: [
+   { heading: '반쯤 끝난 일의 위험', paragraphs: [
+    '계좌 이체는 A 계좌에서 빼고 B 계좌에 더하는 두 단계다. 첫 단계 직후에 서버가 꺼지면 돈이 사라진다. 1970년대 은행과 항공 예약 시스템을 만들던 사람들은 이 문제를 매일 겪었다. 여러 단계의 작업을 "전부 되거나 전부 안 되거나" 둘 중 하나로 만들 방법이 필요했다.',
+    'IBM의 짐 그레이는 이 개념을 **트랜잭션**으로 정리했다. 트랜잭션은 시작과 커밋 사이의 작업들을 하나로 묶는다. 커밋하면 모든 변경이 함께 반영되고 중간에 실패하면 시작 전 상태로 되돌린다(**롤백**). 1983년 해르더와 로이터는 트랜잭션이 지켜야 할 성질을 원자성, 일관성, 격리성, 지속성의 머리글자를 따 **ACID**라고 이름 붙였다. 그레이는 트랜잭션 처리 연구로 1998년 튜링상을 받았다.'
+   ]},
+   { heading: '꺼져도 잃지 않는 방법: 로그를 먼저', paragraphs: [
+    '커밋한 내용이 서버가 꺼진 뒤에도 남으려면(지속성) 디스크에 써야 한다. 그런데 데이터 파일의 여러 곳을 매번 바로 고치는 것은 느리고 고치는 도중에 꺼지면 파일이 반쯤 바뀐 채로 남는다. 그래서 DB는 변경 내용을 먼저 순서대로 **로그**에 적는다. 로그는 파일 끝에 덧붙이기만 하니 빠르다. 로그가 디스크에 안전하게 쓰이면 커밋을 완료하고 데이터 파일은 나중에 천천히 고친다.',
+    '서버가 꺼졌다 켜지면 DB는 로그를 다시 읽어 커밋된 변경은 다시 적용하고 커밋되지 않은 변경은 되돌린다. 이 방식을 **로그 선행 기록**(WAL)이라고 한다. 1990년대 IBM의 ARIES 알고리즘이 이 복구 방식을 정교하게 정리했고 지금 PostgreSQL의 WAL, MySQL InnoDB의 redo 로그가 모두 이 생각이다. 이 로그는 뒤의 복제 단원에서 다시 중요한 역할을 한다.'
+   ]},
+   { heading: '동시에 고칠 때: 격리 수준', paragraphs: [
+    '두 트랜잭션이 동시에 실행될 때 가장 안전한 것은 마치 하나씩 차례로 실행한 것처럼 보이게 하는 것이다. 이것을 **직렬화 가능**이라고 한다. 하지만 완전히 차례대로 실행하면 느리다. 그래서 SQL 표준은 1992년에 얼마나 섞여도 되는지에 따라 **격리 수준**을 네 단계로 정했다. READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE이다.',
+    '1995년 베렌슨, 번스타인, 그레이 등은 「A Critique of ANSI SQL Isolation Levels」에서 표준의 정의가 모호하고 빠진 이상 현상이 있다고 지적했다. 이 단원의 그림에 나오는 **갱신 손실**이 대표적이다. 두 요청이 모두 재고 1을 읽고 각자 0으로 고치면 주문은 두 건인데 재고는 하나였다. 대부분의 DB 기본값인 READ COMMITTED는 이것을 막지 않는다. 그래서 실무에서는 격리 수준을 올리거나, 읽고 판단하는 대신 UPDATE … WHERE qty > 0처럼 조건과 변경을 한 문장으로 쓰거나, SELECT … FOR UPDATE로 행을 잠근다. 1장 동기화 단원의 "확인과 변경을 한 덩어리로"가 DB에서 다시 나타난 것이다.'
+   ]},
+   { heading: '읽는 사람과 쓰는 사람이 서로 막지 않게: MVCC', paragraphs: [
+    '잠금만으로 격리하면 쓰는 동안 읽는 사람이 기다려야 한다. 그래서 PostgreSQL과 Oracle, InnoDB는 행을 고칠 때 기존 값을 덮어쓰지 않고 새 버전을 만든다. 각 트랜잭션은 시작한 시점의 버전들을 본다. 이것을 **다중 버전 동시성 제어**(MVCC)라고 한다. 읽기는 쓰기를 막지 않고 쓰기도 읽기를 막지 않는다. 대신 아무도 보지 않는 옛 버전을 치우는 일(PostgreSQL의 VACUUM)이 따로 필요하다.'
+   ]}
+  ],
+  to: '트랜잭션과 SQL은 관계형 DB의 강점이다. 그런데 2000년대 후반 많은 회사가 트랜잭션을 일부 포기한 NoSQL DB로 옮겼다. 왜 그랬을까? 다음 단원 관계형 DB와 NoSQL 선택이 이 질문을 다룬다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '7장 트랜잭션', note: 'ACID가 실제로 무엇을 보장하는지, 격리 수준별로 어떤 이상 현상이 생기는지를 예제로 설명합니다. 이 단원과 가장 가까운 책입니다.', url: 'https://dataintensive.net/' },
+   { title: 'Database System Concepts (데이터베이스 시스템)', by: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan', where: '7판 17장 트랜잭션, 18장 동시성 제어, 19장 복구 시스템', note: '직렬 가능성, 잠금 규약, MVCC, 로그 기반 복구를 표준 용어로 정리합니다.', url: 'https://www.db-book.com/' }
+  ],
+  papers: [
+   { title: 'Principles of Transaction-Oriented Database Recovery', by: 'Theo Haerder, Andreas Reuter', where: 'ACM Computing Surveys, 1983', note: 'ACID라는 이름을 붙인 논문입니다.', url: 'https://doi.org/10.1145/289.291' },
+   { title: 'A Critique of ANSI SQL Isolation Levels', by: 'Hal Berenson, Phil Bernstein, Jim Gray, Jim Melton, Elizabeth O’Neil, Patrick O’Neil', where: 'SIGMOD, 1995', note: '격리 수준의 정의를 다시 정리하고 스냅숏 격리를 분석한 논문입니다.', url: 'https://doi.org/10.1145/223784.223785' },
+   { title: 'PostgreSQL · Transaction Isolation', by: 'PostgreSQL Global Development Group', where: '공식 문서', note: '실제 DB가 각 격리 수준에서 무엇을 막고 무엇을 허용하는지 표로 보여 줍니다.', url: 'https://www.postgresql.org/docs/current/transaction-iso.html' }
+  ]
+ },
+ 'database-choice': {
+  from: '앞 단원에서 관계형 DB가 트랜잭션으로 데이터를 지키는 방법을 봤다. 그런데 2000년대 후반 많은 회사가 그 보장의 일부를 내려놓은 새 데이터베이스로 옮겼다.',
+  parts: [
+   { heading: '한 대로는 감당할 수 없게 되었을 때', paragraphs: [
+    '2000년대 중반 구글과 아마존 같은 회사는 데이터와 요청이 서버 한 대로는 도저히 감당할 수 없는 규모가 되었다. 관계형 DB는 기본적으로 한 대의 서버에서 조인과 트랜잭션을 처리하도록 설계되어 있었다. 서버를 더 큰 것으로 바꾸는 데는 한계가 있었고 여러 대에 나누면 조인과 트랜잭션이 어려워졌다.',
+    '두 회사는 각자 답을 냈다. 2006년 구글은 Bigtable을, 2007년 아마존은 Dynamo를 논문으로 공개했다. Bigtable은 키 순서로 정렬된 거대한 표를 여러 서버에 나눠 저장했고 Dynamo는 앞 장에서 본 장바구니처럼 절대 쓰기를 거절하지 않도록 일관성을 일부 양보했다. 둘 다 SQL과 조인, 여러 행에 걸친 트랜잭션을 포기하는 대신 서버를 늘리는 만큼 성능이 늘어나게 했다.'
+   ]},
+   { heading: 'NoSQL이라는 이름', paragraphs: [
+    '이 논문들의 영향으로 2009년 무렵부터 Cassandra, MongoDB, Redis, HBase 같은 오픈소스 DB가 쏟아졌고 이들을 묶어 **NoSQL**이라고 불렀다. 이름은 원래 한 모임의 트위터 해시태그였다. 하나의 기술이 아니라 "관계형이 아닌 것"을 모은 이름이라 그 안에는 성격이 전혀 다른 것들이 섞여 있다. 키 하나로 값을 읽고 쓰는 **키값 저장소**, JSON 같은 문서를 통째로 저장하는 **문서 DB**, 열 단위로 넓게 저장하는 **와이드 컬럼 DB**, 관계 자체를 저장하는 **그래프 DB**다.',
+    '2005년 스톤브레이커와 체틴테멜은 논문 「"One Size Fits All": An Idea Whose Time Has Come and Gone」에서 이미 같은 방향을 예견했다. 하나의 범용 DB가 모든 용도에 맞던 시대는 끝났고 용도별로 다른 DB가 낫다는 것이다. 스톤브레이커는 Ingres와 PostgreSQL을 만든 사람이었다.'
+   ]},
+   { heading: '무엇을 내려놓고 무엇을 얻었나', paragraphs: [
+    'NoSQL이 빠르고 잘 늘어나는 이유는 무언가를 포기했기 때문이다. 대개 조인을 포기해서 함께 읽는 데이터를 한 문서나 한 키에 모아 두고, 여러 항목에 걸친 트랜잭션을 포기하거나 제한하고, 경우에 따라 즉시 일관성을 포기한다. 그러면 데이터를 키로 나눠 여러 서버에 흩어 놓기 쉽다.',
+    '대신 그 포기의 대가는 애플리케이션이 진다. 접근 패턴을 미리 정해 데이터 모양을 거기에 맞춰야 하고 새로운 질문이 생기면 데이터를 다시 짜야 할 수 있다. 2010년대를 거치며 흐름은 다시 섞였다. MongoDB와 DynamoDB는 트랜잭션을 추가했고 Google Spanner 같은 분산 SQL DB는 여러 지역에 걸쳐 SQL과 트랜잭션을 제공했다. PostgreSQL은 JSON 컬럼으로 문서 저장을 받아들였다.'
+   ]},
+   { heading: '질문에서 시작하는 선택', paragraphs: [
+    '그래서 DB를 고를 때는 이름보다 질문이 먼저다. 여러 항목을 함께 맞춰 바꿔야 하는가? 새로운 조회 방식이 자주 생기는가? 키 하나로 읽고 쓰는가? 잠깐 틀리거나 사라져도 되는가? 이 단원의 그림처럼 같은 서비스 안에서도 주문은 관계형 DB에, 장바구니는 키값 저장소에 두는 식으로 답이 다를 수 있다. 처음에는 관계형 DB 하나로 시작하고 분명한 이유가 생길 때 다른 저장소를 더하는 것이 대부분의 팀에게 안전한 길이다.'
+   ]}
+  ],
+  to: '어떤 DB를 쓰든 같은 데이터를 반복해서 읽으면 DB에 부담이 쌓인다. 자주 읽는 결과를 더 가까운 곳에 복사해 두면 어떨까? 다음 단원 캐시가 이 생각과 그 대가를 다룬다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '2장 데이터 모델과 질의 언어, 3장 저장소와 검색', note: '관계형, 문서형, 그래프 모델을 같은 예제로 비교하고 저장 구조의 차이가 성능에 주는 영향을 설명합니다.', url: 'https://dataintensive.net/' },
+   { title: 'Database Internals', by: 'Alex Petrov', where: '1부 저장 엔진, 2부 분산 시스템', note: 'B-tree와 LSM-tree 기반 저장 엔진, 분산 DB가 내부에서 하는 일을 설명합니다. 더 깊이 알고 싶을 때 봅니다.', url: 'https://www.databass.dev/' }
+  ],
+  papers: [
+   { title: 'Bigtable: A Distributed Storage System for Structured Data', by: 'Fay Chang, Jeffrey Dean, Sanjay Ghemawat 외', where: 'OSDI 2006 (ACM TOCS 2008)', note: '와이드 컬럼 DB의 원형이 된 논문입니다.', url: 'https://doi.org/10.1145/1365815.1365816' },
+   { title: 'Dynamo: Amazon’s Highly Available Key-value Store', by: 'Giuseppe DeCandia 외', where: 'SOSP, 2007', note: '가용성을 위해 일관성을 양보한 설계를 자세히 설명합니다.', url: 'https://doi.org/10.1145/1323293.1294281' },
+   { title: '"One Size Fits All": An Idea Whose Time Has Come and Gone', by: 'Michael Stonebraker, Uğur Çetintemel', where: 'ICDE, 2005', note: '용도별 DB의 시대를 예견한 논문입니다.', url: 'https://doi.org/10.1109/ICDE.2005.1' }
+  ]
+ },
+ cache: {
+  from: '앞 단원까지 데이터를 어떤 DB에 어떤 모양으로 저장할지 봤다. 어떤 DB를 고르든 같은 데이터를 반복해서 읽으면 DB에 부담이 쌓인다.',
+  parts: [
+   { heading: '방금 쓴 것은 곧 또 쓴다', paragraphs: [
+    '1965년 케임브리지의 모리스 윌크스는 논문 「Slave Memories and Dynamic Storage Allocation」에서 크고 느린 주기억 장치 앞에 작고 빠른 메모리를 두고 최근에 쓴 내용을 복사해 두자고 제안했다. 프로그램은 방금 쓴 데이터를 곧 다시 쓰고(시간 지역성) 가까이 있는 데이터를 함께 쓰는(공간 지역성) 경향이 있으니 작은 복사본만으로도 대부분의 요청에 빠르게 답할 수 있다는 것이다. 1960년대 말 IBM System/360 Model 85에 이 생각이 **캐시**라는 이름으로 들어갔고 지금은 모든 CPU에 여러 단계의 캐시가 있다.',
+    '같은 관찰은 컴퓨터의 거의 모든 층에서 통한다. 1장에서 본 페이지 캐시는 디스크 앞의 캐시이고 2장의 DNS 리졸버는 이름 조회의 캐시다. 브라우저와 CDN은 웹 응답을, 애플리케이션의 Redis는 DB 조회 결과를 복사해 둔다. 인기 상품 몇 개가 조회의 대부분을 차지하는 것처럼 요청은 고르게 퍼지지 않기 때문이다.'
+   ]},
+   { heading: 'DB 앞에 둔 메모리: memcached와 cache-aside', paragraphs: [
+    '2003년 블로그 서비스 LiveJournal을 운영하던 브래드 피츠패트릭은 DB가 버티지 못하자 여러 서버의 남는 메모리를 하나의 큰 캐시처럼 쓰는 **memcached**를 만들었다. 앱이 캐시를 먼저 보고 없으면 DB에서 읽어 캐시에 넣는 방식, 즉 **cache-aside**가 이때부터 웹 서비스의 표준처럼 퍼졌다. 2009년 나온 Redis는 리스트나 정렬된 집합 같은 자료구조까지 메모리에서 다뤄 캐시를 넘어 세션 저장소와 순위표로도 쓰이게 되었다.'
+   ]},
+   { heading: '컴퓨터 과학의 두 가지 어려운 문제', paragraphs: [
+    '복사본에는 피할 수 없는 문제가 하나 있다. 원본이 바뀌면 복사본은 낡는다. "컴퓨터 과학에서 어려운 것은 캐시 무효화와 이름 짓기 두 가지뿐"이라는 필 칼튼의 말이 자주 인용되는 이유다. 원본이 바뀔 때마다 모든 복사본을 정확히 찾아 지우려면 누가 어디에 복사해 두었는지 다 알아야 하는데 브라우저, CDN, 앱 캐시가 흩어져 있으면 사실상 불가능하다.',
+    '그래서 대부분의 캐시는 **TTL**로 문제를 단순하게 만든다. "이 값은 최대 몇 초 동안만 믿어라"는 약속이다. TTL 동안은 낡은 값이 보일 수 있다는 것을 받아들이는 대신 무효화를 놓쳐도 틀린 값이 영원히 남지는 않는다. 그리고 값이 바뀌면 캐시를 새 값으로 고치기보다 지운다. 동시에 일어난 두 갱신의 순서가 DB와 캐시에서 엇갈리면 캐시에 옛 값이 남을 수 있기 때문이다. 이 단원의 그림이 이 흐름을 보여 준다.'
+   ]},
+   { heading: '규모가 커지면 생기는 일', paragraphs: [
+    '페이스북은 2013년 논문 「Scaling Memcache at Facebook」에서 수천 대의 캐시 서버를 운영하며 겪은 문제를 공개했다. 인기 있는 키가 만료되는 순간 수많은 요청이 동시에 DB로 몰리는 **캐시 스탬피드**, 갱신과 캐시 채우기가 엇갈려 옛 값이 남는 문제가 대표적이다. 캐시 서버가 한 요청에만 DB 조회를 허락하는 리스(lease) 같은 장치로 이를 막았다.',
+    '가장 중요한 원칙은 캐시는 원본이 아니라는 것이다. 캐시가 비거나 꺼져도 시스템은 느려질 뿐 틀려서는 안 된다. 결제 직전의 가격과 재고처럼 틀리면 안 되는 값은 캐시가 아니라 원본에서 다시 확인한다.'
+   ]}
+  ],
+  to: '캐시는 읽기를 빠르게 한다. 그렇다면 오래 걸리는 쓰기 작업, 예를 들어 주문 뒤의 이메일 발송이나 썸네일 생성은 어떻게 할까? 사용자를 기다리게 하지 않고 나중에 처리하는 방법이 다음 단원 메시지 큐다.',
+  books: [
+   { title: 'Computer Systems: A Programmer’s Perspective (컴퓨터 시스템)', by: 'Randal E. Bryant, David R. O’Hallaron', where: '3판 6장 메모리 계층', note: '지역성과 CPU 캐시가 왜 효과가 있는지를 프로그래머 관점에서 설명합니다. 모든 층의 캐시를 이해하는 출발점입니다.', url: 'https://csapp.cs.cmu.edu/' },
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '11장 스트림 처리 중 데이터베이스와 스트림(캐시 갱신), 12장 데이터 시스템의 미래', note: '캐시를 원본에서 파생된 데이터로 보고 어떻게 일관되게 유지할지 설명합니다.', url: 'https://dataintensive.net/' }
+  ],
+  papers: [
+   { title: 'Slave Memories and Dynamic Storage Allocation', by: 'M. V. Wilkes', where: 'IEEE Transactions on Electronic Computers, 1965', note: '캐시의 생각을 처음 제안한 두 쪽짜리 논문입니다.', url: 'https://doi.org/10.1109/PGEC.1965.264263' },
+   { title: 'Scaling Memcache at Facebook', by: 'Rajesh Nishtala 외', where: 'NSDI, 2013', note: '대규모 cache-aside에서 생기는 스탬피드와 일관성 문제, 그 해법을 다룹니다.', url: 'https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala' },
+   { title: 'RFC 9111 · HTTP Caching', by: 'R. Fielding, M. Nottingham, J. Reschke (편)', where: 'IETF, 2022', note: '브라우저와 CDN 캐시의 규칙입니다.', url: 'https://www.rfc-editor.org/rfc/rfc9111' }
+  ]
+ },
+ queue: {
+  from: '앞 단원의 캐시는 읽기를 빠르게 했다. 이번에는 오래 걸리는 일을 사용자의 요청과 떼어 나중에 처리하는 방법을 본다.',
+  parts: [
+   { heading: '요청 안에서 모든 것을 끝내려 할 때', paragraphs: [
+    '주문을 받으면 주문을 저장하고, 확인 메일을 보내고, 재고 시스템에 알리고, 추천 데이터를 갱신해야 한다. 이 모든 일을 요청 하나 안에서 차례로 하면 사용자는 메일 서버가 느린 만큼 기다려야 하고 메일 서버가 죽으면 주문까지 실패한다. 꼭 지금 끝나야 하는 일(주문 저장)과 조금 뒤에 끝나도 되는 일(메일 발송)이 한데 묶여 있는 것이 문제다.',
+    '그래서 둘 사이에 대기열을 둔다. 요청을 받은 서버는 "이 주문의 메일을 보내라"는 메시지를 큐에 넣고 바로 응답한다. 별도의 워커가 자기 속도대로 메시지를 꺼내 처리한다. 보내는 쪽(**생산자**)과 처리하는 쪽(**소비자**)이 같은 시간에 살아 있을 필요도, 같은 속도로 일할 필요도 없어진다. 순간적으로 요청이 몰려도 큐가 완충해 준다.'
+   ]},
+   { heading: '은행에서 웹으로 온 메시지 큐', paragraphs: [
+    '이 생각은 은행과 기업 시스템에서 먼저 자랐다. 서로 다른 시스템이 메시지를 안정적으로 주고받아야 했기 때문이다. 1993년 IBM의 MQSeries가 대표적이고 2003년 호프와 울프의 책 『Enterprise Integration Patterns』가 메시지로 시스템을 잇는 방법을 패턴으로 정리했다. 웹 쪽에서는 2004년 AWS가 첫 서비스 중 하나로 SQS를 베타로 공개했고 2007년 RabbitMQ가 나왔다.',
+    '2011년 LinkedIn의 크렙스, 나크헤드, 라오는 Kafka를 발표했다. Kafka는 메시지를 처리하면 지우는 대신 디스크의 로그에 순서대로 쌓아 두고 소비자마다 어디까지 읽었는지만 기록한다. 같은 메시지를 여러 소비자가 각자 읽을 수 있고 지난 메시지를 다시 읽을 수도 있다. 작업을 나눠 주는 **큐**와 일어난 일을 기록하는 **로그**는 비슷해 보여도 쓰임이 다르다.'
+   ]},
+   { heading: '잃지 않으려면 두 번 받을 수 있다', paragraphs: [
+    '큐가 해결하기 어려운 근본 문제가 하나 있다. 워커가 메일을 보낸 직후, 큐에 "처리했다"고 알리기 직전에 죽으면 큐는 처리됐는지 알 수 없다. 메시지를 다시 보여 주면 메일이 두 번 가고 다시 보여 주지 않으면 처리 도중 죽은 경우 일이 사라진다. 대부분의 큐는 잃는 것보다 중복이 낫다고 보고 **적어도 한 번 전달**을 택한다.',
+    '그래서 소비자는 같은 메시지를 두 번 받아도 결과가 같게, 즉 **멱등하게** 만들어야 한다. 3장 REST 단원의 멱등 키와 같은 생각이다. 처리한 메시지 ID를 기록해 두고 이미 처리한 것이면 건너뛴다. 이 단원의 그림이 워커가 죽은 뒤 메시지가 다시 나타나 다른 워커가 받는 과정을 보여 준다.'
+   ]},
+   { heading: 'DB와 큐 사이의 틈: 아웃박스', paragraphs: [
+    '또 하나의 틈은 DB와 큐 사이에 있다. 주문을 DB에 저장한 직후, 큐에 메시지를 넣기 전에 서버가 죽으면 주문은 있는데 메일 작업은 없다. 순서를 바꿔도 반대 문제가 생긴다. 두 시스템에 걸친 작업을 하나의 트랜잭션으로 묶을 수 없기 때문이다.',
+    '이를 푸는 흔한 방법이 **트랜잭셔널 아웃박스** 패턴이다. 주문과 함께 "보낼 메시지"를 같은 DB의 아웃박스 표에 같은 트랜잭션으로 저장한다. 별도의 전달자가 아웃박스를 읽어 큐에 보낸다. 앞 단원의 트랜잭션이 DB 안의 원자성을 보장하고 소비자의 멱등성이 전달자의 재전송을 견딘다. 여러 장치를 조합해 신뢰성을 쌓는 방식은 2장 TCP 단원과 닮았다.'
+   ]}
+  ],
+  to: '큐는 일을 나눠 처리량을 늘린다. 하지만 결국 모든 데이터는 DB에 모이고 DB 서버 한 대에도 한계가 있다. 같은 데이터를 여러 서버에 두거나 나눠 저장하면 어떨까? 다음 단원 복제와 샤딩이 이 질문을 다룬다.',
+  books: [
+   { title: 'Enterprise Integration Patterns', by: 'Gregor Hohpe, Bobby Woolf', where: '3장 메시징 시스템, 10장 메시징 엔드포인트(멱등 수신자)', note: '메시지 큐로 시스템을 잇는 패턴을 정리한 고전입니다. 패턴 목록은 웹에서 볼 수 있습니다.', url: 'https://www.enterpriseintegrationpatterns.com/' },
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '11장 스트림 처리', note: '메시지 큐와 로그 기반 브로커(Kafka)의 차이, 정확히 한 번 처리의 어려움을 설명합니다.', url: 'https://dataintensive.net/' }
+  ],
+  papers: [
+   { title: 'Kafka: a Distributed Messaging System for Log Processing', by: 'Jay Kreps, Neha Narkhede, Jun Rao', where: 'NetDB Workshop, 2011', note: '메시지를 로그로 쌓아 두는 Kafka의 설계를 소개한 논문입니다.' },
+   { title: 'Pattern: Transactional outbox', by: 'Chris Richardson', where: 'microservices.io', note: 'DB와 메시지 전송 사이의 틈을 메우는 패턴을 설명합니다.', url: 'https://microservices.io/patterns/data/transactional-outbox.html' },
+   { title: 'Amazon SQS – 15 Years and Still Queueing!', by: 'Jeff Barr', where: 'AWS 블로그, 2021', note: 'AWS의 첫 서비스 중 하나였던 SQS의 역사를 돌아본 글입니다.', url: 'https://aws.amazon.com/blogs/aws/amazon-sqs-15-years-and-still-queueing/' }
+  ]
+ },
+ replication: {
+  from: '앞 단원까지 데이터를 저장하고 빠르게 읽고 일을 나눠 처리하는 방법을 봤다. 결국 모든 데이터는 DB에 모이고 DB 서버 한 대는 언젠가 고장 나며 처리량에도 한계가 있다.',
+  parts: [
+   { heading: '같은 데이터를 여러 곳에', paragraphs: [
+    '서버 한 대에만 데이터가 있으면 그 서버의 디스크가 고장 나는 순간 서비스가 멈춘다. 그래서 같은 데이터를 다른 서버에도 실시간으로 복사해 둔다. 이것이 **복제**다. 가장 흔한 방식은 한 서버(**주 DB**)만 쓰기를 받고 그 변경 기록을 다른 서버(**복제본**)에 보내 같은 순서로 따라 하게 하는 것이다. 앞 단원의 트랜잭션에서 본 로그 선행 기록이 바로 그 변경 기록이다. 복구를 위해 만든 로그가 복제의 통로가 된 것이다.',
+    '2000년 MySQL이 binlog를 이용한 복제를 넣으면서 쓰기는 주 DB에, 읽기는 여러 복제본에 보내는 구성이 웹 서비스의 표준이 되었다. 읽기가 쓰기보다 훨씬 많은 대부분의 서비스에서 복제본을 늘리면 읽기 처리량이 늘고 주 DB가 죽으면 복제본을 승격해 이어 갈 수 있다.'
+   ]},
+   { heading: '기다릴 것인가, 먼저 답할 것인가', paragraphs: [
+    '복제에는 근본적인 선택이 하나 있다. 주 DB가 커밋을 완료하기 전에 복제본이 받아 적을 때까지 기다리면(**동기 복제**) 주 DB가 죽어도 데이터가 사라지지 않는다. 대신 쓰기마다 네트워크 왕복을 기다려야 하고 복제본이 느리면 쓰기도 느려진다. 기다리지 않으면(**비동기 복제**) 빠르지만 장애 순간 아직 복제되지 않은 쓰기가 사라질 수 있고 평소에도 복제본이 몇 ms에서 몇 초 늦을 수 있다.',
+    '대부분의 DB는 비동기를 기본으로 한다. 그래서 복제본에서 읽으면 방금 쓴 내용이 아직 없을 수 있다. 이 단원의 그림처럼 댓글을 쓰고 새로고침했는데 내 댓글이 사라지는 일이 생긴다. 쓰기 직후의 읽기는 주 DB로 보내는 식의 대처가 필요한 이유다.'
+   ]},
+   { heading: '갈라진 네트워크에서는 둘 다 가질 수 없다', paragraphs: [
+    '2000년 에릭 브루어는 강연에서 네트워크가 갈라졌을 때 일관성과 가용성을 동시에 가질 수 없다고 주장했고 2002년 길버트와 린치가 이를 증명했다. 이른바 **CAP 정리**다. 두 데이터센터 사이 연결이 끊겼을 때 양쪽이 계속 쓰기를 받으면(가용성) 데이터가 갈라지고 한쪽이 쓰기를 멈추면(일관성) 그쪽 사용자는 서비스를 못 쓴다.',
+    '2018년 GitHub의 장애가 이 선택을 생생하게 보여 줬다. 동부 데이터센터의 네트워크가 43초 동안 끊기자 자동 장애 조치가 서부의 복제본을 주 DB로 승격했다. 동부에는 서부로 복제되지 않은 쓰기가 남아 있었고 두 쪽의 데이터를 맞추느라 24시간 넘게 서비스가 저하됐다. 2007년 아마존의 Dynamo는 반대로 장바구니가 절대 쓰기를 거절하지 않도록 가용성을 택하고 갈라진 데이터를 나중에 합치는 설계를 했다.'
+   ]},
+   { heading: '복제로도 모자라면: 샤딩', paragraphs: [
+    '복제는 읽기를 늘리지만 쓰기는 여전히 주 DB 한 대가 받는다. 쓰기와 데이터 양이 한 서버의 한계를 넘으면 데이터 자체를 키 기준으로 나눠 서로 다른 서버에 저장한다. 이것이 **샤딩**(또는 파티셔닝)이다. 사용자 ID로 나누면 사용자 1~100만은 샤드 1, 그다음은 샤드 2에 둔다.',
+    '샤딩의 대가는 크다. 샤드를 넘는 조인과 트랜잭션을 DB가 해 주지 않고 서버를 늘릴 때 데이터를 옮겨야 한다. 해시 나머지로 나누면 서버 하나를 더할 때 거의 모든 데이터가 움직이므로 1997년 카거 등이 제안한 **일관 해싱**으로 움직이는 양을 줄인다. 이 단원의 Python 예제가 그 차이를 계산해 보여 준다. 대부분의 팀에게 샤딩은 인덱스, 캐시, 복제본, 더 큰 서버를 다 쓴 뒤의 마지막 수단이다.'
+   ]}
+  ],
+  to: '복제본이 여러 개면 누가 주 DB인지, 어떤 쓰기가 확정되었는지 모두가 같은 답을 내야 한다. 네트워크가 갈라져도 둘이 서로 주인이라고 주장하지 않게 하려면? 다음 단원 합의와 Raft가 이 질문을 다룬다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '5장 복제, 6장 파티셔닝', note: '단일 리더, 다중 리더, 리더 없는 복제와 복제 지연이 만드는 문제, 파티셔닝 방식을 체계적으로 설명합니다. 이 단원의 뼈대입니다.', url: 'https://dataintensive.net/' },
+   { title: 'Database System Concepts (데이터베이스 시스템)', by: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan', where: '7판 21~23장 병렬·분산 데이터베이스', note: '분산 저장과 복제, 분산 트랜잭션을 표준 용어로 다룹니다.', url: 'https://www.db-book.com/' }
+  ],
+  papers: [
+   { title: 'Dynamo: Amazon’s Highly Available Key-value Store', by: 'Giuseppe DeCandia 외', where: 'SOSP, 2007', note: '일관 해싱과 복제, 가용성을 택한 설계를 자세히 설명합니다.', url: 'https://doi.org/10.1145/1323293.1294281' },
+   { title: 'Brewer’s Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services', by: 'Seth Gilbert, Nancy Lynch', where: 'SIGACT News, 2002', note: 'CAP 정리를 증명한 논문입니다.', url: 'https://doi.org/10.1145/564585.564601' },
+   { title: 'Eventually Consistent', by: 'Werner Vogels', where: 'Communications of the ACM, 2009', note: '아마존 CTO가 최종 일관성의 의미와 선택지를 정리한 짧은 글입니다.', url: 'https://doi.org/10.1145/1435417.1435432' },
+   { title: 'October 21 post-incident analysis', by: 'Jason Warner (GitHub)', where: 'GitHub 블로그, 2018', note: '비동기 복제와 자동 장애 조치가 만든 24시간 장애의 분석입니다.', url: 'https://github.blog/news-insights/company-news/oct21-post-incident-analysis/' }
+  ]
+ },
+ raft: {
+  from: '앞 단원에서 복제본이 여러 개일 때 네트워크가 갈라지면 둘 다 주인이라고 주장할 수 있다는 것을 봤다. 여러 서버가 하나의 결정에 동의하는 문제, 합의로 넘어간다.',
+  parts: [
+   { heading: '동의하는 것이 왜 어려운가', paragraphs: [
+    '서버 세 대가 "지금 리더는 누구인가"나 "다음 기록은 무엇인가"에 같은 답을 내야 한다고 하자. 메시지가 언제나 제때 도착한다면 쉽다. 하지만 실제 네트워크에서 메시지는 늦거나 사라지고 서버는 멈춘다. 응답이 없는 서버가 죽은 건지 느린 건지 구분할 방법이 없다.',
+    '1985년 피셔, 린치, 패터슨은 메시지 지연에 상한이 없다면 서버 하나만 멈출 수 있어도 항상 합의에 도달하는 알고리즘은 없다는 것을 증명했다. 이른바 **FLP 불가능성**이다. 그래서 실제 합의 알고리즘들은 "일정 시간 응답이 없으면 죽은 것으로 본다"는 시간 가정을 쓰고 대신 안전성, 즉 틀린 결정을 내리지 않는 것만큼은 어떤 경우에도 지킨다.'
+   ]},
+   { heading: '정확했지만 어려웠던 Paxos', paragraphs: [
+    '레슬리 램포트는 1989년 그리스 섬의 가상 의회 이야기로 합의 알고리즘 **Paxos**를 설명한 논문을 썼다. 의원들이 수시로 자리를 비워도 의회는 모순 없는 법을 통과시킨다는 이야기였다. 비유가 어렵다는 이유로 출판이 미뤄져 1998년에야 「The Part-Time Parliament」로 나왔다. Paxos는 정확성을 인정받았지만 이해하기 어렵고 실제 시스템으로 옮기기는 더 어려웠다. 구글은 2006년 Paxos 위에 잠금 서비스 Chubby를 만들며 논문과 실제 구현 사이의 간극이 컸다고 적었다.'
+   ]},
+   { heading: '이해하기 쉽게 만든 Raft', paragraphs: [
+    '2014년 스탠퍼드의 온가로와 오스터하우트는 「In Search of an Understandable Consensus Algorithm」에서 **Raft**를 발표했다. 설계 목표 자체가 이해하기 쉬움이었다. 문제를 셋으로 나눴다. 리더 하나를 뽑는 **리더 선출**, 리더가 받은 쓰기를 다른 서버에 복사하는 **로그 복제**, 그리고 어떤 경우에도 확정된 기록이 바뀌지 않게 하는 **안전성**이다.',
+    '핵심은 **과반수**다. 리더는 쓰기를 받으면 자기 로그에 붙이고 다른 서버에 보내며 과반수가 받아 적으면 그 기록을 확정(커밋)한다. 새 리더가 되려면 과반수의 표가 필요하고 서버는 자기보다 로그가 뒤처진 후보에게 투표하지 않는다. 두 과반수는 반드시 한 서버 이상 겹치므로 확정된 기록을 가진 서버가 언제나 선거에 끼어 있고 기록이 사라질 수 없다. 네트워크가 갈라져도 과반수를 가진 쪽은 하나뿐이라 리더가 둘이 되어 서로 다른 결정을 내리지 않는다. 이 단원의 그림이 리더가 죽은 뒤 뒤처진 후보가 표를 못 받는 장면을 보여 준다.'
+   ]},
+   { heading: '인프라의 바닥에서', paragraphs: [
+    'Raft가 나온 해에 CoreOS의 etcd가 Raft를 채택했고 etcd는 Kubernetes의 모든 상태를 저장하는 곳이 되었다. Consul, CockroachDB, 그리고 ZooKeeper를 걷어 낸 Kafka의 KRaft도 Raft를 쓴다. 우리가 직접 Raft를 구현할 일은 거의 없지만 그 성질은 운영에 바로 영향을 준다. 과반수가 필요하니 서버는 3대나 5대로 홀수로 두고 2대나 4대는 이득이 없다. 기록을 디스크에 안전하게 쓰는 시간이 길어지면 리더 선거가 흔들린다.',
+    '돌아보면 이 장은 데이터를 표로 나누는 이야기에서 시작해 여러 서버가 하나의 진실에 동의하는 이야기로 끝났다. 규모가 커질수록 "데이터가 맞는가"라는 질문은 한 서버 안의 트랜잭션에서 여러 서버 사이의 합의로 넓어진다.'
+   ]}
+  ],
+  to: '이 장에서 데이터를 저장하고 지키는 방법을 봤다. 그런데 그 데이터에 접근하는 사람이 누구인지, 그 사람이 정말 그 일을 해도 되는지는 아직 묻지 않았다. 다음 장은 인증과 안전한 경계를 다룬다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '8장 분산 시스템의 골칫거리, 9장 일관성과 합의', note: '네트워크와 시계가 왜 믿을 수 없는지에서 출발해 합의 알고리즘이 무엇을 보장하는지 설명합니다.', url: 'https://dataintensive.net/' },
+   { title: 'Database Internals', by: 'Alex Petrov', where: '14장 합의 (Paxos, Raft)', note: 'Paxos와 Raft의 동작을 그림과 함께 비교합니다.', url: 'https://www.databass.dev/' }
+  ],
+  papers: [
+   { title: 'In Search of an Understandable Consensus Algorithm', by: 'Diego Ongaro, John Ousterhout', where: 'USENIX ATC, 2014', note: 'Raft 논문입니다. 18쪽 분량이고 읽기 쉽게 쓰였습니다.', url: 'https://raft.github.io/raft.pdf' },
+   { title: 'The Part-Time Parliament', by: 'Leslie Lamport', where: 'ACM Transactions on Computer Systems, 1998', note: 'Paxos 논문입니다. 그리스 의회 이야기로 쓰였습니다.', url: 'https://doi.org/10.1145/279227.279229' },
+   { title: 'Impossibility of Distributed Consensus with One Faulty Process', by: 'Michael J. Fischer, Nancy A. Lynch, Michael S. Paterson', where: 'Journal of the ACM, 1985', note: 'FLP 불가능성 논문입니다.', url: 'https://doi.org/10.1145/3149.214121' },
+   { title: 'The Chubby Lock Service for Loosely-Coupled Distributed Systems', by: 'Mike Burrows', where: 'OSDI, 2006', note: 'Paxos를 실제로 구현하며 겪은 어려움을 적은 논문입니다.', url: 'https://www.usenix.org/legacy/event/osdi06/tech/burrows.html' }
+  ]
  }
 };

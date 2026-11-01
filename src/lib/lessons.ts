@@ -471,7 +471,9 @@ print(len(pods))           # 2개로 줄어듭니다`,codeNotes:['컨트롤러�
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
  1: ['process', 'scheduling', 'sync', 'deadlock', 'memory', 'linux', 'diagnosis'],
- 0: ['dns', 'tcp', 'nat', 'http', 'tls', 'websocket']
+ 0: ['dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
+ 2: ['kit', 'rest', 'async', 'proxy', 'ratelimit'],
+ 3: ['normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft']
 };
 const position = (x: Lesson) => { const i = sequence[x.category]?.indexOf(x.id) ?? -1; return i < 0 ? Infinity : i; };
 export const lessons = [...core, ...operatingSystem, ...expansion, ...additions].sort((a,b) => a.category-b.category || position(a)-position(b));
