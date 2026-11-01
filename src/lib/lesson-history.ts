@@ -1359,5 +1359,34 @@ export const histories:Record<string,LessonHistory>={
    ['Clark, The Design Philosophy of the DARPA Internet Protocols (SIGCOMM, 1988)','https://doi.org/10.1145/52324.52336'],
    ['Meta Engineering · More details about the October 4 outage (2021)','https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/']
   ]
+ },
+ webserver:{
+  intro:'최초의 웹 서버는 한 사람이 자기 컴퓨터에서 돌린 작은 프로그램이었습니다. 웹이 커지면서 웹 서버는 디스크의 파일을 돌려주는 프로그램에서 다른 프로그램을 불러 응답을 만드는 프로그램으로, 다시 수만 개의 연결을 감당하는 프로그램으로 바뀌었습니다. 그 사이에 웹 서버와 앱을 잇는 약속들이 생겼습니다.',
+  timeline:[
+   {year:'1990',title:'CERN httpd',body:'팀 버너스리는 CERN에서 NeXT 컴퓨터로 최초의 웹 서버와 브라우저를 만들었습니다. 서버는 요청받은 경로의 HTML 파일을 그대로 돌려줬습니다. 그가 만든 첫 웹사이트는 지금도 info.cern.ch에 남아 있습니다.'},
+   {year:'1993~1995',title:'NCSA HTTPd와 Apache',body:'일리노이 대학 NCSA의 롭 맥쿨이 만든 NCSA HTTPd가 널리 쓰였고 요청마다 외부 프로그램을 실행하는 CGI를 도입했습니다. 1994년 개발이 멈추자 웹마스터들이 각자 만든 수정 사항을 모아 1995년 Apache HTTP Server를 내놓았고 Apache는 오랫동안 가장 많이 쓰이는 웹 서버가 되었습니다.'},
+   {year:'2001~2006',title:'JSON',body:'더글러스 크록퍼드는 자바스크립트의 객체 표기법을 떼어 내 데이터 교환 형식으로 쓰자고 제안하고 json.org에 정리했습니다. XML보다 훨씬 단순해서 Ajax와 함께 빠르게 퍼졌고 2006년 RFC 4627로 정리되었습니다. 지금 규격은 RFC 8259와 ECMA-404입니다.'},
+   {year:'2003',title:'WSGI',body:'Python에는 웹 프레임워크마다 웹 서버와 붙는 방식이 달라 조합을 고르기 어려웠습니다. 2003년 PEP 333이 웹 서버가 앱의 함수 하나를 부르는 표준 약속 WSGI를 정했고 이후 어떤 WSGI 서버든 어떤 WSGI 프레임워크와도 함께 쓸 수 있게 되었습니다.'},
+   {year:'2010',title:'gunicorn',body:'Ruby의 Unicorn을 본뜬 gunicorn이 Python용 WSGI 서버로 나왔습니다. 마스터 프로세스가 워커 프로세스들을 미리 띄워 두고 관리하는 pre-fork 방식으로 1장의 프로세스 모델을 그대로 씁니다. 지금도 Django와 Flask를 운영할 때 가장 흔히 쓰입니다.'},
+   {year:'2018~2019',title:'ASGI',body:'async와 await가 퍼지고 WebSocket 같은 오래 열린 연결이 흔해지자 동기 함수 하나를 부르는 WSGI로는 부족해졌습니다. Django 팀을 중심으로 비동기 함수를 부르는 ASGI가 정리되었고 uvicorn 같은 서버와 FastAPI 같은 프레임워크가 그 위에서 동작합니다.'}
+  ],
+  decisions:[
+   {question:'왜 HTTP/1.1 요청은 빈 줄로 머리와 본문을 나눌까?',answer:'TCP는 메시지 경계가 없는 바이트 흐름이라 받는 쪽은 어디까지가 머리인지 알아야 합니다. 텍스트 줄 단위로 헤더를 적고 빈 줄 하나로 끝을 표시하면 사람이 읽기 쉽고 구현도 단순합니다. 본문은 길이가 제각각이라 Content-Length로 따로 알립니다.',cost:'텍스트를 해석하는 데 비용이 들고 헤더를 잘못 해석하는 구현 차이가 보안 문제(요청 밀수)를 만들기도 했습니다. HTTP/2는 이진 프레임으로 바꿨습니다.'},
+   {question:'왜 웹 서버와 앱을 나눴을까?',answer:'연결 관리, 바이트 읽기, HTTP 해석, keep-alive, 타임아웃은 어느 앱이든 똑같습니다. 이것을 웹 서버가 맡고 앱은 해석된 요청을 받아 응답만 돌려주게 하면 각자 따로 발전하고 바꿔 끼울 수 있습니다. WSGI와 ASGI가 그 경계의 약속입니다.',cost:'층이 하나 늘어 설정과 문제 지점이 늘어납니다. 타임아웃이 웹 서버, 앱 서버, 프록시에 각각 있어 서로 맞춰야 합니다.'},
+   {question:'왜 JSON이 API의 기본 형식이 되었을까?',answer:'XML은 태그와 스키마가 강력했지만 장황하고 다루기 번거로웠습니다. JSON은 문자열, 숫자, 배열, 객체 몇 가지만으로 대부분의 데이터를 표현하고 거의 모든 언어의 기본 자료구조와 바로 맞물려 쓰기 쉬웠습니다.',cost:'날짜와 큰 정수, 이진 데이터를 표현하는 표준 방법이 없어 서비스마다 관례가 다릅니다. 스키마가 없으니 검증은 따로 해야 합니다(5장 입력 검증).'}
+  ],
+  today:[
+   'Python 웹 앱은 직접 소켓 서버를 짜지 않고 gunicorn(WSGI)이나 uvicorn(ASGI) 위에 프레임워크를 올립니다. 컨테이너에서는 0.0.0.0의 정해진 포트에서 기다리게 합니다.',
+   '요청과 응답은 결국 바이트입니다. 문자 인코딩, Content-Type, Content-Length가 어긋나면 해석이 깨지니 디버깅할 때는 curl -v로 실제 바이트를 봅니다.',
+   'JSON의 날짜는 ISO 8601 문자열로, 큰 정수는 문자열로 주고받는 등 팀의 관례를 정하고 스키마로 검증합니다.'
+  ],
+  sources:[
+   ['CERN · The World Wide Web project (첫 웹사이트)','https://info.cern.ch/hypertext/WWW/TheProject.html'],
+   ['Apache HTTP Server · About the Apache HTTP Server Project','https://httpd.apache.org/ABOUT_APACHE.html'],
+   ['RFC 8259 · The JSON Data Interchange Format','https://www.rfc-editor.org/rfc/rfc8259'],
+   ['PEP 3333 · Python Web Server Gateway Interface v1.0.1','https://peps.python.org/pep-3333/'],
+   ['Gunicorn · Design (pre-fork worker model)','https://gunicorn.org/design/'],
+   ['ASGI · Introduction','https://asgi.readthedocs.io/en/latest/introduction.html']
+  ]
  }
 };

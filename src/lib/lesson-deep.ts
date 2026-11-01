@@ -1161,5 +1161,29 @@ export const deeps:Record<string,LessonDeep>={
    ['Python · ipaddress','https://docs.python.org/3/library/ipaddress.html'],
    ['Linux man-pages · traceroute(8)','https://man7.org/linux/man-pages/man8/traceroute.8.html']
   ]
+ },
+ webserver:{
+  definition:'서버 소켓은 socket으로 만들고 bind로 주소와 포트에 묶은 뒤 listen으로 연결을 받을 준비를 합니다. 클라이언트가 연결하면 운영체제가 TCP 핸드셰이크를 끝내고 연결을 대기열(backlog)에 넣습니다. 서버가 accept를 부르면 대기열에서 연결 하나를 꺼내 그 연결 전용의 새 소켓(파일 디스크립터)을 돌려주고 원래 소켓은 계속 다음 연결을 기다립니다. HTTP/1.1 요청은 "메서드 경로 버전" 요청 줄, "이름: 값" 헤더 줄들, 빈 줄, 본문 순서이며 줄은 CRLF(\\r\\n)로 끝납니다. 응답도 상태 줄, 헤더, 빈 줄, 본문 순서입니다.',
+  terms:[
+   ['listen과 backlog','연결을 받을 준비를 하고 핸드셰이크가 끝난 연결을 쌓아 둘 대기열의 크기를 정합니다.'],
+   ['accept','대기열에서 연결 하나를 꺼내 그 연결 전용 소켓을 돌려줍니다.'],
+   ['요청 줄','POST /orders HTTP/1.1처럼 메서드, 경로, 버전을 적은 첫 줄입니다.'],
+   ['Content-Length','본문의 바이트 수입니다. 서버는 이만큼 읽어야 본문이 끝났음을 압니다.'],
+   ['직렬화와 역직렬화','객체를 바이트(JSON 등)로 바꾸는 것과 그 반대입니다.'],
+   ['WSGI와 ASGI','웹 서버가 Python 앱의 함수를 부르는 동기와 비동기 약속입니다.']
+  ],
+  sections:[
+   {title:'요청 하나가 함수에 닿기까지',body:'gunicorn과 Flask를 예로 들면 이렇게 진행됩니다.',list:['gunicorn 마스터 프로세스가 0.0.0.0:8000 소켓을 열고 워커 프로세스들을 띄웁니다. 워커들은 같은 소켓에서 accept를 기다립니다.','연결이 오면 워커 하나가 accept로 받아 요청 줄과 헤더를 빈 줄까지 읽고 Content-Length만큼 본문을 읽습니다.','워커는 요청 정보를 environ이라는 dict에 담아 WSGI 약속대로 Flask 앱 함수를 부릅니다.','Flask는 경로를 보고 @app.route로 등록된 함수를 부르고 반환값을 응답 객체로 만듭니다.','워커는 상태 줄, 헤더, 본문을 바이트로 만들어 소켓에 쓰고 keep-alive면 같은 연결에서 다음 요청을 기다립니다.']},
+   {title:'TCP는 메시지가 아니라 바이트 흐름',body:'보내는 쪽이 send를 한 번 해도 받는 쪽의 recv는 여러 번에 나눠 받을 수 있고 여러 번 보낸 것이 한 번에 올 수도 있습니다. 2장 TCP 단원에서 본 대로 TCP는 순서와 도착만 보장하고 경계는 모릅니다. 그래서 HTTP/1.1은 빈 줄로 머리의 끝을, Content-Length나 청크 인코딩으로 본문의 끝을 알립니다. 직접 프로토콜을 만들 때도 길이를 앞에 붙이거나 구분자를 정해야 합니다.'},
+   {title:'직렬화의 경계에서 생기는 일',body:'JSON은 텍스트이고 파이썬 객체는 메모리 안의 구조입니다. 그 사이에서 몇 가지가 흔히 어긋납니다.',list:['바이트와 문자열: 소켓에서 온 것은 바이트이고 decode("utf-8")을 거쳐야 문자열입니다. 인코딩이 다르면 한글이 깨집니다.','날짜: JSON에는 날짜 형식이 없어서 json.dumps는 datetime을 그대로 바꾸지 못합니다. ISO 8601 문자열로 바꿔 보냅니다.','큰 정수: 자바스크립트는 2^53보다 큰 정수를 정확히 다루지 못해 ID를 문자열로 보내는 관례가 있습니다.','신뢰: 역직렬화한 값은 아직 검증되지 않은 외부 입력입니다. 5장 입력 검증 단원에서 다시 다룹니다.']},
+   {title:'직접 만든 서버를 운영에 쓰지 않는 이유',body:'Python의 http.server 모듈이나 손으로 짠 소켓 서버는 원리를 보기에 좋지만 운영에는 맞지 않습니다. 부분 수신, 느린 클라이언트(3장 프록시 단원), keep-alive와 파이프라이닝, 잘못된 요청, 거대한 헤더, 시그널을 받았을 때의 정상 종료처럼 처리해야 할 경우가 아주 많기 때문입니다. 공식 문서도 http.server를 운영에 쓰지 말라고 경고합니다. 원리를 이해한 뒤에는 검증된 서버에 맡깁니다.'}
+  ],
+  sources:[
+   ['RFC 9112 · HTTP/1.1 (메시지 형식)','https://www.rfc-editor.org/rfc/rfc9112'],
+   ['Python · socket','https://docs.python.org/3/library/socket.html'],
+   ['Python · http.server (운영 사용 경고)','https://docs.python.org/3/library/http.server.html'],
+   ['PEP 3333 · WSGI','https://peps.python.org/pep-3333/'],
+   ['RFC 8259 · JSON','https://www.rfc-editor.org/rfc/rfc8259']
+  ]
  }
 };

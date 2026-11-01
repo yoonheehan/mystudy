@@ -474,5 +474,16 @@ export const diagrams:Record<string,Diagram>={
    {rows:[['노트북 192.168.0.12','기본 게이트웨이로','64'],['공유기','기본 경로 → 통신사','63'],['통신사 라우터','203.0.0.0/8 과 203.0.113.0/24 중 더 긴 /24 선택 → 해외 회선','62']],highlight:[2],packet:'여러 경로가 맞으면 가장 구체적인 경로',caption:'통신사 라우터에는 이 주소에 맞는 경로가 여럿 있습니다. 가장 길게 맞는 /24를 고릅니다. 이 경로는 BGP로 다른 네트워크가 알려 준 것입니다.'},
    {rows:[['공유기','기본 경로 → 통신사','63'],['통신사 라우터','/24 → 해외 회선','62'],['백본 라우터 여러 대','각자 가장 구체적인 경로로 넘김','61 → 53'],['목적지 네트워크 라우터','203.0.113.10은 직접 연결된 네트워크 → 서버에 전달','52']],highlight:[3],packet:'도착 · TTL 52',caption:'백본 라우터 여러 대를 지나 목적지 네트워크에 도착합니다. 패킷마다 이 판단을 독립적으로 하므로 같은 연결의 패킷도 다른 길로 갈 수 있습니다.'},
    {rows:[['라우터 7번째','TTL이 0이 됨 → 패킷 버림, 시간 초과 메시지를 출발지로','0']],highlight:[0],packet:'traceroute: TTL을 1, 2, 3…으로 보내 본다',caption:'TTL이 0이 되면 라우터는 패킷을 버리고 출발지에 알립니다. 경로가 고리를 이뤄도 패킷이 영원히 돌지 않고 traceroute는 이 성질로 경로를 한 칸씩 밝힙니다.'}
+  ]},
+ webserver:{kind:'sequence',title:'브라우저의 POST /orders가 Flask 함수에 닿기까지',lanes:['브라우저','운영체제 소켓','gunicorn 워커','Flask 앱'],
+  steps:[
+   {from:2,to:1,label:'bind 0.0.0.0:8000 · listen',tone:'note',caption:'서버가 소켓을 포트 8000에 묶고 연결을 기다립니다. 0.0.0.0이라 모든 네트워크 인터페이스에서 받습니다.'},
+   {from:0,to:1,label:'TCP 연결 (SYN → SYN-ACK → ACK)',caption:'2장에서 본 핸드셰이크는 운영체제가 처리합니다. 끝난 연결은 대기열에 쌓입니다.'},
+   {from:1,to:2,label:'accept → 새 소켓 fd 4',caption:'워커가 accept로 연결 하나를 꺼내면 그 연결 전용 소켓 fd 4가 생깁니다. 원래 소켓은 다음 연결을 계속 기다립니다.'},
+   {from:0,to:2,label:'POST /orders HTTP/1.1 · 헤더 · 빈 줄',caption:'요청 줄과 헤더가 도착합니다. 워커는 빈 줄(\\r\\n\\r\\n)이 나올 때까지 읽습니다.'},
+   {from:0,to:2,label:'본문 {"item": 42, …} (두 번에 나뉘어 도착)',tone:'wait',caption:'TCP는 바이트 흐름이라 본문이 여러 번에 나눠 도착할 수 있습니다. 워커는 Content-Length만큼 다 읽을 때까지 기다립니다.'},
+   {from:2,to:3,label:'WSGI: app(environ, start_response)',caption:'해석한 요청을 environ dict에 담아 Flask 앱을 부릅니다. Flask는 경로를 보고 @app.route 함수를 고릅니다.'},
+   {from:3,to:2,label:'dict → JSON 직렬화 · 201',caption:'함수가 돌려준 dict를 Flask가 JSON 문자열로 바꾸고 상태 코드와 헤더를 정합니다.'},
+   {from:2,to:0,label:'HTTP/1.1 201 Created · Content-Length · 본문',caption:'워커가 상태 줄, 헤더, 빈 줄, 본문을 바이트로 만들어 fd 4에 씁니다. keep-alive면 같은 연결에서 다음 요청을 기다립니다.'}
   ]}
 };

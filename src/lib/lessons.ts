@@ -42,6 +42,8 @@ export const sources = {
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ rfc9112: { name: 'RFC 9112 · HTTP/1.1', url: 'https://www.rfc-editor.org/rfc/rfc9112' },
+ pyWsgi: { name: 'PEP 3333 · WSGI', url: 'https://peps.python.org/pep-3333/' },
  rfc791: { name: 'RFC 791 · Internet Protocol', url: 'https://www.rfc-editor.org/rfc/rfc791' },
  pyIpaddress: { name: 'Python · ipaddress', url: 'https://docs.python.org/3/library/ipaddress.html' },
  fsyncMan: { name: 'Linux man-pages · fsync', url: 'https://man7.org/linux/man-pages/man2/fsync.2.html' },
@@ -524,13 +526,41 @@ for dest in ["10.0.3.7", "10.0.9.1", "203.0.113.10"]:
     print(dest, "→", next_hop(dest))
 
 net = ipaddress.ip_network("10.0.3.0/24")
-print(net.num_addresses, net[0], net[-1])   # 256 10.0.3.0 10.0.3.255`,codeNotes:['10.0.3.7은 세 경로 모두에 들어가지만 접두사가 가장 긴 /24가 선택됩니다. 라우터가 실제로 하는 일과 같습니다.','0.0.0.0/0은 모든 주소에 맞는 기본 경로입니다. 더 구체적인 경로가 없을 때만 쓰입니다.','ipaddress 모듈로 내 VPC의 CIDR에 주소가 몇 개 들어가는지, 두 범위가 겹치는지(overlaps) 확인해 보세요.'],answer:'인터넷은 데이터를 패킷으로 나눠 목적지 IP 주소를 붙여 보내는 패킷 교환 네트워크입니다. 라우터는 패킷마다 라우팅 테이블에서 목적지와 가장 길게 맞는 경로를 골라 다음 라우터로 넘기고 TTL로 무한히 도는 패킷을 막습니다. IP는 전달만 최선을 다하고 순서와 재전송은 TCP가 맡는 층 구조라서 각 층을 나눠 진단할 수 있습니다.',follow:[['IP 주소와 MAC 주소는 어떻게 다른가요?','IP 주소는 인터넷 전체에서 목적지를 찾는 논리적 주소이고 MAC 주소는 같은 네트워크 안에서 다음 장비에 프레임을 전달할 때 쓰는 하드웨어 주소입니다. 패킷이 라우터를 지날 때마다 MAC 주소는 바뀌지만 IP 주소는 그대로입니다.'],['traceroute는 어떻게 경로를 알아내나요?','TTL을 1, 2, 3으로 늘리며 패킷을 보냅니다. TTL이 0이 된 라우터가 시간 초과 메시지를 돌려주므로 몇 번째 라우터가 어디인지 차례로 알 수 있습니다.']],memory:'잘라서, 주소를 붙여, 우체국마다 가장 구체적인 길로. 순서와 분실은 위층이 챙긴다.',mistake:'인터넷이 전화처럼 출발지와 목적지 사이에 고정된 선을 잇는다고 생각하지 마세요. 패킷마다 독립적으로 길을 찾습니다.',quiz:{question:'라우팅 테이블에 0.0.0.0/0, 10.0.0.0/16, 10.0.3.0/24가 있을 때 10.0.3.7로 가는 패킷은 어느 경로를 쓰나요?',options:['0.0.0.0/0','10.0.0.0/16','10.0.3.0/24'],correct:2,explanation:'라우터는 목적지와 가장 길게 맞는(가장 구체적인) 접두사를 고릅니다.'},refs:['rfc791','pyIpaddress']})
+print(net.num_addresses, net[0], net[-1])   # 256 10.0.3.0 10.0.3.255`,codeNotes:['10.0.3.7은 세 경로 모두에 들어가지만 접두사가 가장 긴 /24가 선택됩니다. 라우터가 실제로 하는 일과 같습니다.','0.0.0.0/0은 모든 주소에 맞는 기본 경로입니다. 더 구체적인 경로가 없을 때만 쓰입니다.','ipaddress 모듈로 내 VPC의 CIDR에 주소가 몇 개 들어가는지, 두 범위가 겹치는지(overlaps) 확인해 보세요.'],answer:'인터넷은 데이터를 패킷으로 나눠 목적지 IP 주소를 붙여 보내는 패킷 교환 네트워크입니다. 라우터는 패킷마다 라우팅 테이블에서 목적지와 가장 길게 맞는 경로를 골라 다음 라우터로 넘기고 TTL로 무한히 도는 패킷을 막습니다. IP는 전달만 최선을 다하고 순서와 재전송은 TCP가 맡는 층 구조라서 각 층을 나눠 진단할 수 있습니다.',follow:[['IP 주소와 MAC 주소는 어떻게 다른가요?','IP 주소는 인터넷 전체에서 목적지를 찾는 논리적 주소이고 MAC 주소는 같은 네트워크 안에서 다음 장비에 프레임을 전달할 때 쓰는 하드웨어 주소입니다. 패킷이 라우터를 지날 때마다 MAC 주소는 바뀌지만 IP 주소는 그대로입니다.'],['traceroute는 어떻게 경로를 알아내나요?','TTL을 1, 2, 3으로 늘리며 패킷을 보냅니다. TTL이 0이 된 라우터가 시간 초과 메시지를 돌려주므로 몇 번째 라우터가 어디인지 차례로 알 수 있습니다.']],memory:'잘라서, 주소를 붙여, 우체국마다 가장 구체적인 길로. 순서와 분실은 위층이 챙긴다.',mistake:'인터넷이 전화처럼 출발지와 목적지 사이에 고정된 선을 잇는다고 생각하지 마세요. 패킷마다 독립적으로 길을 찾습니다.',quiz:{question:'라우팅 테이블에 0.0.0.0/0, 10.0.0.0/16, 10.0.3.0/24가 있을 때 10.0.3.7로 가는 패킷은 어느 경로를 쓰나요?',options:['0.0.0.0/0','10.0.0.0/16','10.0.3.0/24'],correct:2,explanation:'라우터는 목적지와 가장 길게 맞는(가장 구체적인) 접두사를 고릅니다.'},refs:['rfc791','pyIpaddress']}),
+l({id:'webserver',category:2,title:'웹 서버는 요청을 어떻게 받나',english:'Socket / accept / HTTP Parsing / JSON / WSGI',hook:'Flask의 @app.route 아래 함수는 누가, 언제 부르는 걸까?',definition:'웹 서버는 특정 포트에서 연결을 기다리다가 요청이 오면 바이트를 읽어 HTTP 요청으로 해석하고 응답을 만들어 돌려주는 프로그램입니다. 운영체제의 소켓 API로 주소와 포트에 묶고(bind) 연결을 기다리며(listen) 연결이 오면 받아들여(accept) 그 연결 전용 소켓으로 읽고 씁니다. HTTP/1.1 요청은 요청 줄, 헤더, 빈 줄, 본문으로 이뤄진 텍스트이고 서버는 빈 줄까지 읽어 헤더를 해석한 뒤 Content-Length만큼 본문을 읽습니다. API는 보통 본문에 JSON을 담고 서버는 이를 파이썬 객체로 바꿨다가(역직렬화) 응답을 다시 JSON 바이트로 바꿉니다(직렬화). Python에서는 gunicorn 같은 서버가 이 일을 맡고 WSGI라는 약속으로 Flask나 Django의 함수를 부릅니다.',analogy:'식당에 비유하면 소켓은 가게 문, 포트는 문 번호, listen은 문을 열고 기다리는 것, accept는 손님 한 명을 자리로 안내해 전담 직원을 붙이는 것입니다. 주문서(HTTP 요청)에는 정해진 양식이 있어서 맨 윗줄에 무엇을 원하는지, 아래에 요청 사항(헤더)을 적고 한 줄을 비운 뒤 상세 내용(본문)을 적습니다. 주방(프레임워크의 함수)은 주문서를 해석한 결과만 받아 요리하고 홀 직원(웹 서버)이 그릇에 담아(직렬화) 내갑니다.',steps:['서버가 소켓을 만들어 0.0.0.0:8000에 묶고 연결을 기다립니다.','운영체제가 TCP 핸드셰이크를 끝낸 연결을 대기열에 넣고 서버가 accept로 하나를 꺼냅니다.','서버는 빈 줄이 나올 때까지 읽어 요청 줄과 헤더를 해석하고 Content-Length만큼 본문을 읽습니다.','경로에 맞는 함수를 불러 결과를 JSON으로 직렬화하고 상태 줄과 헤더를 붙여 응답을 보냅니다.'],scenario:'개발 중에는 잘 되던 API가 운영에서 큰 요청 본문을 보내면 가끔 JSON 해석 오류를 냈습니다. 서버가 recv 한 번에 요청 전체가 온다고 가정했기 때문입니다. TCP는 메시지 경계를 지키지 않는 바이트 흐름이라 큰 본문은 여러 번에 나눠 도착합니다. 직접 만든 서버를 걷어 내고 Content-Length만큼 끝까지 읽어 주는 검증된 서버(gunicorn)와 프레임워크로 바꿨습니다.',aws:'ALB 같은 로드 밸런서가 HTTP를 받아 대상 그룹의 앱 서버 포트로 넘깁니다. 앱 컨테이너는 0.0.0.0의 정해진 포트에서 기다려야 하고 헬스 체크 경로에 200을 돌려줘야 트래픽을 받습니다.',ncloud:'Load Balancer의 리스너와 대상 그룹이 같은 역할을 합니다. 서버의 ACG에서 앱 포트를 로드 밸런서에만 열어 두고 앱은 그 포트에서 기다리게 합니다.',tradeoff:'소켓과 HTTP 해석을 직접 짜면 원리는 잘 보이지만 부분 수신, keep-alive, 느린 클라이언트, 잘못된 요청 같은 수많은 경우를 처리해야 합니다. 그래서 운영에서는 검증된 웹 서버와 프레임워크에 맡기고 우리는 업무 로직에 집중합니다.',language:'Python · HTTP 요청을 손으로 해석하고 응답 만들기',code:`import json
+
+raw = (b"POST /orders HTTP/1.1\\r\\n"
+       b"Host: shop.example.com\\r\\n"
+       b"Content-Type: application/json\\r\\n"
+       b"Content-Length: 24\\r\\n"
+       b"\\r\\n"
+       b'{"item": 42, "qty": 2}  ')
+
+head, _, body = raw.partition(b"\\r\\n\\r\\n")        # 빈 줄에서 머리와 본문을 나눈다
+request_line, *header_lines = head.decode().split("\\r\\n")
+method, path, version = request_line.split(" ")
+headers = dict(line.split(": ", 1) for line in header_lines)
+data = json.loads(body[: int(headers["Content-Length"])])   # 역직렬화
+print(method, path, data)
+
+payload = json.dumps({"orderId": 5531, "qty": data["qty"]}).encode()  # 직렬화
+response = (b"HTTP/1.1 201 Created\\r\\n"
+            b"Content-Type: application/json\\r\\n"
+            + f"Content-Length: {len(payload)}\\r\\n\\r\\n".encode() + payload)
+print(response.decode())
+
+# 실제 소켓 서버의 뼈대(PC에서 직접 실행해 볼 때만):
+# import socket
+# with socket.create_server(("127.0.0.1", 8000)) as server:
+#     conn, addr = server.accept()          # 연결 하나를 받아
+#     request = conn.recv(65536)            # 바이트를 읽고(한 번에 다 온다는 보장은 없다)
+#     conn.sendall(response)                # 응답을 보낸다`,codeNotes:['요청은 바이트이고 빈 줄(\\r\\n\\r\\n)이 머리와 본문의 경계입니다. 본문 길이는 Content-Length가 알려 줍니다.','json.loads와 json.dumps가 역직렬화와 직렬화입니다. 바이트, 문자열, 파이썬 객체 사이를 오가는 경계를 눈여겨보세요.','맨 아래 주석의 소켓 코드는 recv 한 번에 요청이 다 온다고 가정해서 학습용으로만 적었습니다. 실제 서버는 Content-Length만큼 끝까지 읽어야 합니다.'],answer:'웹 서버는 소켓을 포트에 묶어 연결을 기다리고 accept로 받은 연결에서 바이트를 읽어 HTTP 요청으로 해석합니다. 빈 줄까지 요청 줄과 헤더를 읽고 Content-Length만큼 본문을 읽은 뒤 경로에 맞는 함수를 부르고 결과를 JSON으로 직렬화해 응답합니다. 운영에서는 부분 수신과 keep-alive, 느린 클라이언트를 처리하는 검증된 서버(gunicorn, uvicorn)에 맡기고 WSGI나 ASGI로 프레임워크와 연결하겠습니다.',follow:[['TCP로 보낸 메시지가 한 번에 오지 않는 이유는?','TCP는 메시지 단위가 아니라 순서가 보장된 바이트 흐름입니다. 보낸 쪽의 send 한 번이 받는 쪽의 recv 여러 번으로 나뉘거나 여러 send가 한 recv로 합쳐질 수 있습니다. 그래서 HTTP는 빈 줄과 Content-Length로 경계를 정합니다.'],['WSGI와 ASGI는 무엇이 다른가요?','WSGI는 요청 하나를 받아 응답 하나를 돌려주는 동기 함수의 약속입니다. ASGI는 async 함수로 요청을 처리하고 WebSocket처럼 오래 열린 연결도 다룰 수 있게 넓힌 약속입니다.']],memory:'문을 열고(bind·listen), 손님을 받고(accept), 주문서를 빈 줄까지 읽고, 길이만큼 본문을 읽는다.',mistake:'recv 한 번이면 요청 전체가 온다고 가정하지 마세요. TCP는 바이트 흐름이라 경계는 HTTP 규칙으로 찾아야 합니다.',quiz:{question:'HTTP/1.1 서버가 요청 본문이 어디서 끝나는지 아는 방법은?',options:['TCP 패킷이 끝나면','Content-Length 헤더(또는 청크 인코딩)를 보고','연결이 끊기면 항상'],correct:1,explanation:'TCP는 경계를 주지 않으므로 HTTP는 Content-Length나 청크 인코딩으로 본문의 끝을 알립니다.'},refs:['rfc9112','pyWsgi']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
  1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'filesystem', 'linux', 'diagnosis'],
  0: ['internet', 'dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
- 2: ['kit', 'rest', 'async', 'proxy', 'ratelimit'],
+ 2: ['webserver', 'kit', 'rest', 'async', 'proxy', 'ratelimit'],
  3: ['normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
  5: ['session', 'cors', 'validation', 'iam'],
  4: ['docker', 'vpc', 'lb', 'storage', 'kubernetes'],

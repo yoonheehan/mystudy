@@ -464,7 +464,7 @@ export const stories: Record<string, LessonStory> = {
     '모든 실시간 기능이 양방향일 필요는 없습니다. 알림이나 진행률처럼 서버에서 클라이언트로만 보내면 된다면 HTML 표준의 **Server-Sent Events**가 더 단순합니다. 평범한 HTTP 응답을 길게 열어 두고 이벤트를 한 줄씩 흘려보내는 방식이라 인증과 프록시를 그대로 쓰고 끊기면 브라우저가 알아서 다시 연결합니다. 몇십 초에 한 번 바뀌는 정보라면 폴링이 여전히 가장 운영하기 쉬운 답입니다. 기술을 고를 때는 얼마나 자주, 어느 방향으로 메시지가 오가는지를 먼저 봅니다.'
    ]}
   ],
-  to: '이 장에서 요청이 서버의 문 앞까지 오는 길을 모두 봤습니다. 다음 장에서는 문 안으로 들어가 서버가 요청을 받아 검증하고 처리하는 과정을 봅니다.',
+  to: '이 장에서 요청이 서버의 문 앞까지 오는 길을 모두 봤습니다. 다음 장은 문 안으로 들어가 서버 프로그램이 연결을 받아 바이트를 HTTP 요청으로 읽어 내는 바닥부터 시작합니다.',
   books: [
    { title: 'High Performance Browser Networking', by: 'Ilya Grigorik', where: '15장 XMLHttpRequest(폴링과 롱 폴링), 16장 Server-Sent Events, 17장 WebSocket', note: '폴링에서 SSE, WebSocket으로 넘어가는 이유와 각각의 비용을 이 단원과 같은 순서로 비교합니다.', url: 'https://hpbn.co/websocket/' },
    { title: 'Computer Networking: A Top-Down Approach (컴퓨터 네트워킹: 하향식 접근)', by: 'James F. Kurose, Keith W. Ross', where: '2장 애플리케이션 계층 (HTTP와 지속 연결)', note: 'WebSocket이 바꾸려 한 HTTP의 요청·응답 구조를 복습할 때 봅니다.' }
@@ -476,7 +476,7 @@ export const stories: Record<string, LessonStory> = {
   ]
  },
  kit: {
-  from: '2장에서 요청이 서버의 문 앞까지 오는 길을 따라왔습니다. 이 장에서는 문 안으로 들어가 서버가 요청을 받아 처리하는 과정을 봅니다. 첫 질문은 "무엇을 브라우저에 맡기고 무엇을 서버가 해야 하는가"입니다.',
+  from: '앞 단원에서 웹 서버가 요청을 받아 해석하고 우리가 적은 함수까지 전달하는 과정을 봤습니다. 이번 질문은 그 함수가 들어온 값을 얼마나 믿어도 되는가, 즉 무엇을 브라우저에 맡기고 무엇을 서버가 해야 하는가입니다.',
   parts: [
    { heading: '문서를 돌려주던 서버가 프로그램을 실행하기까지', paragraphs: [
     '초기 웹 서버는 디스크에 있는 HTML 파일을 그대로 돌려줬습니다. 하지만 검색 결과나 방명록처럼 요청마다 내용이 달라지는 페이지가 필요해지자 1993년 NCSA의 웹 서버는 요청이 오면 외부 프로그램을 실행하고 그 출력을 응답으로 보내는 방법을 넣었습니다. 이것이 **CGI**입니다. 웹 서버와 프로그램 사이의 약속만 정했기 때문에 Perl이든 C든 어떤 언어로도 동적 페이지를 만들 수 있었습니다.',
@@ -1480,6 +1480,51 @@ export const stories: Record<string, LessonStory> = {
    { title: 'The Design Philosophy of the DARPA Internet Protocols', by: 'David D. Clark', where: 'SIGCOMM, 1988', note: '인터넷이 무엇을 우선해서 지금의 모양이 되었는지 설계자 스스로 정리한 논문입니다. 짧고 읽기 쉽습니다.', url: 'https://doi.org/10.1145/52324.52336' },
    { title: 'RFC 791 · Internet Protocol', by: 'Jon Postel (편집)', where: 'IETF, 1981', note: 'IPv4 규격입니다. 머리말 그림이 유명합니다.', url: 'https://www.rfc-editor.org/rfc/rfc791' },
    { title: 'More details about the October 4 outage', by: 'Santosh Janardhan (Meta)', where: 'Meta Engineering 블로그, 2021', note: 'BGP 경로 철회가 어떻게 전체 서비스를 사라지게 했는지 설명한 글입니다.', url: 'https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/' }
+  ]
+ },
+ webserver: {
+  question: 'Flask에 함수 하나를 적었을 뿐인데 그 함수는 누가, 언제, 어떻게 불러서 브라우저에 응답을 돌려줄까요?',
+  from: '2장에서 요청이 서버의 문 앞까지 오는 길을 따라왔습니다. 이 장은 문 안으로 들어갑니다. 첫 단원에서는 서버 프로그램이 연결을 받아 바이트를 HTTP 요청으로 읽어 내는 바닥부터 봅니다.',
+  parts: [
+   { heading: '파일을 돌려주던 첫 웹 서버', paragraphs: [
+    '1990년 CERN의 팀 버너스리가 만든 첫 웹 서버가 한 일은 단순했습니다. 요청에 적힌 경로를 보고 디스크의 HTML 파일을 그대로 돌려줬습니다. 그가 만든 첫 웹사이트는 지금도 info.cern.ch에 남아 있습니다. 하지만 이 단순한 일 아래에는 몇 가지 단계가 숨어 있습니다. 연결을 받고, 바이트를 읽고, 그 바이트가 무슨 요청인지 해석하고, 응답을 다시 바이트로 만들어 보내는 일입니다. 이 단원은 그 단계를 하나씩 엽니다.'
+   ]},
+   { heading: '운영체제가 열어 주는 문: 소켓', paragraphs: [
+    '1장 진단 단원에서 프로그램은 운영체제가 제공하는 **소켓**으로 통신한다고 했습니다. 서버 프로그램은 소켓을 하나 만들어 주소와 **포트**에 묶고(bind) 연결을 받을 준비를 합니다(listen). 포트는 한 컴퓨터 안에서 여러 프로그램을 구분하는 번호입니다. 2장에서 IP 주소가 컴퓨터를 찾는다면 포트는 그 컴퓨터 안의 어느 프로그램인지를 찾습니다.',
+    '클라이언트가 연결해 오면 2장에서 본 TCP 핸드셰이크는 운영체제가 알아서 처리하고 끝난 연결을 대기열에 쌓아 둡니다. 서버가 **accept**를 부르면 운영체제는 대기열에서 연결 하나를 꺼내 그 연결 전용의 새 소켓을 돌려줍니다. 1장 파일 시스템 단원에서 본 것처럼 이것도 파일 디스크립터입니다. 서버는 이 번호로 읽고 쓰고 원래 소켓은 계속 다음 손님을 기다립니다.'
+   ]},
+   { heading: '바이트를 요청으로 읽어 내기: HTTP의 형식', paragraphs: [
+    '연결에서 읽은 것은 그냥 바이트입니다. 여기서 놓치기 쉬운 사실이 있습니다. 2장 TCP 단원에서 본 대로 TCP는 순서와 도착은 보장하지만 메시지의 경계는 모릅니다. 브라우저가 요청을 한 번에 보내도 서버는 그것을 두 번, 세 번에 나눠 받을 수 있습니다. 그렇다면 서버는 요청이 어디서 끝나는지 어떻게 알까요?',
+    '그래서 HTTP/1.1은 형식으로 경계를 정했습니다. 첫 줄은 POST /orders HTTP/1.1처럼 메서드, 경로, 버전을 적은 **요청 줄**이고 그 아래에 Host: shop.example.com 같은 **헤더**가 한 줄씩 옵니다. 헤더가 끝나면 빈 줄 하나를 둡니다. 서버는 빈 줄이 나올 때까지 읽으면 머리가 끝났음을 압니다. 그 뒤의 **본문**은 길이가 제각각이라 헤더의 **Content-Length**가 몇 바이트인지 알려 줍니다. 사람이 읽을 수 있는 텍스트라서 1990년대 개발자들은 telnet으로 직접 요청을 쳐 보며 서버를 디버깅했습니다. 이 단원의 Python 예제가 바로 이 형식을 손으로 해석해 봅니다.'
+   ]},
+   { heading: '객체와 바이트 사이: JSON과 직렬화', paragraphs: [
+    '초기 웹은 본문에 HTML을 담았지만 지금의 API는 대부분 **JSON**을 담습니다. 2000년대 초 더글러스 크록퍼드는 자바스크립트의 객체 표기법이 데이터를 주고받기에 충분히 좋다는 것을 알아차리고 json.org에 정리했습니다. 당시 주류였던 XML보다 훨씬 단순해서 Ajax와 함께 빠르게 퍼졌습니다.',
+    '서버 안에서 데이터는 파이썬의 dict나 list 같은 객체이고 네트워크로 나가는 것은 바이트입니다. 객체를 JSON 바이트로 바꾸는 것을 **직렬화**, 그 반대를 **역직렬화**라고 합니다. 이 경계에서 자주 문제가 생깁니다. 바이트를 문자열로 바꿀 때 인코딩이 다르면 한글이 깨지고 JSON에는 날짜 형식이 없어서 따로 약속해야 합니다. 그리고 역직렬화한 값은 아직 누가 보냈는지 모르는 외부 입력이라는 점도 기억해 둡니다. 이 장의 다음 단원이 바로 그 이야기입니다.'
+   ]},
+   { heading: '웹 서버와 앱을 나누는 약속: WSGI', paragraphs: [
+    '연결을 받고, 바이트를 읽고, HTTP를 해석하는 일은 어느 웹 앱이든 똑같습니다. 그런데 2000년대 초 Python에서는 웹 프레임워크마다 웹 서버와 붙는 방식이 달라서 서버와 프레임워크를 자유롭게 조합할 수 없었습니다. 2003년 PEP 333은 웹 서버가 요청 정보를 dict에 담아 앱의 함수 하나를 부르고 앱은 상태와 헤더, 본문을 돌려준다는 단순한 약속, **WSGI**를 정했습니다.',
+    '이 약속 덕분에 일이 깔끔하게 나뉘었습니다. gunicorn 같은 웹 서버는 1장에서 본 프로세스 모델로 워커를 띄워 연결과 HTTP를 처리하고 Flask나 Django는 해석된 요청을 받아 경로에 맞는 함수를 부르는 일만 합니다. 우리가 @app.route 아래에 적은 함수는 이 사슬의 맨 끝에서 불립니다. 2018년 무렵에는 3장 뒤의 비동기 단원에서 볼 async 함수와 WebSocket을 위해 같은 생각을 넓힌 **ASGI**가 나왔습니다. 이 단원의 그림이 요청 하나가 이 사슬을 지나 함수에 닿는 과정을 보여 줍니다.'
+   ]},
+   { heading: '원리를 안 뒤에는 검증된 서버에', paragraphs: [
+    '이 단원처럼 소켓과 HTTP를 직접 다뤄 보면 원리가 잘 보입니다. 하지만 운영 서버를 직접 짜는 것은 다른 이야기입니다. 본문이 나눠 도착하는 경우, 연결을 재사용하는 keep-alive, 요청을 아주 천천히 보내는 클라이언트, 잘못된 형식, 종료 신호를 받았을 때 처리 중인 요청을 마무리하는 일까지 모두 처리해야 합니다. Python의 http.server 모듈 문서도 운영에 쓰지 말라고 경고합니다. 원리는 이해하되 실제로는 gunicorn이나 uvicorn 같은 검증된 서버에 맡기고 우리는 업무 로직에 집중합니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: '클라이언트가 한 번에 보낸 요청은 서버의 recv 한 번에 다 도착한다.', truth: 'TCP는 경계가 없는 바이트 흐름이라 나눠서 오거나 합쳐서 올 수 있습니다. HTTP는 빈 줄과 Content-Length로 경계를 정하고 서버는 그만큼 끝까지 읽어야 합니다.' },
+   { belief: 'Flask가 직접 포트를 열고 연결을 받는다.', truth: '운영에서는 gunicorn 같은 웹 서버가 소켓과 HTTP를 처리하고 WSGI 약속에 따라 Flask 앱의 함수를 부릅니다. flask run의 개발 서버는 개발용입니다.' },
+   { belief: 'JSON으로 받은 데이터는 이미 형식이 맞는 안전한 데이터다.', truth: '역직렬화는 바이트를 객체로 바꿨을 뿐입니다. 필드가 빠졌거나 타입이 틀렸거나 악의적인 값일 수 있어서 따로 검증해야 합니다.' }
+  ],
+  to: '서버가 요청을 받아 함수까지 전달하는 과정을 봤습니다. 그렇다면 그 함수는 들어온 값을 그대로 믿어도 될까요? 무엇을 브라우저에 맡기고 무엇을 서버가 다시 확인해야 할까요? 다음 단원 브라우저와 서버의 경계가 이 질문을 다룹니다.',
+  books: [
+   { title: 'Computer Networking: A Top-Down Approach (컴퓨터 네트워킹: 하향식 접근)', by: 'James F. Kurose, Keith W. Ross', where: '2장 애플리케이션 계층 (웹과 HTTP, 소켓 프로그래밍)', note: 'Python으로 TCP 서버와 클라이언트를 직접 짜 보는 절이 있습니다. 이 단원과 가장 가까운 교과서입니다.' },
+   { title: 'The Linux Programming Interface (리눅스 API의 모든 것)', by: 'Michael Kerrisk', where: '56~61장 소켓 (특히 59장 인터넷 도메인 소켓, 61장 고급 소켓 주제)', note: 'bind, listen, accept와 대기열, 부분 읽기와 쓰기가 커널에서 어떻게 동작하는지 자세히 설명합니다.', url: 'https://man7.org/tlpi/' },
+   { title: 'UNIX Network Programming, Volume 1: The Sockets Networking API', by: 'W. Richard Stevens, Bill Fenner, Andrew M. Rudoff', where: '3판 1~6장 기초 소켓 프로그래밍과 서버 설계', note: '소켓 프로그래밍의 고전입니다. 반복 서버, 프로세스별 서버, 다중화 서버를 차례로 비교합니다.' }
+  ],
+  papers: [
+   { title: 'RFC 9112 · HTTP/1.1', by: 'R. Fielding, M. Nottingham, J. Reschke (편)', where: 'IETF, 2022', note: '요청 줄, 헤더, 본문 길이를 정하는 HTTP/1.1 메시지 형식입니다.', url: 'https://www.rfc-editor.org/rfc/rfc9112' },
+   { title: 'PEP 3333 · Python Web Server Gateway Interface v1.0.1', by: 'Phillip J. Eby', where: 'Python, 2010 (처음은 2003년 PEP 333)', note: 'WSGI를 정한 문서입니다. 앞부분의 동기 설명이 왜 이런 약속이 필요했는지 보여 줍니다.', url: 'https://peps.python.org/pep-3333/' },
+   { title: 'RFC 8259 · The JSON Data Interchange Format', by: 'T. Bray (편)', where: 'IETF, 2017', note: '현재 JSON 규격입니다. 짧아서 한 번에 읽을 수 있습니다.', url: 'https://www.rfc-editor.org/rfc/rfc8259' },
+   { title: 'Introducing JSON', by: 'Douglas Crockford', where: 'json.org', note: 'JSON 문법을 그림 몇 장으로 정리한 원래 페이지입니다.', url: 'https://www.json.org/json-en.html' }
   ]
  }
 };
