@@ -42,6 +42,7 @@ export const sources = {
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ passwordStorage: { name: 'OWASP · Password Storage', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html' },
  pySqlite: { name: 'Python · sqlite3', url: 'https://docs.python.org/3/library/sqlite3.html' },
  rfc9112: { name: 'RFC 9112 · HTTP/1.1', url: 'https://www.rfc-editor.org/rfc/rfc9112' },
  pyWsgi: { name: 'PEP 3333 · WSGI', url: 'https://peps.python.org/pep-3333/' },
@@ -581,7 +582,23 @@ for sql, params in [
     except sqlite3.IntegrityError as error:
         print("DB가 거절:", error)
 
-print(db.execute("SELECT c.name, o.total FROM orders o JOIN customers c ON c.id = o.customer_id").fetchall())`,codeNotes:['?는 값을 SQL 문장과 따로 넘기는 자리입니다. 문자열을 이어 붙이지 않으므로 5장의 SQL 인젝션이 생기지 않습니다.','UNIQUE와 REFERENCES를 어긴 두 INSERT를 DB가 IntegrityError로 거절하는 것을 확인하세요. 앱 코드가 검사하지 않아도 DB가 막습니다.','SQLite는 하위 호환 때문에 외래 키 검사가 기본으로 꺼져 있습니다. PRAGMA 줄을 지우고 실행하면 없는 고객의 주문이 들어갑니다.'],answer:'DBMS는 여러 프로그램이 같은 데이터를 동시에 안전하게 다루도록 저장, 동시성, 복구, 제약을 맡는 소프트웨어입니다. 관계형 DB는 데이터를 테이블에 두고 기본 키로 행을 구별하며 외래 키로 테이블을 잇습니다. SQL로 원하는 결과를 선언하면 찾는 방법은 DB가 정하고 NOT NULL, UNIQUE, 외래 키 같은 제약으로 잘못된 데이터를 DB 수준에서 막겠습니다.',follow:[['기본 키로 자동 증가 숫자와 UUID 중 무엇을 쓰나요?','자동 증가 숫자는 작고 정렬되어 인덱스에 유리하지만 개수와 순서가 드러나고 여러 DB에서 만들면 겹칩니다. UUID는 어디서 만들어도 겹치지 않지만 크고 무작위라 인덱스에 불리해서 시간 순서가 들어간 UUIDv7 같은 형식을 쓰기도 합니다.'],['제약 조건은 앱에서 검사하면 되지 않나요?','앱의 검사는 사용자에게 친절한 오류를 주는 데 좋지만 동시에 들어온 두 요청이나 다른 경로(관리 스크립트, 다른 서비스)는 막지 못합니다. 마지막 방어선은 DB의 제약 조건입니다.']],memory:'표로 저장하고, 키로 잇고, 원하는 것을 SQL로 말하고, 틀린 데이터는 DB가 막는다.',mistake:'SQL 문장에 사용자 입력을 문자열로 이어 붙이지 마세요. 값은 언제나 매개변수(?, %s)로 넘깁니다.',quiz:{question:'orders.customer_id에 외래 키를 걸었을 때 존재하지 않는 고객 ID로 주문을 넣으면?',options:['그대로 들어간다','DB가 제약 위반으로 거절한다','고객이 자동으로 생긴다'],correct:1,explanation:'외래 키는 참조하는 행이 반드시 있어야 한다는 제약이라 DB가 INSERT를 거절합니다.'},refs:['pySqlite','joins']})
+print(db.execute("SELECT c.name, o.total FROM orders o JOIN customers c ON c.id = o.customer_id").fetchall())`,codeNotes:['?는 값을 SQL 문장과 따로 넘기는 자리입니다. 문자열을 이어 붙이지 않으므로 5장의 SQL 인젝션이 생기지 않습니다.','UNIQUE와 REFERENCES를 어긴 두 INSERT를 DB가 IntegrityError로 거절하는 것을 확인하세요. 앱 코드가 검사하지 않아도 DB가 막습니다.','SQLite는 하위 호환 때문에 외래 키 검사가 기본으로 꺼져 있습니다. PRAGMA 줄을 지우고 실행하면 없는 고객의 주문이 들어갑니다.'],answer:'DBMS는 여러 프로그램이 같은 데이터를 동시에 안전하게 다루도록 저장, 동시성, 복구, 제약을 맡는 소프트웨어입니다. 관계형 DB는 데이터를 테이블에 두고 기본 키로 행을 구별하며 외래 키로 테이블을 잇습니다. SQL로 원하는 결과를 선언하면 찾는 방법은 DB가 정하고 NOT NULL, UNIQUE, 외래 키 같은 제약으로 잘못된 데이터를 DB 수준에서 막겠습니다.',follow:[['기본 키로 자동 증가 숫자와 UUID 중 무엇을 쓰나요?','자동 증가 숫자는 작고 정렬되어 인덱스에 유리하지만 개수와 순서가 드러나고 여러 DB에서 만들면 겹칩니다. UUID는 어디서 만들어도 겹치지 않지만 크고 무작위라 인덱스에 불리해서 시간 순서가 들어간 UUIDv7 같은 형식을 쓰기도 합니다.'],['제약 조건은 앱에서 검사하면 되지 않나요?','앱의 검사는 사용자에게 친절한 오류를 주는 데 좋지만 동시에 들어온 두 요청이나 다른 경로(관리 스크립트, 다른 서비스)는 막지 못합니다. 마지막 방어선은 DB의 제약 조건입니다.']],memory:'표로 저장하고, 키로 잇고, 원하는 것을 SQL로 말하고, 틀린 데이터는 DB가 막는다.',mistake:'SQL 문장에 사용자 입력을 문자열로 이어 붙이지 마세요. 값은 언제나 매개변수(?, %s)로 넘깁니다.',quiz:{question:'orders.customer_id에 외래 키를 걸었을 때 존재하지 않는 고객 ID로 주문을 넣으면?',options:['그대로 들어간다','DB가 제약 위반으로 거절한다','고객이 자동으로 생긴다'],correct:1,explanation:'외래 키는 참조하는 행이 반드시 있어야 한다는 제약이라 DB가 INSERT를 거절합니다.'},refs:['pySqlite','joins']}),
+l({id:'password',category:5,title:'비밀번호와 로그인',english:'Password Hashing / Salt / bcrypt · scrypt · Argon2 / MFA',hook:'DB가 통째로 유출돼도 사용자의 비밀번호는 지킬 수 있을까?',definition:'로그인은 사용자가 아는 것(비밀번호), 가진 것(휴대폰, 보안 키), 자기 자신(생체 정보) 중 하나 이상으로 신원을 증명하는 일입니다. 서버는 비밀번호를 그대로 저장하지 않고 되돌릴 수 없는 해시로 바꿔 저장한 뒤 로그인 때 입력값을 같은 방법으로 해시해 비교합니다. 사용자마다 다른 무작위 값인 솔트를 섞어 같은 비밀번호도 다른 해시가 되게 하고 bcrypt, scrypt, Argon2처럼 일부러 느리고 메모리를 많이 쓰는 함수를 써서 유출된 해시를 대량으로 맞춰 보는 공격을 어렵게 합니다. 비밀번호 하나에 의존하지 않도록 일회용 코드나 보안 키를 더하는 것이 다중 인증(MFA)입니다.',analogy:'열쇠를 맡기는 대신 열쇠의 본을 뜬 석고 틀만 보관하는 것과 비슷합니다. 손님이 열쇠를 가져오면 틀에 맞는지만 확인합니다. 틀을 도둑맞아도 거기서 열쇠를 바로 만들 수는 없습니다. 다만 도둑이 수많은 열쇠를 깎아 틀에 대 볼 수 있으니 틀에 맞춰 보는 데 일부러 한참 걸리게 만들고(느린 해시), 손님마다 틀에 무늬를 다르게 새겨(솔트) 한 번에 여러 틀을 맞춰 볼 수 없게 합니다.',steps:['가입할 때 사용자마다 무작위 솔트를 만들고 비밀번호와 함께 느린 해시 함수에 넣습니다.','해시 결과, 솔트, 사용한 알고리즘과 비용 값을 함께 저장하고 비밀번호 자체는 버립니다.','로그인할 때 저장된 솔트와 비용으로 입력값을 다시 해시하고 상수 시간 비교로 맞는지 확인합니다.','맞으면 세션이나 토큰을 발급하고 실패가 반복되면 속도 제한과 추가 인증을 겁니다.'],scenario:'오래된 서비스를 넘겨받아 보니 비밀번호가 솔트 없는 MD5로 저장되어 있었습니다. 유출되면 미리 계산된 표로 대부분이 몇 분 안에 풀리는 형식입니다. 다음 로그인 때 입력된 비밀번호를 Argon2로 다시 해시해 저장하고, 그사이 로그인하지 않은 계정은 기존 MD5 해시를 다시 Argon2로 감싸 두었다가 로그인 시 교체하는 방식으로 옮겼습니다.',aws:'Amazon Cognito를 쓰면 비밀번호 저장, MFA, 계정 잠금, 비밀번호 재설정을 직접 구현하지 않아도 됩니다. 직접 구현한다면 해시는 앱에서 만들고 DB에는 해시만 저장하며 DB 접근은 5장의 IAM과 비밀 관리로 제한합니다.',ncloud:'직접 회원 기능을 만든다면 비밀번호 해시를 Cloud DB에 저장하고 DB 접속 정보는 Secret Manager 같은 비밀 저장소에 둡니다. 외부 인증 서비스 연동도 검토합니다.',tradeoff:'해시를 느리게 할수록 공격자의 대입 비용이 커지지만 로그인마다 서버 CPU와 메모리도 그만큼 씁니다. 로그인 요청이 몰리면 해시 계산이 병목이 될 수 있어 비용 값은 로그인 한 번에 수십~수백 ms가 되도록 측정해 정하고 로그인 경로에는 속도 제한을 겁니다.',language:'Python · scrypt로 비밀번호를 해시하고 확인하기',code:`import hashlib, hmac, os
+
+def hash_password(password, salt=None):
+    salt = salt or os.urandom(16)                     # 사용자마다 다른 무작위 솔트
+    digest = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1)
+    return salt, digest
+
+def verify(password, salt, stored):
+    _, digest = hash_password(password, salt)
+    return hmac.compare_digest(digest, stored)       # 상수 시간 비교
+
+salt_a, hash_a = hash_password("correct horse")
+salt_b, hash_b = hash_password("correct horse")      # 같은 비밀번호, 다른 솔트
+print("해시가 같은가:", hash_a == hash_b)              # False
+print("맞는 비밀번호:", verify("correct horse", salt_a, hash_a))
+print("틀린 비밀번호:", verify("correct h0rse", salt_a, hash_a))`,codeNotes:['같은 비밀번호도 솔트가 다르면 해시가 완전히 달라집니다. 그래서 유출된 DB에서 같은 비밀번호를 쓰는 사람을 찾을 수 없고 미리 계산한 표도 쓸 수 없습니다.','n=2**14는 scrypt의 비용 값입니다. 숫자를 늘려 가며 실행 시간이 어떻게 변하는지 재 보세요. 운영에서는 로그인 한 번이 수십~수백 ms가 되도록 정합니다.','hmac.compare_digest는 앞에서부터 다른 글자를 찾는 즉시 멈추지 않아 비교 시간으로 정답을 추측하는 공격을 막습니다. 실무에서는 argon2-cffi나 bcrypt 라이브러리가 솔트와 비용을 한 문자열에 담아 관리해 줍니다.'],answer:'비밀번호는 되돌릴 수 없는 해시로 저장하고 사용자마다 다른 솔트를 섞어 같은 비밀번호도 다른 해시가 되게 하겠습니다. 해시 함수는 bcrypt, scrypt, Argon2처럼 일부러 느리고 메모리를 쓰는 것을 골라 유출되더라도 대량 대입을 어렵게 하고 비교는 상수 시간으로 합니다. 로그인 경로에는 속도 제한과 다중 인증을 더하고 유출된 비밀번호 목록과 대조하는 정책도 검토합니다.',follow:[['SHA-256으로 해시하면 안 되나요?','SHA-256은 빠르게 계산하도록 설계되어 GPU로 초당 수십억 개를 맞춰 볼 수 있습니다. 비밀번호에는 일부러 느리고 메모리를 많이 쓰는 함수가 필요합니다.'],['비밀번호를 주기적으로 바꾸게 하는 것이 좋은가요?','NIST SP 800-63B는 이유 없는 주기적 변경을 요구하지 말라고 권합니다. 사람들이 예측 가능한 변형(Password1, Password2)을 쓰게 될 뿐입니다. 대신 유출 목록에 있는 비밀번호를 막고 유출이 의심될 때 바꾸게 합니다.']],memory:'저장하지 말고 해시로, 모두 다르게 솔트로, 맞춰 보기 힘들게 느리게. 비밀번호 하나에 기대지 않는다.',mistake:'비밀번호를 암호화(되돌릴 수 있는 방식)하거나 MD5, SHA-1, SHA-256 같은 빠른 해시로 저장하지 마세요.',quiz:{question:'비밀번호 해시에 사용자마다 다른 솔트를 섞는 가장 큰 이유는?',options:['해시를 더 짧게 만들려고','같은 비밀번호라도 해시가 달라져 미리 계산한 표와 일괄 대입을 막으려고','비밀번호를 나중에 복원하려고'],correct:1,explanation:'솔트가 다르면 같은 비밀번호도 다른 해시가 되어 한 번의 계산으로 여러 계정을 맞출 수 없습니다.'},refs:['passwordStorage','auth']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
@@ -589,7 +606,7 @@ const sequence: Record<number, string[]> = {
  0: ['internet', 'dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
  2: ['webserver', 'kit', 'rest', 'async', 'proxy', 'ratelimit'],
  3: ['sqlbasics', 'normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
- 5: ['session', 'cors', 'validation', 'iam'],
+ 5: ['password', 'session', 'cors', 'validation', 'iam'],
  4: ['docker', 'vpc', 'lb', 'storage', 'kubernetes'],
  6: ['git', 'pytest', 'cicd', 'observability', 'scale', 'recovery']
 };

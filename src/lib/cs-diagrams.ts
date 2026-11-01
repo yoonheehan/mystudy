@@ -493,5 +493,22 @@ export const diagrams:Record<string,Diagram>={
    {rows:[['1','민수','minsu@example.com']],highlight:[0],packet:'INSERT … ("지은", "minsu@example.com")  → 거절: UNIQUE constraint failed',caption:'같은 이메일을 다시 넣으려 하자 DB가 거절합니다. 앱이 검사를 빠뜨려도, 두 요청이 동시에 들어와도 DB가 막습니다.'},
    {rows:[['1','민수','minsu@example.com'],['2','지은','jieun@example.com']],highlight:[1],packet:'INSERT … ("지은", "jieun@example.com")',caption:'다른 이메일이면 들어갑니다. 행마다 겹치지 않는 기본 키가 붙어 다른 테이블이 이 번호로 고객을 가리킬 수 있습니다.'},
    {rows:[['2','지은','jieun@example.com']],highlight:[0],packet:'SELECT id, name, email FROM customers WHERE email LIKE \'j%\'',caption:'SELECT는 원하는 조건만 적습니다. 어떤 순서로 찾을지는 DB가 정합니다. 결과는 조건에 맞는 행들입니다.'}
+  ]},
+ password:{kind:'flow',title:'민수가 로그인할 때 서버가 비밀번호를 확인하는 과정',
+  nodes:[
+   {label:'요청 받기',sub:'HTTPS로 아이디와 비밀번호'},
+   {label:'속도 제한 확인',sub:'계정·IP별 실패 횟수'},
+   {label:'저장된 값 꺼내기',sub:'알고리즘 · 비용 · 솔트 · 해시'},
+   {label:'느린 해시 계산',sub:'Argon2id(입력, 솔트) ≈ 80ms'},
+   {label:'상수 시간 비교',sub:'compare_digest'},
+   {label:'세션 발급',sub:'다음 단원'}
+  ],
+  steps:[
+   {active:0,status:{0:'ok'},caption:'비밀번호는 HTTPS로만 받습니다. 2장 TLS 단원에서 본 암호화가 없으면 중간에서 그대로 보입니다. 서버 로그에도 남기지 않습니다.'},
+   {active:1,status:{0:'ok',1:'ok'},caption:'이 계정과 IP의 최근 실패 횟수를 확인합니다. 너무 많으면 해시를 계산하기 전에 거절합니다. 해시 계산 자체가 비싸기 때문입니다.'},
+   {active:2,status:{0:'ok',1:'ok',2:'ok'},caption:'DB에는 비밀번호가 없습니다. 가입 때 저장한 알고리즘, 비용 값, 민수만의 솔트, 해시 결과가 있을 뿐입니다.'},
+   {active:3,status:{0:'ok',1:'ok',2:'ok',3:'ok'},caption:'입력된 비밀번호를 같은 솔트와 비용으로 다시 해시합니다. 일부러 느리게 만든 함수라 한 번에 수십 밀리초가 걸립니다. 공격자에게는 시도마다 이 비용이 듭니다.'},
+   {active:4,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'fail'},result:'불일치 · "아이디 또는 비밀번호가 틀렸습니다"',caption:'틀린 비밀번호라면 두 해시가 다릅니다. 아이디가 없는 경우와 같은 메시지를 돌려줘 가입 여부를 드러내지 않고 실패 횟수를 올립니다.'},
+   {active:5,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'ok',5:'ok'},result:'일치 · 세션 ID 발급',caption:'맞는 비밀번호로 다시 시도하면 해시가 일치합니다. 서버는 이제 비밀번호 대신 예측할 수 없는 세션 ID를 발급하고 이후 요청은 그것으로 확인합니다.'}
   ]}
 };

@@ -1417,5 +1417,33 @@ export const histories:Record<string,LessonHistory>={
    ['PostgreSQL · A Brief History of PostgreSQL','https://www.postgresql.org/docs/current/history.html'],
    ['SQLite · Most Widely Deployed SQL Database Engine','https://www.sqlite.org/mostdeployed.html']
   ]
+ },
+ password:{
+  intro:'비밀번호는 컴퓨터를 여러 사람이 나눠 쓰기 시작한 순간 함께 생겼습니다. 그리고 생기자마자 털렸습니다. 그 뒤 60년의 역사는 비밀번호를 어떻게 저장해야 털려도 덜 위험한지, 그리고 비밀번호 하나에 얼마나 기대지 않을 수 있는지를 찾아온 과정입니다.',
+  timeline:[
+   {year:'1961~1962',title:'첫 비밀번호와 첫 유출',body:'MIT의 시분할 시스템 CTSS는 사용자마다 쓸 수 있는 시간을 나누려고 비밀번호를 도입했습니다. 1962년 박사 과정 학생 앨런 셔는 사용 시간을 늘리려고 비밀번호 파일을 출력하게 만들었고 다른 사람들에게도 나눠 줬습니다. 그는 25년 뒤에야 이를 고백했습니다. 비밀번호 파일을 평문으로 두면 어떻게 되는지 보여 준 첫 사례입니다.'},
+   {year:'1979',title:'모리스와 톰슨의 비밀번호 보안',body:'벨 연구소의 로버트 모리스와 켄 톰슨은 논문 「Password Security: A Case History」에서 UNIX가 비밀번호를 어떻게 지키게 되었는지 정리했습니다. 비밀번호를 평문 대신 일방향 함수로 바꿔 저장하고, 사용자마다 다른 솔트를 섞고, 계산을 일부러 느리게 했습니다. 지금의 비밀번호 저장 원칙이 거의 모두 이 논문에 있습니다.'},
+   {year:'1999',title:'bcrypt',body:'닐스 프로보스와 데이비드 마지에르는 컴퓨터가 빨라져도 비용 값만 올리면 계속 느리게 만들 수 있는 비밀번호 해시 bcrypt를 발표했습니다. 하드웨어가 발전할수록 공격자도 빨라진다는 점을 처음부터 설계에 넣은 것입니다.'},
+   {year:'2009~2015',title:'GPU와 메모리를 쓰는 해시',body:'GPU로 단순한 해시를 초당 수십억 개씩 계산할 수 있게 되자 CPU 시간만 늘리는 것으로는 부족해졌습니다. 2009년 콜린 퍼시벌의 scrypt는 많은 메모리를 요구해 GPU와 전용 칩의 병렬 공격을 비싸게 만들었습니다. 2015년 공개 경쟁인 Password Hashing Competition에서 Argon2가 우승했고 2021년 RFC 9106으로 표준이 되었습니다.'},
+   {year:'2011~2022',title:'비밀번호 너머로',body:'2011년 RFC 6238은 휴대폰 앱이 30초마다 바뀌는 일회용 코드를 만드는 TOTP를 정했습니다. 2013년부터 트로이 헌트의 Have I Been Pwned는 유출된 계정 정보를 모아 내 계정이 털렸는지 확인하게 해 줬습니다. 2019년 W3C의 WebAuthn은 비밀을 서버에 보내지 않고 기기 안의 키로 서명해 로그인하는 방식을 표준으로 만들었고 이것이 지금의 패스키로 이어졌습니다.'}
+  ],
+  decisions:[
+   {question:'왜 비밀번호를 암호화하지 않고 해시할까?',answer:'암호화는 키가 있으면 되돌릴 수 있습니다. 서버가 키를 갖고 있으니 서버가 털리면 키도 함께 털릴 수 있습니다. 해시는 되돌리는 방법 자체가 없어서 서버도 원래 비밀번호를 모르고 로그인 때 다시 해시한 값만 비교합니다.',cost:'서버가 비밀번호를 모르니 "비밀번호 찾기"는 불가능하고 재설정만 가능합니다. 해시 방식을 바꾸려면 사용자가 다시 로그인할 때까지 기다려야 합니다.'},
+   {question:'왜 해시를 일부러 느리게 할까?',answer:'유출된 해시를 가진 공격자는 흔한 비밀번호 목록을 하나씩 해시해 맞춰 봅니다. 해시 한 번이 1마이크로초면 하루에 수백억 번을 시도하지만 100밀리초면 같은 시간에 수십만 번밖에 못 합니다. 정상 사용자는 로그인할 때 한 번만 계산하니 거의 느끼지 못합니다.',cost:'로그인마다 서버 자원을 씁니다. 로그인 요청이 몰리거나 공격자가 로그인을 대량으로 시도하면 해시 계산이 병목이 될 수 있어 속도 제한이 꼭 함께 있어야 합니다.'},
+   {question:'왜 비밀번호 하나로 끝내지 않을까?',answer:'사람들은 같은 비밀번호를 여러 곳에 쓰고 피싱에 속기도 합니다. 다른 사이트에서 유출된 계정 정보를 그대로 대입하는 공격도 흔합니다. 휴대폰이나 보안 키처럼 다른 종류의 증명을 하나 더 요구하면 비밀번호가 새어도 로그인하지 못합니다.',cost:'사용자의 불편이 늘고 휴대폰을 잃어버렸을 때의 복구 절차가 새로운 공격 지점이 됩니다.'}
+  ],
+  today:[
+   '비밀번호는 Argon2id, scrypt, bcrypt 중 하나로 해시하고 검증된 라이브러리를 씁니다. 직접 해시 방식을 설계하지 않습니다.',
+   'NIST SP 800-63B처럼 길이를 충분히 허용하고, 이유 없는 주기적 변경을 강요하지 않고, 유출 목록에 있는 비밀번호를 막습니다.',
+   '로그인 경로에는 계정 기준과 IP 기준의 속도 제한을 걸고 중요한 서비스에는 다중 인증이나 패스키를 제공합니다. 직접 만들 이유가 없다면 Cognito 같은 인증 서비스를 검토합니다.'
+  ],
+  sources:[
+   ['Wired · The World’s First Computer Password? It Was Useless Too (2012)','https://www.wired.com/2012/01/computer-password/'],
+   ['Morris & Thompson, Password Security: A Case History (CACM, 1979)','https://doi.org/10.1145/359168.359172'],
+   ['Provos & Mazières, A Future-Adaptable Password Scheme (USENIX, 1999)','https://www.usenix.org/legacy/events/usenix99/provos.html'],
+   ['RFC 9106 · Argon2','https://www.rfc-editor.org/rfc/rfc9106'],
+   ['RFC 6238 · TOTP','https://www.rfc-editor.org/rfc/rfc6238'],
+   ['Have I Been Pwned · About','https://haveibeenpwned.com/About']
+  ]
  }
 };
