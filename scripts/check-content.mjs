@@ -114,6 +114,23 @@ const order=chapterOrder.flatMap(c=>lessons.filter(l=>l.category===c).map(l=>l.i
 for(const id of ids)check(stories[id],`${id}: missing story`);
 for(const [id,story] of Object.entries(stories))if(story.from){const prev=order[order.indexOf(id)-1];check(stories[prev]?.to,`${id}: story starts from the previous lesson, but '${prev}' has no closing hand-off`);}
 
+// Every story opens with a key question and closes with misconceptions to correct.
+for(const id of ids)if(stories[id])check(stories[id].question&&(stories[id].misconceptions||[]).length>=2,`${id}: story needs a key question and at least 2 misconceptions`);
+
+// Key terms: bolded in their home lesson; earlier lessons that use one explain it or point ahead in the same paragraph.
+const {keyTerms}=load('src/lib/key-terms.ts');
+const storyParas=id=>stories[id].parts.flatMap(p=>p.paragraphs);
+const pointsAhead=/단원|장에서|장의|다음|뒤에서|뒤의|앞에서|앞의/;
+const escapeRe=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+for(const [term,home] of Object.entries(keyTerms)){
+ check(ids.has(home),`keyTerms: '${term}' points at unknown lesson '${home}'`);
+ if(!ids.has(home))continue;
+ const used=new RegExp('(^|[^가-힣])'+escapeRe(term)),bolded=new RegExp('\\*\\*[^*]*'+escapeRe(term)+'[^*]*\\*\\*');
+ check(storyParas(home).some(p=>bolded.test(p)),`keyTerms: '${term}' is not bolded in its home lesson '${home}'`);
+ for(const id of order.slice(0,order.indexOf(home)))for(const p of storyParas(id))
+  check(!used.test(p)||bolded.test(p)||pointsAhead.test(p),`keyTerms: '${term}' is used in '${id}' before '${home}' explains it: ${p.slice(0,50)}…`);
+}
+
 // Chapter openers line up with chapters and are complete when written.
 const {chapterIntros,chapterNames}=load('src/lib/lesson-context.ts');
 check(chapterIntros.length===chapterNames.length,'chapterIntros must have one slot per chapter');
