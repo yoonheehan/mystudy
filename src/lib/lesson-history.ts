@@ -1587,5 +1587,89 @@ export const histories:Record<string,LessonHistory>={
    ['Google SRE Book · Practical Alerting (Borgmon)','https://sre.google/sre-book/practical-alerting/'],
    ['Graphite Documentation','https://graphite.readthedocs.io/en/latest/']
   ]
+ },
+ orm:{
+  intro:'관계형 DB는 표와 집합으로 생각하고 프로그램은 객체와 참조로 생각합니다. 이 둘을 잇는 코드를 매번 손으로 쓰던 개발자들이 그 반복을 라이브러리로 옮긴 것이 ORM이고, 연결을 여는 비용을 없애려고 연결을 돌려 쓰게 만든 것이 커넥션 풀입니다.',
+  timeline:[
+   {year:'1990년대',title:'객체와 표의 불일치',body:'Smalltalk, C++, Java 같은 객체 지향 언어가 퍼지면서 객체를 표로 쪼개 저장하고 다시 조립하는 코드가 프로그램의 큰 부분을 차지했습니다. 상속, 참조, 컬렉션 같은 객체의 개념이 표에는 없어서 이 어긋남을 객체 관계 임피던스 불일치라고 불렀습니다. Smalltalk용 TOPLink 같은 초기 매핑 도구가 나왔습니다.'},
+   {year:'2001~2002',title:'Hibernate와 PoEAA',body:'개빈 킹은 Java 진영의 무거운 표준(EJB 엔티티 빈)에 대한 대안으로 Hibernate를 만들었습니다. 2002년 마틴 파울러의 『Patterns of Enterprise Application Architecture』는 Active Record, Data Mapper, Unit of Work, Identity Map, Lazy Load 같은 패턴 이름을 붙여 ORM이 하는 일을 정리했습니다.'},
+   {year:'2004~2006',title:'Rails ActiveRecord와 SQLAlchemy',body:'Ruby on Rails의 ActiveRecord는 표 하나를 클래스 하나로 그대로 대응시켜 웹 개발을 빠르게 만들었습니다. 2006년 마이크 베이어의 SQLAlchemy는 SQL을 감추기보다 SQL을 파이썬으로 조립하는 층(Core)과 Data Mapper 방식의 ORM을 나눠 제공했습니다. Django ORM도 같은 시기에 나왔습니다.'},
+   {year:'2006',title:'"컴퓨터 과학의 베트남"',body:'테드 뉴어드는 ORM이 처음엔 쉬워 보이지만 끝없는 예외 처리에 빠진다고 비판하는 글을 썼고 ORM 논쟁의 상징이 되었습니다. 이후 파울러는 ORM이 문제를 완벽히 풀 수는 없지만 반복 코드의 대부분을 없애 준다고 정리했습니다(OrmHate, 2012).'},
+   {year:'2007',title:'PgBouncer',body:'PostgreSQL은 연결마다 서버 프로세스를 하나씩 만들어 연결이 비쌉니다. Skype가 공개한 PgBouncer는 수많은 앱 연결을 적은 수의 실제 DB 연결에 나눠 태우는 프록시로, 연결 수 문제의 표준 해법이 되었습니다.'},
+   {year:'2010년대',title:'풀 크기는 작게',body:'Java의 HikariCP 등은 풀 크기가 클수록 좋다는 직관이 틀렸다는 것을 측정으로 보였습니다. DB가 동시에 처리할 수 있는 일은 코어와 디스크 수에 묶여 있어서 연결을 줄이면 오히려 처리량이 늘었습니다. 서버리스가 퍼지자 RDS Proxy 같은 관리형 연결 프록시도 생겼습니다.'}
+  ],
+  decisions:[
+   {question:'왜 ORM은 연관 데이터를 기본으로 늦게 가져올까?',answer:'주문을 읽을 때마다 고객, 상품, 배송 정보를 모두 함께 가져오면 쓰지 않을 데이터까지 읽게 됩니다. 접근할 때 가져오는 지연 로딩은 어떤 화면에서든 필요한 만큼만 읽는 안전한 기본값입니다.',cost:'목록에서 항목마다 연관 데이터에 접근하면 N+1 쿼리가 됩니다. 화면마다 필요한 연관 데이터를 즉시 로딩으로 명시해야 합니다.'},
+   {question:'왜 연결을 미리 열어 두고 돌려 쓸까?',answer:'연결 하나를 열려면 2장에서 본 TCP 연결, TLS, 인증을 거치고 PostgreSQL은 서버 프로세스까지 만듭니다. 수 ms가 드는 일을 요청마다 반복하면 쿼리보다 연결이 더 오래 걸립니다.',cost:'열어 둔 연결은 DB의 자원을 계속 차지하고 DB의 최대 연결 수를 나눠 갖습니다. 앱 서버를 늘리면 연결도 함께 늘어 한도를 넘을 수 있습니다.'},
+   {question:'왜 풀이 꽉 차면 기다리게 할까?',answer:'연결을 더 만들어 주면 당장은 빨라 보이지만 DB가 동시에 처리할 수 있는 양을 넘으면 모든 쿼리가 함께 느려집니다. 앱 쪽에서 줄을 세우는 것이 DB를 지키는 방법입니다.',cost:'기다림이 길어지면 요청이 타임아웃됩니다. 풀 대기 시간을 지표로 보고 느린 쿼리나 연결을 오래 쥐는 코드(트랜잭션 안의 외부 API 호출 등)를 찾아야 합니다.'}
+  ],
+  today:[
+   '대부분의 서비스가 SQLAlchemy, Django ORM, JPA 같은 ORM으로 단순한 조회와 저장을 하고 복잡한 집계는 직접 SQL을 씁니다.',
+   '개발 중에 SQL 로그를 켜고, 중요한 API에는 쿼리 수를 확인하는 테스트를 두어 N+1이 다시 생기지 않게 막습니다.',
+   '앱 서버 수 × 풀 크기를 DB 최대 연결 수 아래로 맞추고, 서버가 많거나 서버리스라면 PgBouncer나 RDS Proxy를 앞에 둡니다.'
+  ],
+  sources:[
+   ['Martin Fowler · Catalog of Patterns of Enterprise Application Architecture','https://martinfowler.com/eaaCatalog/'],
+   ['Martin Fowler · OrmHate (2012)','https://martinfowler.com/bliki/OrmHate.html'],
+   ['SQLAlchemy · Relationship Loading Techniques','https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html'],
+   ['PgBouncer','https://www.pgbouncer.org/'],
+   ['HikariCP · About Pool Sizing','https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing']
+  ]
+ },
+ oauth:{
+  intro:'2000년대 중반 웹 서비스들이 서로의 데이터를 가져다 쓰기 시작했습니다. 새 SNS가 "친구를 찾아 드릴게요"라며 메일 계정의 비밀번호를 물었고 사람들은 그것을 입력했습니다. 비밀번호를 넘기는 이 관행을 끝내려는 시도가 OAuth입니다.',
+  timeline:[
+   {year:'2006~2007',title:'비밀번호 반패턴과 OAuth 1.0',body:'Twitter의 블레인 쿡과 크리스 메시나 등은 Twitter API에 OpenID 로그인을 연결하려다 위임 인가를 위한 표준이 없다는 것을 알게 되었습니다. 여러 회사의 개발자가 모여 2007년 OAuth 1.0을 발표했고 2010년 RFC 5849로 정리되었습니다. 요청마다 서명을 계산해야 해서 구현이 까다로웠습니다.'},
+   {year:'2012',title:'OAuth 2.0',body:'RFC 6749는 서명 대신 TLS 위에서 토큰을 그대로 보내는(Bearer) 방식으로 단순화하고 웹, 모바일, 서버 간 호출 등 여러 흐름을 정의했습니다. 편집자였던 에런 해머는 표준이 너무 느슨해져 안전하게 구현하기 어렵다며 중간에 물러났고, 이 비판은 이후 보안 권고들로 이어졌습니다.'},
+   {year:'2014',title:'OpenID Connect',body:'OAuth의 액세스 토큰은 사용자가 누구인지 표준적으로 말해 주지 않아 회사마다 로그인 방식이 달랐습니다. OpenID Connect는 OAuth 2.0 위에 사용자 정보를 담은 서명된 ID 토큰(JWT)과 openid 범위를 더해 로그인을 표준화했습니다.'},
+   {year:'2015',title:'PKCE',body:'모바일 앱은 클라이언트 시크릿을 안전하게 숨길 수 없고 같은 기기의 다른 앱이 돌아오는 주소를 가로챌 수 있었습니다. RFC 7636의 PKCE는 흐름을 시작한 앱만 인가 코드를 토큰으로 바꿀 수 있게 했고 지금은 모든 클라이언트에 권장됩니다.'},
+   {year:'2025',title:'보안 권고와 OAuth 2.1',body:'RFC 9700(OAuth 2.0 Security Best Current Practice)은 implicit 흐름과 비밀번호를 직접 받는 흐름을 쓰지 말고 인가 코드 + PKCE를 쓰라고 정리했습니다. 이런 권고를 하나로 모은 OAuth 2.1 초안이 진행 중입니다.'}
+  ],
+  decisions:[
+   {question:'왜 비밀번호 대신 토큰일까?',answer:'토큰은 범위(캘린더 읽기만), 수명(1시간), 대상(이 앱만)이 정해져 있고 사용자가 언제든 회수할 수 있습니다. 비밀번호는 모든 권한을 영구히 넘기고 바꾸지 않는 한 회수할 수 없습니다. 앱이 해킹당해도 피해가 토큰의 범위로 제한됩니다.',cost:'토큰을 발급하고 검증하고 회수하는 권한 서버와 흐름이 필요해 구조가 복잡해집니다.'},
+   {question:'왜 토큰을 바로 주지 않고 코드를 거칠까?',answer:'브라우저 주소로 오가는 값은 기록, 로그, 리퍼러에 남을 수 있습니다. 그래서 브라우저로는 짧게 살고 한 번만 쓸 수 있는 코드만 보내고, 실제 토큰은 우리 서버가 권한 서버와 직접 TLS로 주고받습니다. PKCE는 그 코드를 가로채도 쓸 수 없게 합니다.',cost:'왕복이 한 번 더 늘고 앱이 state와 verifier를 요청 사이에 기억해야 합니다.'},
+   {question:'왜 로그인에 액세스 토큰을 쓰면 안 될까?',answer:'액세스 토큰은 API를 호출하라고 준 것이지 누구에게 발급됐는지 증명하라고 준 것이 아닙니다. 다른 앱에 발급된 액세스 토큰을 가져와 내 앱에 내밀면 그 사용자로 로그인되는 사고가 실제로 있었습니다. ID 토큰은 대상(aud)이 내 앱으로 정해져 있어 이를 막습니다.',cost:'ID 토큰의 서명 키를 받아 오고 발급자, 대상, 만료, nonce를 모두 검증해야 합니다. 검증된 라이브러리를 쓰는 이유입니다.'}
+  ],
+  today:[
+   '소셜 로그인과 사내 SSO는 OpenID Connect로, 외부 API 접근은 OAuth 2.0 액세스 토큰으로 합니다. 흐름은 웹, 모바일, SPA 모두 인가 코드 + PKCE입니다.',
+   '권한 서버를 직접 만들기보다 Cognito, Auth0, Keycloak 같은 제품이나 구글·카카오·네이버의 제공자를 쓰고 앱은 검증된 라이브러리로 연동합니다.',
+   '로그인 뒤에는 5장 세션 단원의 방식대로 우리 서비스의 세션을 따로 두고, 외부 API용 토큰은 최소 범위로 받아 서버에만 보관합니다.'
+  ],
+  sources:[
+   ['RFC 6749 · The OAuth 2.0 Authorization Framework (2012)','https://www.rfc-editor.org/rfc/rfc6749'],
+   ['RFC 7636 · Proof Key for Code Exchange (PKCE) (2015)','https://www.rfc-editor.org/rfc/rfc7636'],
+   ['OpenID Connect Core 1.0','https://openid.net/specs/openid-connect-core-1_0.html'],
+   ['RFC 9700 · OAuth 2.0 Security Best Current Practice (2025)','https://www.rfc-editor.org/rfc/rfc9700'],
+   ['RFC 5849 · The OAuth 1.0 Protocol (2010)','https://www.rfc-editor.org/rfc/rfc5849']
+  ]
+ },
+ microservices:{
+  intro:'처음 서비스는 대개 하나의 프로그램입니다. 그것이 자연스럽고 빠릅니다. 문제는 성공한 뒤에 옵니다. 코드와 팀이 함께 커지면서 하나의 프로그램이 모두의 발목을 잡는 순간이 오고, 회사들은 그것을 나누기 시작했습니다. 그리고 나눈 대가를 치르며 언제 나눠야 하는지를 배웠습니다.',
+  timeline:[
+   {year:'1968',title:'콘웨이의 법칙',body:'멜빈 콘웨이는 「How Do Committees Invent?」에서 시스템을 설계하는 조직은 자기 조직의 소통 구조를 닮은 설계를 만든다고 썼습니다. 팀 구조와 시스템 구조가 함께 간다는 이 관찰은 50년 뒤 마이크로서비스 논의의 출발점이 되었습니다.'},
+   {year:'2000년대 초',title:'Amazon의 서비스 전환',body:'Amazon은 웹사이트 전체가 하나의 거대한 애플리케이션이던 구조를 팀마다 소유하는 서비스들로 나누고 서로 API로만 대화하게 했습니다. 2006년 CTO 베르너 보겔스는 ACM Queue 인터뷰에서 이 경험을 "만든 사람이 운영한다(you build it, you run it)"로 요약했습니다.'},
+   {year:'2000년대',title:'SOA와 ESB',body:'기업들은 서비스 지향 아키텍처(SOA)라는 이름으로 시스템을 서비스로 나눴지만 무거운 표준(SOAP, WS-*)과 모든 메시지를 중앙의 엔터프라이즈 서비스 버스(ESB)로 보내는 구조 때문에 버스가 새로운 병목이 되곤 했습니다.'},
+   {year:'2008~2016',title:'Netflix의 클라우드 이전',body:'2008년 DB 손상으로 DVD 배송이 사흘간 멈춘 뒤 Netflix는 데이터센터의 단일 애플리케이션을 AWS 위의 수백 개 서비스로 옮기기 시작해 2016년 마쳤습니다. 그 과정에서 만든 API 게이트웨이 Zuul, 서킷 브레이커 Hystrix, 장애를 일부러 일으키는 Chaos Monkey를 오픈소스로 공개했습니다.'},
+   {year:'2014~2015',title:'이름과 반작용',body:'제임스 루이스와 마틴 파울러의 글 「Microservices」가 업무 능력 단위로 나눈 작고 독립적으로 배포되는 서비스들이라는 정의를 퍼뜨렸습니다. 이듬해 파울러는 「MonolithFirst」에서 성공한 마이크로서비스 대부분이 모놀리스에서 출발했다며 처음부터 나누지 말라고 덧붙였습니다.'},
+   {year:'2018~2023',title:'다시 합치기',body:'Segment는 2018년 「Goodbye Microservices」에서 수백 개로 나눈 서비스를 다시 하나로 합친 경험을 공개했고, 2023년 Amazon Prime Video 팀은 영상 품질 감시 시스템을 서버리스 서비스들에서 하나의 프로세스로 합쳐 비용을 90% 줄였다고 밝혔습니다. 나누는 것은 목적이 아니라 수단이라는 점이 분명해졌습니다.'}
+  ],
+  decisions:[
+   {question:'왜 서비스마다 DB를 따로 가질까?',answer:'여러 서비스가 같은 표를 직접 읽고 쓰면 표 하나의 구조를 바꿀 때 모든 서비스를 함께 바꿔 배포해야 합니다. DB를 서비스 안에 숨기고 API와 이벤트로만 데이터를 주고받아야 팀이 서로를 기다리지 않고 배포할 수 있습니다.',cost:'서비스를 넘는 조인과 트랜잭션이 사라집니다. 주문과 결제를 함께 맞추려면 사가로 단계를 나누고 실패 시 되돌리는 보상 단계를 설계해야 하며, 다른 서비스의 데이터는 복사본으로 들고 잠깐씩 어긋남을 받아들입니다.'},
+   {question:'왜 입구에 API 게이트웨이를 둘까?',answer:'클라이언트가 수십 개 서비스의 주소를 직접 알면 서비스를 나누거나 합칠 때마다 앱을 바꿔야 합니다. 게이트웨이가 하나의 주소로 받아 경로별로 보내고, 인증·처리율 제한·로그 같은 공통 기능을 서비스마다 반복하지 않게 합니다.',cost:'모든 요청이 지나는 곳이라 게이트웨이가 느리거나 죽으면 전체가 멈춥니다. 여러 대로 늘리고, 업무 로직을 게이트웨이에 넣지 않아 또 하나의 모놀리스가 되지 않게 합니다.'},
+   {question:'왜 동기 호출보다 이벤트를 권할까?',answer:'주문 서비스가 결제, 재고, 알림 서비스를 차례로 기다리면 그중 하나만 느려도 주문 전체가 느려지고 하나만 죽어도 실패합니다. "주문 생성됨" 이벤트를 큐에 내보내고 각 서비스가 알아서 처리하면 서로의 장애에 덜 묶입니다.',cost:'결과가 바로 나오지 않아 "처리 중" 상태와 결과 확인 방법이 필요하고, 4장 큐 단원의 중복 전달과 순서 문제를 소비자가 감당해야 합니다.'}
+  ],
+  today:[
+   '초기 제품과 작은 팀은 모듈 경계를 분명히 그은 모놀리스로 시작하고, 팀이 커지거나 특정 기능의 확장·장애 격리가 필요할 때 그 경계부터 떼어 냅니다(스트랭글러 패턴).',
+   '서비스를 나눈다면 서비스마다 자기 DB와 배포 파이프라인, 담당 팀을 두고 외부 입구에 API 게이트웨이, 서비스 사이에 타임아웃·재시도·서킷 브레이커·분산 추적을 기본으로 갖춥니다.',
+   '서비스가 많아지면 서비스 메시(Istio, Linkerd)로 mTLS, 재시도, 트래픽 분할을 코드 밖에서 관리하기도 하지만 운영 비용이 크므로 필요가 분명할 때 도입합니다.'
+  ],
+  sources:[
+   ['James Lewis & Martin Fowler · Microservices (2014)','https://martinfowler.com/articles/microservices.html'],
+   ['Martin Fowler · MonolithFirst (2015)','https://martinfowler.com/bliki/MonolithFirst.html'],
+   ['Melvin Conway · How Do Committees Invent? (1968)','http://www.melconway.com/Home/Committees_Paper.html'],
+   ['Netflix · Completing the Netflix Cloud Migration (2016)','https://about.netflix.com/en/news/completing-the-netflix-cloud-migration'],
+   ['Segment · Goodbye Microservices (2018)','https://www.twilio.com/en-us/blog/developers/best-practices/goodbye-microservices'],
+   ['Prime Video Tech · Scaling up the Prime Video audio/video monitoring service (2023)','https://www.primevideotech.com/video-streaming/scaling-up-the-prime-video-audio-video-monitoring-service-and-reducing-costs-by-90']
+  ]
  }
 };

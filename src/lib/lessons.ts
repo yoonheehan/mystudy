@@ -46,6 +46,12 @@ export const sources = {
  redisPersistence: { name: 'Redis · Persistence', url: 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/' },
  promOverview: { name: 'Prometheus · Overview', url: 'https://prometheus.io/docs/introduction/overview/' },
  grafanaDocs: { name: 'Grafana Documentation', url: 'https://grafana.com/docs/grafana/latest/' },
+ saLoading: { name: 'SQLAlchemy · Relationship Loading Techniques', url: 'https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html' },
+ saPooling: { name: 'SQLAlchemy · Connection Pooling', url: 'https://docs.sqlalchemy.org/en/20/core/pooling.html' },
+ oauth2: { name: 'RFC 6749 · The OAuth 2.0 Authorization Framework', url: 'https://www.rfc-editor.org/rfc/rfc6749' },
+ oidcCore: { name: 'OpenID Connect Core 1.0', url: 'https://openid.net/specs/openid-connect-core-1_0.html' },
+ fowlerMicroservices: { name: 'Lewis & Fowler · Microservices', url: 'https://martinfowler.com/articles/microservices.html' },
+ apiGatewayPattern: { name: 'microservices.io · API Gateway Pattern', url: 'https://microservices.io/patterns/apigateway.html' },
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
@@ -724,16 +730,87 @@ for ratio in history:
     firing_minutes = firing_minutes + 1 if ratio > 0.02 else 0
     if firing_minutes >= 5:
         print("알림 보냄: 오류율이 5분 넘게 2% 초과")
-        break`,codeNotes:['카운터는 서버가 재시작하지 않는 한 줄지 않는 누적값입니다. 값 자체보다 구간의 증가 속도(rate)를 보면 초당 요청 수와 오류 수가 됩니다. 실제 rate()는 재시작으로 0이 된 경우도 보정합니다.','오류율은 오류 속도를 요청 속도로 나눈 값입니다. 오류 수만 보면 트래픽이 늘 때마다 알림이 울립니다.','for 조건은 잠깐 튄 값으로 사람을 깨우지 않게 합니다. history의 두 번째 값부터 5분 연속 2%를 넘어서야 알림이 나갑니다.'],answer:'모니터링 도구는 메트릭, 로그, 트레이스를 모으고 저장하고 보여 주고 알립니다. Prometheus는 대상의 /metrics를 주기적으로 가져와 라벨이 붙은 시계열로 저장하고 PromQL로 오류율과 p99 지연을 계산해 알림 규칙을 평가하며, Grafana는 여러 데이터 원본을 한 대시보드에 보여 줍니다. 네 가지 황금 신호와 SLO 기준으로 대시보드와 알림을 만들고 라벨 카디널리티를 관리하며 로그와 트레이스로 이어지게 연결하겠습니다.',follow:[['Prometheus는 왜 서버가 보내지 않고 가져오는(pull) 방식인가요?','Prometheus가 대상 목록을 알고 직접 가져오므로 대상이 죽으면 스크레이프 실패로 바로 드러나고(up 지표), 대상이 수집 서버 주소를 몰라도 됩니다. 아주 짧게 끝나는 배치 작업처럼 가져갈 틈이 없는 경우에는 Pushgateway나 OpenTelemetry 수집기로 보냅니다.'],['로그도 Prometheus에 넣으면 안 되나요?','Prometheus는 숫자 시계열만 저장합니다. 로그는 Loki나 Elasticsearch 같은 로그 저장소에, 트레이스는 Tempo나 Jaeger에 두고 Grafana에서 같은 시간대와 라벨로 서로 오가게 연결합니다.']],memory:'앱은 내놓고 Prometheus는 가져가고 Grafana는 그리고 Alertmanager는 깨운다. 카운터는 rate로 본다.',mistake:'라벨에 사용자 ID, 요청 ID, 전체 URL처럼 값이 끝없는 것을 넣지 마세요. 라벨 조합마다 시계열이 하나씩 생겨 Prometheus의 메모리가 폭발합니다.',quiz:{question:'요청 카운터 http_requests_total로 초당 요청 수를 보려면?',options:['카운터 값을 그대로 그린다','rate(http_requests_total[5m])로 증가 속도를 계산한다','평균 응답 시간을 곱한다'],correct:1,explanation:'카운터는 누적값이라 계속 커지기만 합니다. 구간의 초당 증가량을 계산하는 rate()로 봅니다.'},refs:['promOverview','grafanaDocs']})
+        break`,codeNotes:['카운터는 서버가 재시작하지 않는 한 줄지 않는 누적값입니다. 값 자체보다 구간의 증가 속도(rate)를 보면 초당 요청 수와 오류 수가 됩니다. 실제 rate()는 재시작으로 0이 된 경우도 보정합니다.','오류율은 오류 속도를 요청 속도로 나눈 값입니다. 오류 수만 보면 트래픽이 늘 때마다 알림이 울립니다.','for 조건은 잠깐 튄 값으로 사람을 깨우지 않게 합니다. history의 두 번째 값부터 5분 연속 2%를 넘어서야 알림이 나갑니다.'],answer:'모니터링 도구는 메트릭, 로그, 트레이스를 모으고 저장하고 보여 주고 알립니다. Prometheus는 대상의 /metrics를 주기적으로 가져와 라벨이 붙은 시계열로 저장하고 PromQL로 오류율과 p99 지연을 계산해 알림 규칙을 평가하며, Grafana는 여러 데이터 원본을 한 대시보드에 보여 줍니다. 네 가지 황금 신호와 SLO 기준으로 대시보드와 알림을 만들고 라벨 카디널리티를 관리하며 로그와 트레이스로 이어지게 연결하겠습니다.',follow:[['Prometheus는 왜 서버가 보내지 않고 가져오는(pull) 방식인가요?','Prometheus가 대상 목록을 알고 직접 가져오므로 대상이 죽으면 스크레이프 실패로 바로 드러나고(up 지표), 대상이 수집 서버 주소를 몰라도 됩니다. 아주 짧게 끝나는 배치 작업처럼 가져갈 틈이 없는 경우에는 Pushgateway나 OpenTelemetry 수집기로 보냅니다.'],['로그도 Prometheus에 넣으면 안 되나요?','Prometheus는 숫자 시계열만 저장합니다. 로그는 Loki나 Elasticsearch 같은 로그 저장소에, 트레이스는 Tempo나 Jaeger에 두고 Grafana에서 같은 시간대와 라벨로 서로 오가게 연결합니다.']],memory:'앱은 내놓고 Prometheus는 가져가고 Grafana는 그리고 Alertmanager는 깨운다. 카운터는 rate로 본다.',mistake:'라벨에 사용자 ID, 요청 ID, 전체 URL처럼 값이 끝없는 것을 넣지 마세요. 라벨 조합마다 시계열이 하나씩 생겨 Prometheus의 메모리가 폭발합니다.',quiz:{question:'요청 카운터 http_requests_total로 초당 요청 수를 보려면?',options:['카운터 값을 그대로 그린다','rate(http_requests_total[5m])로 증가 속도를 계산한다','평균 응답 시간을 곱한다'],correct:1,explanation:'카운터는 누적값이라 계속 커지기만 합니다. 구간의 초당 증가량을 계산하는 rate()로 봅니다.'},refs:['promOverview','grafanaDocs']}),
+l({id:'orm',category:3,title:'ORM과 커넥션 풀',english:'ORM / N+1 Query / Lazy vs Eager Loading / Connection Pool',hook:'로컬에서는 0.1초였던 주문 목록 API가 운영에서는 왜 3초가 걸릴까?',definition:'ORM(객체 관계 매핑)은 DB의 표와 행을 프로그램의 클래스와 객체로 바꿔 주는 라이브러리입니다. order.customer.name처럼 객체를 따라가면 ORM이 필요한 SQL을 만들어 실행하므로 SQL을 직접 쓰지 않아도 됩니다. 편리한 대신 어떤 SQL이 언제 몇 번 나가는지 코드에서 보이지 않습니다. 대표적인 함정이 N+1 문제로, 목록 하나를 가져오는 쿼리 1번 뒤에 항목마다 연관 데이터를 가져오는 쿼리가 N번 더 나갑니다. 커넥션 풀은 DB 연결을 요청마다 새로 열지 않고 미리 열어 둔 연결을 빌려 쓰고 돌려주는 장치입니다. 연결을 여는 데는 TCP, 인증, 서버 쪽 프로세스 생성 비용이 들고 DB가 받을 수 있는 연결 수에도 한도가 있기 때문입니다.',analogy:'ORM은 통역사와 같습니다. 내가 한국어(객체)로 말하면 통역사가 DB의 언어(SQL)로 옮겨 줍니다. 그런데 손님 100명의 이름을 물을 때 통역사가 한 명씩 100번 왕복하면(N+1) 아무리 말을 잘 옮겨도 느립니다. "100명 명단을 한 번에 주세요"라고 미리 말해야 합니다. 커넥션 풀은 식당의 테이블입니다. 손님이 올 때마다 테이블을 새로 조립하지 않고 정해진 수의 테이블을 돌려 쓰며, 테이블이 다 차면 손님은 입구에서 잠깐 기다립니다.',steps:['요청이 들어오면 앱이 풀에서 DB 연결 하나를 빌립니다. 남은 연결이 없으면 정해진 시간만큼 기다립니다.','ORM이 코드의 조회를 SQL로 바꿔 실행하고 결과 행을 객체로 만듭니다.','연관 객체에 접근할 때 지연 로딩이면 그때 쿼리가 추가로 나가고, 즉시 로딩(JOIN이나 IN)이면 처음에 함께 가져옵니다.','트랜잭션을 커밋하거나 되돌린 뒤 연결을 풀에 돌려줍니다.'],scenario:'주문 목록 API가 개발 환경에서는 빨랐는데 운영에서 3초가 걸렸습니다. SQL 로그를 켜 보니 주문 50개를 가져오는 쿼리 1번 뒤에 주문마다 고객과 상품을 따로 조회하는 쿼리가 100번 더 나가고 있었습니다. 개발 DB는 같은 컴퓨터에 있어 왕복이 0.1ms였지만 운영 DB는 네트워크 너머라 왕복마다 수 ms가 더해졌습니다. 즉시 로딩(selectinload)으로 바꾸자 쿼리가 3번으로 줄었습니다. 같은 시기 트래픽이 몰리자 "too many connections" 오류도 났는데, 서버 20대가 각자 풀 크기 20으로 400개 연결을 열려고 했기 때문이었습니다. 풀 크기를 줄이고 PgBouncer를 앞에 두어 해결했습니다.',aws:'Amazon RDS Proxy가 Lambda나 여러 앱 서버의 연결을 모아 DB 연결 수를 줄이고 장애 조치 때 연결을 유지합니다. Performance Insights로 자주 실행되는 쿼리를 찾아 N+1을 발견할 수 있습니다.',ncloud:'Cloud DB for PostgreSQL·MySQL의 최대 연결 수를 확인하고 앱 서버 수 × 풀 크기가 그 안에 들어오게 정합니다. 느린 쿼리 로그로 반복되는 쿼리를 찾습니다.',tradeoff:'ORM은 반복되는 SQL과 객체 변환을 없애고 SQL 인젝션을 막아 주지만 실제로 나가는 쿼리를 감춥니다. 복잡한 집계나 성능이 중요한 쿼리는 직접 SQL을 쓰는 것이 낫습니다. 커넥션 풀은 크다고 좋지 않습니다. DB의 CPU와 디스크가 동시에 처리할 수 있는 양은 정해져 있어서 연결이 너무 많으면 오히려 문맥 교환과 잠금 경쟁으로 느려집니다.',language:'Python · sqlite3로 N+1 쿼리 수를 세어 보기',code:`import sqlite3
+
+db = sqlite3.connect(":memory:")
+db.executescript("""
+CREATE TABLE customers(id INTEGER PRIMARY KEY, name TEXT);
+CREATE TABLE orders(id INTEGER PRIMARY KEY, customer_id INTEGER REFERENCES customers(id));
+""")
+db.executemany("INSERT INTO customers VALUES (?, ?)", [(i, f"고객{i}") for i in range(1, 51)])
+db.executemany("INSERT INTO orders VALUES (?, ?)", [(i, i) for i in range(1, 51)])
+
+queries = []
+db.set_trace_callback(queries.append)      # 실행되는 SQL을 모두 기록
+
+# 지연 로딩처럼: 목록 1번 + 주문마다 고객 1번
+queries.clear()
+for order_id, customer_id in db.execute("SELECT id, customer_id FROM orders").fetchall():
+    db.execute("SELECT name FROM customers WHERE id = ?", (customer_id,)).fetchone()
+print("N+1 방식:", len(queries), "번")      # 51번
+
+# 즉시 로딩처럼: JOIN 한 번
+queries.clear()
+rows = db.execute("""SELECT o.id, c.name FROM orders o
+                     JOIN customers c ON c.id = o.customer_id""").fetchall()
+print("JOIN 방식:", len(queries), "번")      # 1번`,codeNotes:['ORM의 지연 로딩은 order.customer에 처음 접근할 때 첫 번째 방식의 쿼리를 대신 실행합니다. 코드에는 SQL이 보이지 않아 51번이 나가는지 알기 어렵습니다.','같은 컴퓨터의 sqlite에서는 51번도 빠릅니다. DB가 네트워크 너머에 있으면 왕복마다 수 ms가 더해져 50번이면 수백 ms가 됩니다. 로컬에서 안 보이던 문제가 운영에서 드러나는 이유입니다.','SQLAlchemy의 joinedload, selectinload나 Django의 select_related, prefetch_related가 두 번째 방식처럼 미리 함께 가져오게 합니다.'],answer:'ORM은 표를 객체로 바꿔 SQL 작성과 변환을 줄여 주지만 실제 쿼리를 감춥니다. 목록 뒤에 항목마다 연관 데이터를 조회하는 N+1 문제를 SQL 로그와 쿼리 수 테스트로 찾고 즉시 로딩이나 JOIN으로 고치겠습니다. 커넥션 풀은 연결을 미리 열어 재사용해 연결 비용을 없애며, 앱 서버 수 × 풀 크기가 DB 최대 연결 수를 넘지 않게 작게 잡고 필요하면 PgBouncer나 RDS Proxy를 둡니다.',follow:[['커넥션 풀 크기는 어떻게 정하나요?','DB가 동시에 실제로 일할 수 있는 양(대략 CPU 코어 수의 두세 배)을 기준으로 작게 시작하고, 모든 앱 서버의 풀 크기 합이 DB 최대 연결 수보다 충분히 작게 합니다. 풀에서 연결을 기다리는 시간과 DB의 활성 쿼리 수를 보며 조정합니다.'],['ORM을 쓰지 말고 SQL만 쓰는 게 낫나요?','대부분의 단순한 조회와 저장은 ORM이 생산성과 안전성(파라미터 바인딩)에서 유리합니다. 복잡한 보고서나 성능이 중요한 쿼리만 직접 SQL로 쓰고, ORM을 쓰더라도 개발 중에 SQL 로그를 켜서 실제 쿼리를 확인합니다.']],memory:'ORM은 SQL을 감춘다, 목록 뒤의 반복 쿼리를 의심하라. 풀은 작게, 합계는 DB 한도 아래로.',mistake:'요청마다 DB 연결을 새로 열고 닫지 마세요. 연결 하나를 여는 데 수 ms가 들고 트래픽이 몰리면 DB의 최대 연결 수를 넘어 오류가 납니다.',quiz:{question:'주문 100개 목록 API에서 쿼리가 201번 나간다면 가장 먼저 의심할 것은?',options:['인덱스가 너무 많음','연관 데이터를 항목마다 따로 조회하는 N+1 문제','커넥션 풀이 너무 큼'],correct:1,explanation:'목록 1번 + 주문마다 고객 1번 + 상품 1번이면 201번입니다. 즉시 로딩이나 JOIN으로 함께 가져옵니다.'},refs:['saLoading','saPooling']}),
+l({id:'oauth',category:5,title:'OAuth 2.0과 소셜 로그인',english:'Delegated Authorization / Authorization Code + PKCE / OpenID Connect',hook:'"구글로 로그인"을 누르면 우리 서비스는 사용자의 구글 비밀번호를 모르는데 어떻게 그 사람이라는 걸 알까?',definition:'OAuth 2.0은 사용자가 비밀번호를 넘겨주지 않고 다른 서비스에 자기 데이터의 일부 권한만 빌려줄 수 있게 하는 위임 인가 표준입니다. 사용자는 권한 서버(구글 등)에서 직접 로그인하고 "이 앱이 내 캘린더를 읽어도 된다"고 동의하며, 앱은 그 결과로 범위(scope)와 수명이 제한된 액세스 토큰을 받아 API를 호출합니다. 웹 앱에서는 브라우저로 일회용 인가 코드를 받고 서버가 그 코드를 토큰으로 바꾸는 인가 코드 흐름을 쓰며, 코드를 가로채도 쓰지 못하게 PKCE를 더합니다. OAuth 자체는 "누구인가"가 아니라 "무엇을 해도 되는가"를 다루므로, 로그인에는 그 위에 신원 정보(ID 토큰)를 더한 OpenID Connect(OIDC)를 씁니다.',analogy:'호텔 발레 파킹 키와 같습니다. 차 주인은 집 열쇠까지 달린 열쇠 꾸러미(비밀번호)를 주지 않고, 시동과 문만 열리고 트렁크는 안 열리는 발레 키(범위가 제한된 토큰)를 줍니다. 발레 키는 오늘 하루만 쓸 수 있고(만료) 주인이 언제든 무효로 할 수 있습니다(회수). OIDC는 여기에 "이 차의 주인은 김하늘입니다"라고 적힌 확인증(ID 토큰)을 함께 주는 것입니다.',steps:['앱이 사용자를 권한 서버의 로그인 페이지로 보내며 원하는 범위, 돌아올 주소, state, PKCE 챌린지를 함께 보냅니다.','사용자가 권한 서버에서 로그인하고 동의하면 권한 서버가 일회용 인가 코드를 붙여 앱의 돌아올 주소로 보냅니다.','앱 서버가 인가 코드와 PKCE 검증값을 권한 서버에 보내 액세스 토큰(OIDC라면 ID 토큰도)으로 바꿉니다.','앱은 ID 토큰의 서명과 대상을 검증해 사용자를 확인하고, 액세스 토큰으로 허락받은 범위의 API만 호출합니다.'],scenario:'회원 가입 단계에서 이탈이 많아 구글 로그인을 붙였습니다. 처음에는 브라우저에서 바로 토큰을 받는 옛 방식(implicit)을 예제에서 그대로 가져와 토큰이 주소창과 브라우저 기록에 남았습니다. 인가 코드 + PKCE 흐름으로 바꾸고 state 값을 검증해 다른 사이트가 로그인 흐름을 끼워 넣는 공격을 막았습니다. ID 토큰은 서명, 발급자(iss), 대상(aud), 만료를 확인한 뒤 sub 값을 우리 회원 ID와 연결했고, 로그인 이후에는 5장 세션 단원의 방식대로 우리 서비스의 세션을 따로 발급했습니다.',aws:'Amazon Cognito가 OAuth 2.0과 OIDC 권한 서버를 관리형으로 제공하고 구글, 애플 같은 외부 로그인을 연결합니다. API Gateway는 JWT 권한 부여자로 액세스 토큰을 검증할 수 있습니다.',ncloud:'네이버 로그인, 카카오 로그인이 OAuth 2.0과 OIDC 방식을 제공합니다. 앱 등록 시 돌아올 주소(redirect URI)를 정확히 등록하고 클라이언트 시크릿은 서버에만 둡니다.',tradeoff:'OAuth와 OIDC를 쓰면 비밀번호를 저장하지 않아도 되고 사용자는 가입 단계가 줄지만, 외부 권한 서버에 의존하고 흐름이 복잡해 잘못 구현하기 쉽습니다. 직접 구현하기보다 검증된 라이브러리나 관리형 서비스를 쓰고, 액세스 토큰은 짧게, 리프레시 토큰은 안전하게 보관합니다.',language:'Python · PKCE가 가로챈 인가 코드를 막는 원리',code:`import base64, hashlib, secrets
+
+def b64url(data):
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+# 1) 앱: 매번 새 비밀값(verifier)을 만들고 그 해시(challenge)만 권한 서버에 보낸다
+verifier = b64url(secrets.token_bytes(32))
+challenge = b64url(hashlib.sha256(verifier.encode()).digest())
+
+# 2) 권한 서버: 로그인과 동의가 끝나면 코드를 발급하고 challenge를 함께 기억한다
+issued = {"code-7f3a": {"challenge": challenge, "user": "sub-1029"}}
+
+# 3) 권한 서버: 코드를 토큰으로 바꿀 때 verifier의 해시가 맞는지 확인한다
+def exchange(code, presented_verifier):
+    entry = issued.pop(code, None)                       # 코드는 한 번만 쓸 수 있다
+    if entry is None:
+        return "거절: 없거나 이미 쓴 코드"
+    if b64url(hashlib.sha256(presented_verifier.encode()).digest()) != entry["challenge"]:
+        return "거절: verifier 불일치"
+    return {"access_token": secrets.token_urlsafe(16), "sub": entry["user"]}
+
+attacker = exchange("code-7f3a", "guessed-verifier")      # 코드를 가로챈 공격자
+print(attacker)                                           # 거절: verifier 불일치
+issued["code-7f3a"] = {"challenge": challenge, "user": "sub-1029"}
+print(exchange("code-7f3a", verifier)["sub"])             # 진짜 앱만 성공: sub-1029`,codeNotes:['브라우저를 거쳐 오는 인가 코드는 다른 앱이나 로그에 노출될 수 있습니다. PKCE는 코드를 받은 쪽이 처음 흐름을 시작한 그 앱인지 verifier로 증명하게 합니다.','권한 서버에는 해시(challenge)만 갔으므로 중간에 challenge를 봐도 verifier를 거꾸로 알아낼 수 없습니다. 5장 비밀번호 단원의 해시와 같은 원리입니다.','실제로는 코드 재사용 시 이미 발급한 토큰까지 무효로 하는 등 더 많은 검사가 있습니다. 직접 구현하지 말고 검증된 라이브러리를 씁니다.'],answer:'OAuth 2.0은 비밀번호 대신 범위와 수명이 제한된 액세스 토큰으로 권한을 위임하는 인가 표준이고, 로그인은 그 위에 ID 토큰을 더한 OpenID Connect로 합니다. 웹과 모바일 모두 인가 코드 + PKCE 흐름을 쓰고 state로 요청을 묶으며, ID 토큰은 서명·발급자·대상·만료를 검증한 뒤 sub를 회원과 연결하겠습니다. 이후 우리 서비스의 세션은 따로 발급하고 토큰은 최소 범위로 짧게 씁니다.',follow:[['OAuth와 OIDC는 무엇이 다른가요?','OAuth는 "이 앱이 무엇을 해도 되는가"를 위한 액세스 토큰을 줍니다. 액세스 토큰만으로는 누가 로그인했는지 표준적으로 알 수 없어서 OIDC가 사용자 정보를 담은 서명된 ID 토큰과 openid 범위를 더했습니다. 소셜 로그인은 OIDC입니다.'],['왜 implicit 흐름을 더 이상 쓰지 않나요?','implicit은 토큰을 주소창의 조각(#)으로 바로 돌려줘 브라우저 기록, 리퍼러, 악성 확장에 노출되기 쉽습니다. 지금의 보안 권고(RFC 9700)는 브라우저 앱도 인가 코드 + PKCE를 쓰라고 합니다.']],memory:'비밀번호 대신 발레 키. 코드는 한 번, PKCE로 주인 증명, 로그인은 OIDC의 ID 토큰.',mistake:'ID 토큰을 받았다고 바로 믿지 마세요. 서명, 발급자(iss), 대상(aud가 우리 앱인지), 만료를 확인하지 않으면 다른 앱용 토큰으로 로그인할 수 있습니다.',quiz:{question:'인가 코드를 중간에 가로챈 공격자가 토큰을 받지 못하게 하는 장치는?',options:['CORS','PKCE의 code_verifier','HTTP 캐시'],correct:1,explanation:'토큰 교환 때 처음 보낸 challenge와 맞는 verifier를 내야 해서 흐름을 시작한 앱만 코드를 쓸 수 있습니다.'},refs:['oauth2','oidcCore']}),
+l({id:'microservices',category:4,title:'모놀리스, 마이크로서비스, API 게이트웨이',english:'Monolith / Microservices / API Gateway / Conway\'s Law',hook:'회사가 커지면 왜 서비스를 여러 개로 쪼갤까? 그리고 왜 다시 합치는 회사도 있을까?',definition:'모놀리스는 서비스의 모든 기능을 한 코드베이스로 만들어 한 번에 배포하는 구조입니다. 마이크로서비스는 주문, 결제, 회원처럼 업무 단위로 작은 서비스를 나누고 각 서비스가 자기 데이터베이스를 가지며 네트워크(HTTP, gRPC, 메시지 큐)로 협력하는 구조입니다. 나누는 목적은 기술보다 조직에 있습니다. 팀마다 자기 서비스를 독립적으로 배포하고 따로 확장하며 장애를 격리하려는 것입니다. 대신 함수 호출이 네트워크 호출로 바뀌어 지연, 부분 실패, 데이터 일관성, 관측과 운영의 어려움이 생깁니다. API 게이트웨이는 여러 서비스 앞에서 외부 요청을 받아 인증, 처리율 제한, 라우팅, 응답 조합을 한곳에서 맡는 입구입니다.',analogy:'작은 식당은 주방 하나에서 요리사 몇 명이 모든 메뉴를 만듭니다(모놀리스). 손님이 많아져 요리사가 수십 명이 되면 서로 부딪혀서 푸드코트처럼 한식, 중식, 디저트 가게로 나눕니다(마이크로서비스). 가게마다 메뉴를 따로 바꾸고 바쁜 가게만 사람을 늘릴 수 있지만, 세트 메뉴 하나를 내려면 여러 가게가 손발을 맞춰야 하고 한 가게가 늦으면 세트 전체가 늦습니다. 푸드코트 입구의 안내 데스크가 API 게이트웨이입니다. 주문을 받아 맞는 가게로 보내고 결제와 번호표를 한곳에서 처리합니다.',steps:['업무 경계(주문, 결제, 재고)를 찾고 경계마다 데이터와 책임을 함께 가진 서비스를 정합니다.','외부 요청은 API 게이트웨이가 받아 인증과 처리율 제한을 하고 맞는 서비스로 보냅니다.','서비스끼리는 동기 호출(HTTP, gRPC)에 타임아웃·재시도·서킷 브레이커를 두거나, 이벤트를 큐로 비동기 전달합니다.','여러 서비스에 걸친 업무는 분산 트랜잭션 대신 사가로 나누고, 요청 하나는 추적 ID로 서비스들을 꿰어 관측합니다.'],scenario:'개발자 5명일 때 Django 모놀리스 하나로 충분했던 쇼핑몰이 개발자 60명이 되자 배포가 일주일에 한 번으로 줄었습니다. 한 팀의 변경이 다른 팀의 기능을 깨뜨려 배포마다 모든 팀의 확인을 기다렸기 때문입니다. 트래픽이 몰리는 검색과 상품 조회만 따로 늘리고 싶어도 전체를 늘려야 했습니다. 먼저 결제를 별도 서비스로 떼어 내 자체 DB와 배포 파이프라인을 주고 API 게이트웨이 뒤에 두었습니다. 그 과정에서 주문과 결제 사이의 트랜잭션이 사라져 사가와 아웃박스로 바꾸었고, 분산 추적 없이는 느린 요청의 원인을 찾을 수 없다는 것을 배웠습니다. 나머지 기능은 모놀리스에 남겨 두었습니다.',aws:'API Gateway가 외부 입구 역할을, ECS·EKS·Lambda가 서비스 실행을, SQS·SNS·EventBridge가 비동기 연결을 맡습니다. App Mesh 대신 지금은 Amazon VPC Lattice나 ECS Service Connect로 서비스 간 연결을 관리합니다.',ncloud:'API Gateway로 외부 API를 관리하고 Ncloud Kubernetes Service 위에 서비스를 배치합니다. 서비스 간 비동기 연결에는 Cloud Data Streaming Service(Kafka)를 쓸 수 있습니다.',tradeoff:'마이크로서비스는 큰 조직이 독립적으로 배포하고 부분만 확장하며 장애를 격리하게 해 주지만 네트워크 지연과 부분 실패, 데이터 일관성, 배포·관측 인프라라는 비용을 냅니다. 작은 팀과 초기 제품은 잘 나눈 모놀리스(모듈러 모놀리스)가 대개 더 빠르고 싸며, 경계가 분명해지고 팀이 커질 때 하나씩 떼어 냅니다.',language:'Python · 서비스를 나누면 가용성과 지연이 어떻게 바뀌나',code:`# 요청 하나가 거치는 서비스와 각 서비스의 가용성·응답 시간(ms)
+services = {"gateway": (0.9995, 5), "order": (0.999, 30), "payment": (0.999, 80),
+            "inventory": (0.999, 20), "user": (0.999, 15)}
+
+def chain(names):
+    availability, latency = 1.0, 0
+    for name in names:
+        a, ms = services[name]
+        availability *= a            # 모두 성공해야 요청이 성공
+        latency += ms                # 차례로 부르면 시간이 더해진다
+    return availability, latency
+
+a, ms = chain(["gateway", "order", "payment", "inventory", "user"])
+print(f"차례로 호출: 가용성 {a:.4%}, 지연 {ms}ms")
+
+# 서로 기다릴 필요 없는 조회는 동시에 부르면 가장 느린 것만큼 걸린다
+parallel_ms = services["gateway"][1] + services["order"][1] + max(services[n][1] for n in ["payment", "inventory", "user"])
+print(f"뒤의 셋을 동시에: 지연 {parallel_ms}ms")
+
+# 한 달(30일) 기준으로 허용되는 장애 시간
+for label, value in [("서비스 하나 99.9%", 0.999), ("다섯을 거치는 요청", a)]:
+    print(label, f"→ 한 달 {30 * 24 * 60 * (1 - value):.0f}분 실패")`,codeNotes:['서비스마다 99.9%로 충분해 보여도 요청 하나가 다섯 개를 모두 거치면 가용성은 곱해져 약 99.55%로 떨어집니다. 한 달에 실패하는 시간이 약 43분에서 약 3시간 14분으로 늘어납니다.','차례로 부르면 지연이 더해집니다. 서로의 결과가 필요 없는 호출은 동시에 부르고, 필요 없으면 아예 동기 호출 대신 이벤트로 바꿉니다.','그래서 마이크로서비스에는 타임아웃, 재시도, 서킷 브레이커, 캐시, 비동기 큐가 함께 따라옵니다. 함수 호출이던 것이 네트워크 호출이 된 대가입니다.'],answer:'모놀리스는 한 번에 배포하는 하나의 코드베이스이고 마이크로서비스는 업무 단위로 데이터와 배포를 나눈 작은 서비스들입니다. 나누는 이유는 팀이 독립적으로 배포하고 필요한 부분만 확장하며 장애를 격리하기 위해서이고, 대가로 네트워크 지연과 부분 실패, 분산 데이터 일관성, 관측 비용이 생깁니다. 작게는 모듈러 모놀리스로 시작해 경계가 분명하고 조직이 커질 때 하나씩 떼어 내며, 외부 입구에는 API 게이트웨이를 두고 서비스 간에는 타임아웃·서킷 브레이커·사가·분산 추적을 갖추겠습니다.',follow:[['서비스마다 DB를 따로 가져야 하나요?','같은 DB의 표를 여러 서비스가 직접 읽고 쓰면 스키마 하나를 바꿀 때 모든 서비스가 함께 바뀌어야 해서 독립 배포라는 목적이 사라집니다. 다른 서비스의 데이터는 그 서비스의 API나 이벤트로만 얻습니다. 대신 서비스를 넘는 조인과 트랜잭션은 없으므로 사가와 데이터 복제로 풉니다.'],['API 게이트웨이와 로드 밸런서는 무엇이 다른가요?','로드 밸런서는 같은 서비스의 여러 서버에 요청을 나눕니다. API 게이트웨이는 경로와 내용을 보고 어느 서비스로 보낼지 정하고 인증, 처리율 제한, 요청 변환, 여러 서비스 응답 조합 같은 공통 기능을 맡습니다. 게이트웨이 뒤에 서비스마다 로드 밸런서가 있는 구성이 흔합니다.']],memory:'나누는 이유는 팀, 대가는 네트워크. 서비스마다 자기 데이터, 입구는 게이트웨이, 처음엔 모놀리스.',mistake:'서비스를 나누면서 DB는 그대로 함께 쓰지 마세요. 모든 서비스가 같은 표에 묶여 따로 배포할 수 없고 네트워크 비용만 더해진 분산 모놀리스가 됩니다.',quiz:{question:'가용성 99.9%인 서비스 5개를 차례로 거쳐야 하는 요청의 가용성은 대략?',options:['99.9%','약 99.5%','99.99%'],correct:1,explanation:'모두 성공해야 하므로 0.999를 다섯 번 곱해 약 99.5%가 됩니다. 서비스를 나눌수록 호출 경로와 실패 처리를 설계해야 합니다.'},refs:['fowlerMicroservices','apiGatewayPattern']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
  1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'filesystem', 'linux', 'diagnosis'],
  0: ['internet', 'dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
  2: ['webserver', 'kit', 'rest', 'async', 'proxy', 'ratelimit'],
- 3: ['sqlbasics', 'normalization', 'join', 'index', 'transaction', 'database-choice', 'documentdb', 'search', 'cache', 'redis', 'queue', 'replication', 'raft'],
- 5: ['password', 'session', 'cors', 'validation', 'iam'],
- 4: ['cloud', 'docker', 'vpc', 'lb', 'storage', 'kubernetes'],
+ 3: ['sqlbasics', 'normalization', 'join', 'index', 'transaction', 'orm', 'database-choice', 'documentdb', 'search', 'cache', 'redis', 'queue', 'replication', 'raft'],
+ 5: ['password', 'session', 'oauth', 'cors', 'validation', 'iam'],
+ 4: ['cloud', 'docker', 'vpc', 'lb', 'storage', 'kubernetes', 'microservices'],
  6: ['git', 'pytest', 'cicd', 'observability', 'monitoring', 'scale', 'recovery']
 };
 const position = (x: Lesson) => { const i = sequence[x.category]?.indexOf(x.id) ?? -1; return i < 0 ? Infinity : i; };

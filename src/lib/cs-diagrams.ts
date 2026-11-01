@@ -540,7 +540,7 @@ export const diagrams:Record<string,Diagram>={
    {from:1,to:2,label:'INCR rate:10.0.0.7',caption:'거의 동시에 서버 B도 같은 키에 명령을 보냅니다. Redis는 받은 순서대로 한 줄로 세웁니다.'},
    {from:2,to:0,label:'1 (처음이므로 EXPIRE 60)',caption:'A의 명령이 먼저 끝까지 실행됩니다. 처음 센 값이니 A가 60초 만료를 겁니다.'},
    {from:2,to:1,label:'2',tone:'ok',caption:'B의 명령은 A의 명령이 끝난 뒤 실행되어 2를 받습니다. 읽고 더하고 쓰는 사이에 아무도 끼어들지 않아 두 요청이 정확히 한 번씩 세어집니다.'},
-   {from:0,to:2,label:'GET 후 SET (잘못된 방식)',tone:'fail',caption:'만약 앱이 GET으로 읽고 1을 더해 SET으로 쓴다면 두 서버가 모두 0을 읽고 1을 써서 한 번이 사라질 수 있습니다. 2장 동기화 단원의 경쟁 상태입니다.'}
+   {from:0,to:2,label:'GET 후 SET (잘못된 방식)',tone:'fail',caption:'만약 앱이 GET으로 읽고 1을 더해 SET으로 쓴다면 두 서버가 모두 0을 읽고 1을 써서 한 번이 사라질 수 있습니다. 1장 동기화 단원의 경쟁 상태입니다.'}
   ]},
  monitoring:{kind:'sequence',title:'요청 지표가 대시보드와 알림이 되기까지',lanes:['앱 /metrics','Prometheus','Grafana','Alertmanager','당직자'],
   steps:[
@@ -550,5 +550,32 @@ export const diagrams:Record<string,Diagram>={
    {from:1,to:2,label:'6.0% (평소 0.5%)',tone:'wait',caption:'오류율이 평소보다 높게 나옵니다. 대시보드에서는 그래프가 튀어 보입니다.'},
    {from:1,to:3,label:'알림: 오류율 > 2% 가 5분 지속',tone:'fail',caption:'알림 규칙이 5분 동안 계속 참이면 Prometheus가 Alertmanager로 알림을 보냅니다. 잠깐 튄 값으로는 보내지 않습니다.'},
    {from:3,to:4,label:'묶어서 Slack · 호출',tone:'ok',caption:'Alertmanager가 같은 원인의 알림을 하나로 묶어 당직자의 Slack이나 호출기로 보냅니다. 알림에는 런북 링크가 붙어 있습니다.'}
+  ]},
+ orm:{kind:'table',title:'주문 50개 목록을 그릴 때 나가는 쿼리',columns:['방식','쿼리','네트워크 왕복 2ms일 때'],packetLabel:'지금 일어나는 일',
+  steps:[
+   {rows:[['코드','for o in orders: o.customer.name','—']],highlight:[0],packet:'주문 목록 API 요청',caption:'코드에는 SQL이 하나도 보이지 않습니다. ORM이 객체 접근을 SQL로 바꿔 실행합니다.'},
+   {rows:[['지연 로딩','SELECT orders 1번','2ms'],['','+ customer마다 SELECT 50번','+ 100ms']],highlight:[1],packet:'o.customer에 처음 접근할 때마다 쿼리',caption:'주문마다 고객을 따로 가져와 51번이 나갑니다. 로컬 DB에서는 왕복이 거의 0이라 눈치채지 못합니다.'},
+   {rows:[['즉시 로딩(JOIN)','SELECT … JOIN customers 1번','2ms'],['즉시 로딩(IN)','SELECT orders + SELECT customers WHERE id IN (…)','4ms']],highlight:[0,1],packet:'joinedload / selectinload',caption:'같은 코드에 로딩 전략만 바꾸면 쿼리가 1~2번으로 줄어듭니다.'},
+   {rows:[['풀 크기 20','서버 20대 × 20 = 400 연결','DB 한도 100 초과'],['풀 크기 5','서버 20대 × 5 = 100 연결','한도 안']],highlight:[0],packet:'트래픽이 몰려 서버를 20대로 늘림',caption:'쿼리를 줄여도 연결 수가 한도를 넘으면 "too many connections" 오류가 납니다.'},
+   {rows:[['PgBouncer','앱 연결 400 → DB 연결 50','한도 안, 대기는 프록시에서']],highlight:[0],packet:'연결 프록시를 앞에 둠',caption:'연결 프록시가 많은 앱 연결을 적은 DB 연결에 나눠 태웁니다. 서버가 많거나 서버리스 환경에서 씁니다.'}
+  ]},
+ oauth:{kind:'sequence',title:'"구글로 로그인"을 눌렀을 때 (인가 코드 + PKCE)',lanes:['브라우저','우리 서버','권한 서버'],
+  steps:[
+   {from:0,to:1,label:'GET /login/google',caption:'사용자가 버튼을 누릅니다. 우리 서버는 state와 verifier를 새로 만들어 세션에 기억합니다.'},
+   {from:1,to:0,label:'302 → 권한 서버 (scope, state, challenge)',caption:'브라우저를 권한 서버로 보냅니다. verifier는 보내지 않고 그 해시인 challenge만 보냅니다.'},
+   {from:0,to:2,label:'로그인 · 동의',tone:'note',caption:'사용자는 권한 서버의 페이지에서 비밀번호를 입력합니다. 우리 서버는 비밀번호를 한 번도 보지 않습니다.'},
+   {from:2,to:0,label:'302 → 우리 서버 ?code=7f3a&state=…',caption:'권한 서버가 일회용 코드를 붙여 등록된 주소로 돌려보냅니다. 브라우저를 거치는 것은 코드뿐입니다.'},
+   {from:0,to:1,label:'GET /callback?code=7f3a&state=…',tone:'wait',caption:'우리 서버는 돌아온 state가 세션에 기억한 값과 같은지 먼저 확인합니다. 다르면 다른 사람의 흐름이 끼어든 것입니다.'},
+   {from:1,to:2,label:'POST /token (code, verifier)',caption:'우리 서버가 권한 서버와 직접 TLS로 통신해 코드와 verifier를 보냅니다. 권한 서버는 verifier의 해시가 challenge와 같은지 확인합니다.'},
+   {from:2,to:1,label:'access_token · id_token',tone:'ok',caption:'토큰을 받으면 ID 토큰의 서명, iss, aud, exp, nonce를 검증하고 sub를 우리 회원과 연결합니다. 그 뒤로는 우리 서비스의 세션을 씁니다.'}
+  ]},
+ microservices:{kind:'sequence',title:'주문 하나를 여러 서비스가 처리할 때 (결제 실패와 보상)',lanes:['클라이언트','API 게이트웨이','주문 서비스','결제 서비스'],
+  steps:[
+   {from:0,to:1,label:'POST /orders + 액세스 토큰',caption:'클라이언트는 게이트웨이 주소 하나만 압니다. 게이트웨이가 토큰을 검증하고 처리율을 확인합니다.'},
+   {from:1,to:2,label:'주문 생성 요청 전달',caption:'경로를 보고 주문 서비스로 보냅니다. 주문 서비스는 자기 DB에 주문을 "결제 대기"로 저장하고 이벤트를 아웃박스에 함께 씁니다.'},
+   {from:2,to:1,label:'202 Accepted · 주문 번호',tone:'wait',caption:'결제를 기다리지 않고 바로 응답합니다. 클라이언트는 "처리 중" 화면을 보여 줍니다.'},
+   {from:2,to:3,label:'이벤트: 주문 생성됨',caption:'결제 서비스는 큐에서 이벤트를 받아 결제를 시도합니다. 두 서비스는 DB를 공유하지 않아 한 트랜잭션으로 묶을 수 없습니다.'},
+   {from:3,to:2,label:'이벤트: 결제 실패',tone:'fail',caption:'카드 한도 초과로 결제가 실패했습니다. 결제 서비스는 실패를 이벤트로 알립니다.'},
+   {from:2,to:0,label:'보상: 주문 취소 → 알림',tone:'ok',caption:'주문 서비스가 사가의 보상 단계로 주문을 "취소"로 바꾸고 사용자에게 알립니다. 트랜잭션의 ROLLBACK 대신 업무적으로 되돌리는 단계를 실행한 것입니다.'}
   ]}
 };

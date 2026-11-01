@@ -1316,7 +1316,7 @@ export const deeps:Record<string,LessonDeep>={
   sections:[
    {title:'자료구조별 대표 쓰임',body:'Redis를 잘 쓴다는 것은 일에 맞는 자료구조를 고른다는 뜻입니다.',list:['문자열: 캐시한 JSON, INCR로 세는 카운터와 처리율 제한.','해시: 사용자 세션이나 객체의 필드들을 키 하나에 묶어 일부 필드만 읽고 고칩니다.','리스트와 스트림: 작업 큐와 최근 활동 목록. 스트림은 소비자 그룹과 확인 응답을 지원합니다.','집합과 정렬된 집합: 중복 없는 방문자, 점수 순 순위표, 시간 순 정렬.','SET key value NX PX 30000: 키가 없을 때만 만료 시간과 함께 쓰는 명령으로 짧은 분산 락을 만듭니다.']},
    {title:'한 스레드가 막히면 모두 멈춘다',body:'명령은 한 줄로 서서 처리됩니다. 백만 개 원소의 리스트를 통째로 읽거나 KEYS *로 모든 키를 훑으면 그동안 다른 모든 요청이 기다립니다. 그래서 SCAN, HSCAN처럼 조금씩 나눠 훑는 명령과 큰 키를 백그라운드에서 지우는 UNLINK를 씁니다. SLOWLOG로 오래 걸린 명령을 찾고, 하나의 키에 너무 많은 데이터를 넣지 않습니다(빅 키). 여러 명령을 원자적으로 묶어야 하면 MULTI/EXEC나 Lua 스크립트를 쓰는데 스크립트도 실행 중에는 다른 명령을 막습니다.'},
-   {title:'얼마나 잃을 수 있나: RDB와 AOF',body:'RDB는 자식 프로세스를 만들어 메모리 전체를 파일로 씁니다. 2장 프로세스 단원의 fork와 쓰기 시 복사 덕분에 서버를 멈추지 않지만 마지막 스냅샷 이후의 변경은 잃을 수 있습니다. AOF는 변경 명령을 파일에 덧붙이고 기본 설정(everysec)에서는 1초마다 fsync해 보통 1초 이내의 손실로 줄입니다. 매 명령 fsync(always)는 더 안전하지만 느립니다. 2장 파일 시스템 단원의 fsync 이야기와 같은 선택입니다.'},
+   {title:'얼마나 잃을 수 있나: RDB와 AOF',body:'RDB는 자식 프로세스를 만들어 메모리 전체를 파일로 씁니다. 1장 프로세스 단원의 fork와 쓰기 시 복사 덕분에 서버를 멈추지 않지만 마지막 스냅샷 이후의 변경은 잃을 수 있습니다. AOF는 변경 명령을 파일에 덧붙이고 기본 설정(everysec)에서는 1초마다 fsync해 보통 1초 이내의 손실로 줄입니다. 매 명령 fsync(always)는 더 안전하지만 느립니다. 1장 파일 시스템 단원의 fsync 이야기와 같은 선택입니다.'},
    {title:'Redis를 캐시로 둘 때와 원본으로 둘 때',body:'캐시라면 만료 시간과 축출 정책(allkeys-lru)을 두고 Redis가 비어도 DB에서 다시 채울 수 있게 합니다. 이때 Redis 장애는 느려짐일 뿐 데이터 손실이 아닙니다. 세션이나 장바구니처럼 Redis에만 있는 데이터라면 AOF, 복제, 장애 조치를 함께 설계하고 축출이 일어나지 않게(noeviction) 메모리를 넉넉히 잡습니다. 비동기 복제라 장애 조치 순간 최근 쓰기를 잃을 수 있다는 점은 4장 복제 단원과 같습니다.'}
   ],
   sources:[
@@ -1347,6 +1347,77 @@ export const deeps:Record<string,LessonDeep>={
    ['Prometheus · Alertmanager','https://prometheus.io/docs/alerting/latest/alertmanager/'],
    ['Grafana Loki','https://grafana.com/docs/loki/latest/'],
    ['OpenTelemetry · Collector','https://opentelemetry.io/docs/collector/']
+  ]
+ },
+ orm:{
+  definition:'ORM은 클래스와 표, 속성과 컬럼, 객체 참조와 외래 키를 대응시키는 매핑 정보를 바탕으로 객체 조작을 SQL로 옮깁니다. 세션(Unit of Work)은 한 트랜잭션 동안 읽은 객체를 기억하고(Identity Map) 바뀐 객체를 모아 커밋 때 한꺼번에 INSERT와 UPDATE로 내보냅니다. 연관 객체는 지연 로딩이면 처음 접근할 때, 즉시 로딩이면 처음 조회 때 JOIN이나 IN 쿼리로 가져옵니다. 커넥션 풀은 정해진 수의 DB 연결을 유지하며 요청에 빌려주고 돌려받고, 오래되거나 끊긴 연결을 검사해 교체합니다.',
+  terms:[
+   ['Active Record와 Data Mapper','객체가 스스로 저장하는 방식과 별도의 매퍼가 객체를 저장하는 방식입니다.'],
+   ['Unit of Work','트랜잭션 동안 바뀐 객체를 모았다가 한 번에 DB에 반영합니다.'],
+   ['지연 로딩과 즉시 로딩','연관 데이터를 접근할 때 가져오느냐, 처음부터 함께 가져오느냐입니다.'],
+   ['N+1 문제','목록 1번 뒤에 항목마다 쿼리가 1번씩 더 나가는 문제입니다.'],
+   ['커넥션 풀','DB 연결을 재사용하는 저장소입니다. 크기, 대기 시간, 최대 수명을 설정합니다.'],
+   ['연결 프록시','PgBouncer, RDS Proxy처럼 많은 앱 연결을 적은 DB 연결에 나눠 태웁니다.']
+  ],
+  sections:[
+   {title:'N+1을 찾고 고치는 방법',body:'N+1은 코드에서 보이지 않으니 쿼리를 직접 봐야 합니다.',list:['개발 중에 ORM의 SQL 로그(SQLAlchemy echo=True, Django의 connection.queries)를 켜고 같은 모양의 쿼리가 반복되는지 봅니다.','반복되는 연관 데이터는 즉시 로딩으로 바꿉니다. 일대일·다대일은 JOIN(joinedload, select_related), 일대다는 IN 쿼리(selectinload, prefetch_related)가 대개 낫습니다.','중요한 API에는 "이 요청은 쿼리 5번 이하" 같은 테스트를 두어 다시 생기지 않게 막습니다.','운영에서는 APM이나 DB의 쿼리 통계로 호출 횟수가 비정상적으로 많은 쿼리를 찾습니다.']},
+   {title:'ORM이 감추는 다른 것들',body:'N+1 말고도 ORM은 몇 가지를 조용히 합니다. 필요 없는 컬럼까지 모두 읽고(SELECT *), 객체를 바꾸기만 해도 커밋 때 UPDATE가 나가며, 트랜잭션이 어디서 시작하고 끝나는지 흐려집니다. 반복문 안에서 객체를 하나씩 저장하면 INSERT가 수천 번 나가므로 대량 작업은 bulk 연산이나 직접 SQL을 씁니다. 반대로 ORM은 값을 항상 파라미터로 넘겨 5장 입력 검증 단원에서 볼 SQL 인젝션을 기본으로 막아 줍니다.'},
+   {title:'풀 크기의 산수',body:'PostgreSQL의 max_connections 기본값은 100이고 연결마다 메모리를 차지합니다. 앱 서버 10대가 각자 풀 크기 20이면 200개를 원해 한도를 넘습니다. 오토스케일링으로 서버가 늘어날 때를 계산에 넣어야 합니다. HikariCP 문서는 출발점으로 (코어 수 × 2) + 디스크 수를 제안합니다. 핵심은 DB가 동시에 실제로 일할 수 있는 양보다 연결을 많이 두면 대기만 늘어난다는 것입니다. 7장 스케일링 단원의 리틀의 법칙으로도 같은 결론이 나옵니다.'},
+   {title:'연결을 오래 쥐지 않기',body:'풀이 금방 바닥나는 흔한 원인은 연결을 빌린 채 다른 일을 하는 코드입니다. 트랜잭션 안에서 외부 결제 API를 호출하면 응답이 올 때까지 연결과 잠금을 함께 쥐고 있습니다. 외부 호출은 트랜잭션 밖으로 빼고, 3장 비동기 단원의 async 서버라면 비동기 드라이버와 풀을 씁니다. 풀에는 대기 타임아웃과 연결의 최대 수명을 두어 끊긴 연결을 계속 쓰지 않게 합니다.'}
+  ],
+  sources:[
+   ['SQLAlchemy · Relationship Loading Techniques','https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html'],
+   ['SQLAlchemy · Connection Pooling','https://docs.sqlalchemy.org/en/20/core/pooling.html'],
+   ['Django · select_related / prefetch_related','https://docs.djangoproject.com/en/5.1/ref/models/querysets/#select-related'],
+   ['PostgreSQL · Connections and Authentication','https://www.postgresql.org/docs/current/runtime-config-connection.html']
+  ]
+ },
+ oauth:{
+  definition:'OAuth 2.0에는 네 역할이 있습니다. 데이터의 주인인 리소스 소유자(사용자), 권한을 빌려 쓰는 클라이언트(우리 앱), 사용자를 인증하고 토큰을 발급하는 권한 서버, 토큰을 받고 API를 제공하는 리소스 서버입니다. 인가 코드 흐름에서 클라이언트는 사용자를 권한 서버의 인가 엔드포인트로 보내고, 돌아온 코드를 토큰 엔드포인트에서 액세스 토큰(과 선택적으로 리프레시 토큰)으로 바꿉니다. OpenID Connect는 openid 범위를 요청하면 ID 토큰을 함께 발급하며, ID 토큰은 발급자(iss), 사용자 식별자(sub), 대상(aud), 만료(exp), nonce를 담은 서명된 JWT입니다.',
+  terms:[
+   ['위임 인가','비밀번호 없이 정해진 범위의 권한만 다른 앱에 빌려주는 것입니다.'],
+   ['범위(scope)','토큰으로 할 수 있는 일의 목록입니다. 최소한으로 요청합니다.'],
+   ['인가 코드','브라우저로 전달되는 짧게 사는 일회용 값입니다. 토큰으로 바꿉니다.'],
+   ['PKCE','verifier와 그 해시 challenge로 흐름을 시작한 앱만 코드를 쓰게 합니다.'],
+   ['state와 nonce','요청과 응답을 묶어 끼워 넣기(CSRF)와 재전송을 막는 값입니다.'],
+   ['ID 토큰','OIDC가 발급하는 사용자 신원 JWT입니다. 서명, iss, aud, exp를 검증합니다.']
+  ],
+  sections:[
+   {title:'로그인 흐름에서 각 값이 막는 것',body:'인가 코드 + PKCE 흐름의 값들은 저마다 막는 공격이 있습니다.',list:['redirect_uri: 등록된 주소로만 코드를 보내 공격자 사이트로 코드가 새는 것을 막습니다. 정확히 일치하게 등록합니다.','state: 우리 서버가 만든 값과 돌아온 값이 같은지 확인해 다른 사람의 로그인 흐름을 끼워 넣는 공격(5장 CORS와 CSRF 단원의 CSRF)을 막습니다.','code_challenge / code_verifier: 코드를 가로채도 verifier 없이는 토큰으로 바꿀 수 없게 합니다.','nonce: ID 토큰 안에 들어가 이전에 발급된 토큰을 다시 내미는 재전송을 막습니다.']},
+   {title:'토큰을 어디에 두나',body:'액세스 토큰과 리프레시 토큰은 비밀번호만큼 소중합니다. 서버에서 외부 API를 부를 토큰이라면 서버의 DB나 비밀 저장소에 암호화해 둡니다. 브라우저 앱이라면 토큰을 localStorage에 두면 XSS 한 번에 빼앗기므로, 서버가 토큰을 들고 브라우저와는 HttpOnly 세션 쿠키로만 대화하는 구성(BFF)이 권장됩니다. 액세스 토큰은 분 단위로 짧게, 리프레시 토큰은 쓸 때마다 새로 바꾸는(rotation) 방식으로 피해를 줄입니다.'},
+   {title:'ID 토큰 검증 순서',body:'ID 토큰은 JWT라서 5장 세션 단원에서 본 서명 검증이 먼저입니다. 권한 서버가 공개한 키(JWKS)로 서명을 확인하고, iss가 기대한 발급자인지, aud가 우리 클라이언트 ID인지, exp가 지나지 않았는지, nonce가 우리가 보낸 값인지 확인합니다. 그다음 sub(발급자 안에서 바뀌지 않는 사용자 ID)를 우리 회원과 연결합니다. 이메일은 바뀌거나 다른 제공자와 겹칠 수 있어 (iss, sub) 쌍을 키로 씁니다.'},
+   {title:'서버끼리 부를 때: 클라이언트 자격 증명',body:'사용자 없이 서비스가 다른 서비스의 API를 부를 때는 클라이언트 자격 증명(client credentials) 흐름으로 서비스 자신의 토큰을 받습니다. 6장 마이크로서비스 단원의 서비스 간 호출에서 이 토큰이나 서비스 메시의 mTLS로 호출자를 확인합니다. 토큰의 범위를 서비스가 실제로 필요한 API로 좁히는 것은 5장 IAM 단원의 최소 권한 원칙과 같습니다.'}
+  ],
+  sources:[
+   ['RFC 6749 · OAuth 2.0','https://www.rfc-editor.org/rfc/rfc6749'],
+   ['RFC 6750 · Bearer Token Usage','https://www.rfc-editor.org/rfc/rfc6750'],
+   ['RFC 7636 · PKCE','https://www.rfc-editor.org/rfc/rfc7636'],
+   ['OpenID Connect Core 1.0','https://openid.net/specs/openid-connect-core-1_0.html'],
+   ['RFC 9700 · OAuth 2.0 Security Best Current Practice','https://www.rfc-editor.org/rfc/rfc9700']
+  ]
+ },
+ microservices:{
+  definition:'마이크로서비스 아키텍처는 하나의 애플리케이션을 업무 능력(주문, 결제, 배송) 단위의 작은 서비스들로 구성합니다. 각 서비스는 자기 프로세스에서 실행되고 자기 데이터를 소유하며 독립적으로 배포됩니다. 서비스끼리는 HTTP·gRPC 같은 동기 호출이나 메시지 브로커를 통한 비동기 이벤트로 협력합니다. 외부 클라이언트는 API 게이트웨이를 통해 들어오며, 게이트웨이는 라우팅, 인증, 처리율 제한, 요청·응답 변환, 여러 서비스 응답의 조합을 맡습니다. 여러 서비스에 걸친 업무는 각 서비스의 로컬 트랜잭션과 실패 시의 보상 트랜잭션을 이어 붙인 사가로 구현합니다.',
+  terms:[
+   ['모놀리스','하나의 코드베이스를 하나의 단위로 배포하는 구조입니다. 모듈로 잘 나누면 모듈러 모놀리스입니다.'],
+   ['서비스 경계','함께 바뀌는 코드와 데이터를 한 서비스로 묶는 선입니다. 업무 도메인을 따라 긋습니다.'],
+   ['API 게이트웨이','외부 요청의 단일 입구입니다. 라우팅과 공통 기능을 맡습니다.'],
+   ['사가','서비스별 로컬 트랜잭션을 차례로 실행하고 실패하면 보상 단계로 되돌리는 방식입니다.'],
+   ['분산 모놀리스','나눴지만 DB나 배포 순서로 서로 묶여 따로 움직이지 못하는 상태입니다.'],
+   ['서비스 메시','서비스 옆의 프록시(사이드카)가 mTLS, 재시도, 트래픽 제어를 대신하는 인프라입니다.']
+  ],
+  sections:[
+   {title:'나눌 때가 되었다는 신호',body:'마이크로서비스는 기술 문제가 아니라 조직 문제에 대한 답입니다. 이런 신호가 겹칠 때 검토합니다.',list:['배포마다 여러 팀의 확인을 기다려 배포 주기가 길어진다.','한 기능(검색, 이미지 처리)만 자원이 많이 필요한데 전체를 함께 늘려야 한다.','한 기능의 장애나 메모리 누수가 서비스 전체를 멈춘다.','기능마다 맞는 언어나 저장소가 분명히 다르다.','반대로 팀이 작고, 경계가 아직 자주 바뀌고, 배포·관측 자동화가 없다면 나누지 않는 편이 낫습니다.']},
+   {title:'사가: 트랜잭션 없이 여러 서비스를 맞추기',body:'주문 서비스와 결제 서비스가 각자 DB를 가지면 4장 트랜잭션 단원의 BEGIN과 COMMIT으로 둘을 함께 묶을 수 없습니다. 사가는 업무를 서비스별 단계로 나눕니다. ① 주문을 "결제 대기"로 저장 ② 결제 승인 ③ 재고 차감 ④ 주문 확정. 중간에 실패하면 이미 끝난 단계를 반대로 되돌리는 보상 단계(결제 취소, 주문 취소)를 실행합니다. 각 단계는 4장 큐 단원의 아웃박스로 이벤트를 안전하게 내보내고, 소비자는 중복 전달에 대비해 멱등하게 만듭니다. 중앙의 조정자가 단계를 지휘하는 오케스트레이션과 이벤트에 각자 반응하는 코레오그래피 방식이 있습니다.'},
+   {title:'API 게이트웨이가 하는 일과 하지 말아야 할 일',body:'게이트웨이는 모든 요청의 길목이라 공통 기능을 두기 좋습니다.',list:['라우팅: /orders는 주문 서비스로, /payments는 결제 서비스로 보냅니다.','인증과 처리율 제한: 5장 OAuth 단원의 액세스 토큰을 검증하고 3장 처리율 제한을 적용합니다.','응답 조합(BFF): 모바일 화면 하나에 필요한 여러 서비스의 응답을 모아 한 번에 돌려줍니다.','하지 말아야 할 일: 주문 규칙 같은 업무 로직을 넣으면 모든 팀이 게이트웨이를 고쳐야 하는 새 병목이 됩니다.']},
+   {title:'모놀리스에서 하나씩 떼어 내기',body:'한 번에 다시 쓰는 대규모 재작성은 대개 실패합니다. 파울러가 무화과나무가 숙주 나무를 감싸며 자라는 모습에 빗댄 스트랭글러 패턴은 게이트웨이나 프록시 뒤에서 기능 하나씩을 새 서비스로 옮기고 그 경로의 트래픽만 새 서비스로 돌립니다. 먼저 경계가 분명하고 변경이 잦거나 확장 요구가 다른 기능을 고르고, 그 기능의 데이터를 새 서비스의 DB로 옮긴 뒤 모놀리스 쪽 코드를 지웁니다. 옮기는 동안 6장과 7장의 배포 자동화, 분산 추적, 대시보드가 갖춰져 있어야 문제를 찾을 수 있습니다.'}
+  ],
+  sources:[
+   ['microservices.io · Microservice Architecture','https://microservices.io/patterns/microservices.html'],
+   ['microservices.io · API Gateway Pattern','https://microservices.io/patterns/apigateway.html'],
+   ['Martin Fowler · StranglerFigApplication','https://martinfowler.com/bliki/StranglerFigApplication.html'],
+   ['Martin Fowler · MicroservicePremium','https://martinfowler.com/bliki/MicroservicePremium.html'],
+   ['Istio · What is Istio?','https://istio.io/latest/docs/overview/what-is-istio/']
   ]
  }
 };

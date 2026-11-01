@@ -9,6 +9,6 @@ export const keyTerms: Record<string, string> = {
  '소켓': 'diagnosis', '포트': 'diagnosis',
  '패킷': 'internet', 'IP 주소': 'internet', '라우터': 'internet', 'DNS': 'dns', 'UDP': 'tcp', 'NAT': 'nat', '인증서': 'tls',
  'JSON': 'webserver', '직렬화': 'webserver', '멱등': 'rest', '이벤트 루프': 'async', '리버스 프록시': 'proxy', '타임아웃': 'proxy',
- '기본 키': 'sqlbasics', '외래 키': 'sqlbasics', '인덱스': 'index', '트랜잭션': 'transaction', '샤딩': 'replication', '역색인': 'search', '문서 DB': 'documentdb', 'Prometheus': 'monitoring',
+ '기본 키': 'sqlbasics', '외래 키': 'sqlbasics', '인덱스': 'index', '트랜잭션': 'transaction', '샤딩': 'replication', '역색인': 'search', '문서 DB': 'documentdb', 'Prometheus': 'monitoring', '마이크로서비스': 'microservices', 'API 게이트웨이': 'microservices', 'ORM': 'orm',
  '솔트': 'password', '쿠키': 'session', '가상 머신': 'cloud', '가용 영역': 'cloud', '컨테이너': 'docker', '로드 밸런서': 'lb'
 };
