@@ -485,5 +485,13 @@ export const diagrams:Record<string,Diagram>={
    {from:2,to:3,label:'WSGI: app(environ, start_response)',caption:'해석한 요청을 environ dict에 담아 Flask 앱을 부릅니다. Flask는 경로를 보고 @app.route 함수를 고릅니다.'},
    {from:3,to:2,label:'dict → JSON 직렬화 · 201',caption:'함수가 돌려준 dict를 Flask가 JSON 문자열로 바꾸고 상태 코드와 헤더를 정합니다.'},
    {from:2,to:0,label:'HTTP/1.1 201 Created · Content-Length · 본문',caption:'워커가 상태 줄, 헤더, 빈 줄, 본문을 바이트로 만들어 fd 4에 씁니다. keep-alive면 같은 연결에서 다음 요청을 기다립니다.'}
+  ]},
+ sqlbasics:{kind:'table',title:'customers 테이블에 SQL을 차례로 보낼 때',columns:['id (기본 키)','name (NOT NULL)','email (UNIQUE)'],packetLabel:'실행한 SQL',
+  steps:[
+   {rows:[],packet:'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE)',caption:'테이블의 열과 타입, 제약 조건을 먼저 정합니다. 이 정의가 스키마입니다. 아직 행은 없습니다.'},
+   {rows:[['1','민수','minsu@example.com']],highlight:[0],packet:'INSERT INTO customers (name, email) VALUES (?, ?)  ← ("민수", "minsu@example.com")',caption:'값은 ?자리에 매개변수로 따로 넘깁니다. id는 DB가 자동으로 1을 붙였습니다.'},
+   {rows:[['1','민수','minsu@example.com']],highlight:[0],packet:'INSERT … ("지은", "minsu@example.com")  → 거절: UNIQUE constraint failed',caption:'같은 이메일을 다시 넣으려 하자 DB가 거절합니다. 앱이 검사를 빠뜨려도, 두 요청이 동시에 들어와도 DB가 막습니다.'},
+   {rows:[['1','민수','minsu@example.com'],['2','지은','jieun@example.com']],highlight:[1],packet:'INSERT … ("지은", "jieun@example.com")',caption:'다른 이메일이면 들어갑니다. 행마다 겹치지 않는 기본 키가 붙어 다른 테이블이 이 번호로 고객을 가리킬 수 있습니다.'},
+   {rows:[['2','지은','jieun@example.com']],highlight:[0],packet:'SELECT id, name, email FROM customers WHERE email LIKE \'j%\'',caption:'SELECT는 원하는 조건만 적습니다. 어떤 순서로 찾을지는 DB가 정합니다. 결과는 조건에 맞는 행들입니다.'}
   ]}
 };

@@ -42,6 +42,7 @@ export const sources = {
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ pySqlite: { name: 'Python · sqlite3', url: 'https://docs.python.org/3/library/sqlite3.html' },
  rfc9112: { name: 'RFC 9112 · HTTP/1.1', url: 'https://www.rfc-editor.org/rfc/rfc9112' },
  pyWsgi: { name: 'PEP 3333 · WSGI', url: 'https://peps.python.org/pep-3333/' },
  rfc791: { name: 'RFC 791 · Internet Protocol', url: 'https://www.rfc-editor.org/rfc/rfc791' },
@@ -554,14 +555,40 @@ print(response.decode())
 # with socket.create_server(("127.0.0.1", 8000)) as server:
 #     conn, addr = server.accept()          # 연결 하나를 받아
 #     request = conn.recv(65536)            # 바이트를 읽고(한 번에 다 온다는 보장은 없다)
-#     conn.sendall(response)                # 응답을 보낸다`,codeNotes:['요청은 바이트이고 빈 줄(\\r\\n\\r\\n)이 머리와 본문의 경계입니다. 본문 길이는 Content-Length가 알려 줍니다.','json.loads와 json.dumps가 역직렬화와 직렬화입니다. 바이트, 문자열, 파이썬 객체 사이를 오가는 경계를 눈여겨보세요.','맨 아래 주석의 소켓 코드는 recv 한 번에 요청이 다 온다고 가정해서 학습용으로만 적었습니다. 실제 서버는 Content-Length만큼 끝까지 읽어야 합니다.'],answer:'웹 서버는 소켓을 포트에 묶어 연결을 기다리고 accept로 받은 연결에서 바이트를 읽어 HTTP 요청으로 해석합니다. 빈 줄까지 요청 줄과 헤더를 읽고 Content-Length만큼 본문을 읽은 뒤 경로에 맞는 함수를 부르고 결과를 JSON으로 직렬화해 응답합니다. 운영에서는 부분 수신과 keep-alive, 느린 클라이언트를 처리하는 검증된 서버(gunicorn, uvicorn)에 맡기고 WSGI나 ASGI로 프레임워크와 연결하겠습니다.',follow:[['TCP로 보낸 메시지가 한 번에 오지 않는 이유는?','TCP는 메시지 단위가 아니라 순서가 보장된 바이트 흐름입니다. 보낸 쪽의 send 한 번이 받는 쪽의 recv 여러 번으로 나뉘거나 여러 send가 한 recv로 합쳐질 수 있습니다. 그래서 HTTP는 빈 줄과 Content-Length로 경계를 정합니다.'],['WSGI와 ASGI는 무엇이 다른가요?','WSGI는 요청 하나를 받아 응답 하나를 돌려주는 동기 함수의 약속입니다. ASGI는 async 함수로 요청을 처리하고 WebSocket처럼 오래 열린 연결도 다룰 수 있게 넓힌 약속입니다.']],memory:'문을 열고(bind·listen), 손님을 받고(accept), 주문서를 빈 줄까지 읽고, 길이만큼 본문을 읽는다.',mistake:'recv 한 번이면 요청 전체가 온다고 가정하지 마세요. TCP는 바이트 흐름이라 경계는 HTTP 규칙으로 찾아야 합니다.',quiz:{question:'HTTP/1.1 서버가 요청 본문이 어디서 끝나는지 아는 방법은?',options:['TCP 패킷이 끝나면','Content-Length 헤더(또는 청크 인코딩)를 보고','연결이 끊기면 항상'],correct:1,explanation:'TCP는 경계를 주지 않으므로 HTTP는 Content-Length나 청크 인코딩으로 본문의 끝을 알립니다.'},refs:['rfc9112','pyWsgi']})
+#     conn.sendall(response)                # 응답을 보낸다`,codeNotes:['요청은 바이트이고 빈 줄(\\r\\n\\r\\n)이 머리와 본문의 경계입니다. 본문 길이는 Content-Length가 알려 줍니다.','json.loads와 json.dumps가 역직렬화와 직렬화입니다. 바이트, 문자열, 파이썬 객체 사이를 오가는 경계를 눈여겨보세요.','맨 아래 주석의 소켓 코드는 recv 한 번에 요청이 다 온다고 가정해서 학습용으로만 적었습니다. 실제 서버는 Content-Length만큼 끝까지 읽어야 합니다.'],answer:'웹 서버는 소켓을 포트에 묶어 연결을 기다리고 accept로 받은 연결에서 바이트를 읽어 HTTP 요청으로 해석합니다. 빈 줄까지 요청 줄과 헤더를 읽고 Content-Length만큼 본문을 읽은 뒤 경로에 맞는 함수를 부르고 결과를 JSON으로 직렬화해 응답합니다. 운영에서는 부분 수신과 keep-alive, 느린 클라이언트를 처리하는 검증된 서버(gunicorn, uvicorn)에 맡기고 WSGI나 ASGI로 프레임워크와 연결하겠습니다.',follow:[['TCP로 보낸 메시지가 한 번에 오지 않는 이유는?','TCP는 메시지 단위가 아니라 순서가 보장된 바이트 흐름입니다. 보낸 쪽의 send 한 번이 받는 쪽의 recv 여러 번으로 나뉘거나 여러 send가 한 recv로 합쳐질 수 있습니다. 그래서 HTTP는 빈 줄과 Content-Length로 경계를 정합니다.'],['WSGI와 ASGI는 무엇이 다른가요?','WSGI는 요청 하나를 받아 응답 하나를 돌려주는 동기 함수의 약속입니다. ASGI는 async 함수로 요청을 처리하고 WebSocket처럼 오래 열린 연결도 다룰 수 있게 넓힌 약속입니다.']],memory:'문을 열고(bind·listen), 손님을 받고(accept), 주문서를 빈 줄까지 읽고, 길이만큼 본문을 읽는다.',mistake:'recv 한 번이면 요청 전체가 온다고 가정하지 마세요. TCP는 바이트 흐름이라 경계는 HTTP 규칙으로 찾아야 합니다.',quiz:{question:'HTTP/1.1 서버가 요청 본문이 어디서 끝나는지 아는 방법은?',options:['TCP 패킷이 끝나면','Content-Length 헤더(또는 청크 인코딩)를 보고','연결이 끊기면 항상'],correct:1,explanation:'TCP는 경계를 주지 않으므로 HTTP는 Content-Length나 청크 인코딩으로 본문의 끝을 알립니다.'},refs:['rfc9112','pyWsgi']}),
+l({id:'sqlbasics',category:3,title:'데이터베이스와 SQL 기초',english:'DBMS / Table / Primary Key / Foreign Key / SQL',hook:'주문 데이터를 그냥 JSON 파일에 저장하면 안 될까?',definition:'데이터베이스 관리 시스템(DBMS)은 여러 프로그램과 사용자가 같은 데이터를 동시에, 안전하게 읽고 쓸 수 있게 관리하는 소프트웨어입니다. 관계형 DB는 데이터를 열(속성)과 행(레코드)으로 이뤄진 테이블에 저장하고 각 행을 구별하는 기본 키, 다른 테이블의 행을 가리키는 외래 키로 테이블을 잇습니다. 데이터는 SQL로 다룹니다. SQL은 "어떻게 찾을지"가 아니라 "무엇을 원하는지"를 적는 선언적 언어라서 SELECT … WHERE …를 쓰면 찾는 방법은 DB가 정합니다. NOT NULL, UNIQUE, 외래 키 같은 제약 조건은 잘못된 데이터가 들어오지 못하게 DB가 직접 막습니다.',analogy:'엑셀 시트 여러 장으로 된 장부를 떠올리세요. 시트(테이블)마다 열 제목이 있고 한 줄이 한 건입니다. 고객 번호처럼 줄마다 겹치지 않는 번호(기본 키)를 붙이고 주문 시트에는 고객 이름 대신 고객 번호(외래 키)를 적습니다. 다만 이 장부에는 엄격한 사무원(DBMS)이 붙어 있어서 없는 고객 번호로 주문을 적으려 하거나 같은 이메일을 두 번 등록하려 하면 거절하고, 여러 사람이 동시에 고쳐도 장부가 꼬이지 않게 순서를 정리합니다.',steps:['저장할 대상(고객, 주문)마다 테이블을 만들고 열의 이름과 타입, 제약 조건을 정합니다.','행마다 기본 키를 두고 다른 테이블을 가리킬 때는 외래 키로 잇습니다.','앱은 DB 서버에 연결해 SQL을 보내고 값은 매개변수로 따로 넘깁니다.','DB는 제약 조건을 검사하고 요청한 결과를 돌려주며 여러 연결의 동시 작업을 조율합니다.'],scenario:'초기 버전은 주문을 JSON 파일 하나에 저장했습니다. 요청이 몰리자 두 요청이 동시에 파일을 읽고 각자 덮어써서 주문이 사라졌고, 특정 고객의 주문을 찾으려면 파일 전체를 읽어야 했습니다. 주문을 PostgreSQL 테이블로 옮기고 고객 ID에 외래 키를 걸자 동시 쓰기는 DB가 조율하고 없는 고객의 주문은 DB가 거절했으며 고객별 조회는 SQL 한 줄이 되었습니다.',aws:'RDS나 Aurora로 PostgreSQL, MySQL을 관리형으로 씁니다. 백업, 패치, 장애 조치를 AWS가 맡고 앱은 엔드포인트 주소로 연결합니다. 연결 수가 많으면 RDS Proxy로 커넥션을 모아 씁니다.',ncloud:'Cloud DB for MySQL, PostgreSQL 같은 관리형 DB를 씁니다. 앱 서버와 같은 VPC의 사설 서브넷에 두고 ACG로 앱 서버에서만 접속하게 합니다.',tradeoff:'DB를 쓰면 동시성, 장애 복구, 제약 조건, 조회를 DB가 맡아 주지만 운영할 서버와 스키마 변경 절차가 생깁니다. 데이터가 작고 한 프로세스만 쓴다면 SQLite 파일 하나로 충분한 경우도 많습니다.',language:'Python · sqlite3로 테이블, 키, 제약 조건 다뤄 보기',code:`import sqlite3
+
+db = sqlite3.connect(":memory:")
+db.execute("PRAGMA foreign_keys = ON")      # SQLite는 외래 키 검사를 직접 켜야 합니다
+db.execute("""CREATE TABLE customers (
+    id    INTEGER PRIMARY KEY,
+    name  TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE)""")
+db.execute("""CREATE TABLE orders (
+    id          INTEGER PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES customers(id),
+    total       INTEGER NOT NULL CHECK (total >= 0))""")
+
+db.execute("INSERT INTO customers (name, email) VALUES (?, ?)", ("민수", "minsu@example.com"))
+db.execute("INSERT INTO orders (customer_id, total) VALUES (?, ?)", (1, 30000))
+
+for sql, params in [
+    ("INSERT INTO customers (name, email) VALUES (?, ?)", ("지은", "minsu@example.com")),  # 같은 이메일
+    ("INSERT INTO orders (customer_id, total) VALUES (?, ?)", (99, 1000)),             # 없는 고객
+]:
+    try:
+        db.execute(sql, params)
+    except sqlite3.IntegrityError as error:
+        print("DB가 거절:", error)
+
+print(db.execute("SELECT c.name, o.total FROM orders o JOIN customers c ON c.id = o.customer_id").fetchall())`,codeNotes:['?는 값을 SQL 문장과 따로 넘기는 자리입니다. 문자열을 이어 붙이지 않으므로 5장의 SQL 인젝션이 생기지 않습니다.','UNIQUE와 REFERENCES를 어긴 두 INSERT를 DB가 IntegrityError로 거절하는 것을 확인하세요. 앱 코드가 검사하지 않아도 DB가 막습니다.','SQLite는 하위 호환 때문에 외래 키 검사가 기본으로 꺼져 있습니다. PRAGMA 줄을 지우고 실행하면 없는 고객의 주문이 들어갑니다.'],answer:'DBMS는 여러 프로그램이 같은 데이터를 동시에 안전하게 다루도록 저장, 동시성, 복구, 제약을 맡는 소프트웨어입니다. 관계형 DB는 데이터를 테이블에 두고 기본 키로 행을 구별하며 외래 키로 테이블을 잇습니다. SQL로 원하는 결과를 선언하면 찾는 방법은 DB가 정하고 NOT NULL, UNIQUE, 외래 키 같은 제약으로 잘못된 데이터를 DB 수준에서 막겠습니다.',follow:[['기본 키로 자동 증가 숫자와 UUID 중 무엇을 쓰나요?','자동 증가 숫자는 작고 정렬되어 인덱스에 유리하지만 개수와 순서가 드러나고 여러 DB에서 만들면 겹칩니다. UUID는 어디서 만들어도 겹치지 않지만 크고 무작위라 인덱스에 불리해서 시간 순서가 들어간 UUIDv7 같은 형식을 쓰기도 합니다.'],['제약 조건은 앱에서 검사하면 되지 않나요?','앱의 검사는 사용자에게 친절한 오류를 주는 데 좋지만 동시에 들어온 두 요청이나 다른 경로(관리 스크립트, 다른 서비스)는 막지 못합니다. 마지막 방어선은 DB의 제약 조건입니다.']],memory:'표로 저장하고, 키로 잇고, 원하는 것을 SQL로 말하고, 틀린 데이터는 DB가 막는다.',mistake:'SQL 문장에 사용자 입력을 문자열로 이어 붙이지 마세요. 값은 언제나 매개변수(?, %s)로 넘깁니다.',quiz:{question:'orders.customer_id에 외래 키를 걸었을 때 존재하지 않는 고객 ID로 주문을 넣으면?',options:['그대로 들어간다','DB가 제약 위반으로 거절한다','고객이 자동으로 생긴다'],correct:1,explanation:'외래 키는 참조하는 행이 반드시 있어야 한다는 제약이라 DB가 INSERT를 거절합니다.'},refs:['pySqlite','joins']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
  1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'filesystem', 'linux', 'diagnosis'],
  0: ['internet', 'dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
  2: ['webserver', 'kit', 'rest', 'async', 'proxy', 'ratelimit'],
- 3: ['normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
+ 3: ['sqlbasics', 'normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
  5: ['session', 'cors', 'validation', 'iam'],
  4: ['docker', 'vpc', 'lb', 'storage', 'kubernetes'],
  6: ['git', 'pytest', 'cicd', 'observability', 'scale', 'recovery']

@@ -1185,5 +1185,28 @@ export const deeps:Record<string,LessonDeep>={
    ['PEP 3333 · WSGI','https://peps.python.org/pep-3333/'],
    ['RFC 8259 · JSON','https://www.rfc-editor.org/rfc/rfc8259']
   ]
+ },
+ sqlbasics:{
+  definition:'관계형 DB에서 테이블은 정해진 열(이름과 타입)을 가진 행들의 모음입니다. 기본 키는 테이블 안에서 행을 하나로 특정하는 열(또는 열들)이고 NULL일 수 없으며 겹칠 수 없습니다. 외래 키는 다른 테이블의 기본 키를 가리키는 열로, DB는 가리키는 행이 실제로 있는지 검사합니다. SQL은 데이터 정의(CREATE TABLE, ALTER), 데이터 조작(SELECT, INSERT, UPDATE, DELETE), 트랜잭션 제어(BEGIN, COMMIT, ROLLBACK)로 나뉩니다. 앱은 DB 드라이버로 서버에 연결해 문장과 매개변수를 보내고 결과 행을 받습니다.',
+  terms:[
+   ['DBMS','데이터의 저장, 동시 접근, 제약, 복구, 조회를 관리하는 소프트웨어입니다.'],
+   ['스키마','테이블과 열, 타입, 제약 조건의 정의입니다.'],
+   ['기본 키','행을 하나로 특정하는 열입니다. NULL일 수 없고 겹칠 수 없습니다.'],
+   ['외래 키','다른 테이블의 기본 키를 가리키는 열입니다. DB가 참조 무결성을 검사합니다.'],
+   ['제약 조건','NOT NULL, UNIQUE, CHECK, 외래 키처럼 DB가 강제하는 규칙입니다.'],
+   ['NULL','값이 없음을 뜻하는 표시입니다. 0이나 빈 문자열과 다르고 = 로 비교되지 않습니다.']
+  ],
+  sections:[
+   {title:'SELECT 한 문장을 읽는 법',body:'SELECT name, total FROM orders WHERE total >= 10000 ORDER BY total DESC LIMIT 5는 쓰는 순서와 생각하는 순서가 다릅니다.',list:['FROM: 어느 테이블에서 시작할지 정합니다.','WHERE: 조건에 맞는 행만 남깁니다.','GROUP BY와 HAVING: 필요하면 행을 묶고 묶음에 조건을 겁니다.','SELECT: 남은 행에서 원하는 열만 고릅니다.','ORDER BY와 LIMIT: 정렬하고 앞에서 몇 개만 가져옵니다. 어떤 인덱스로 찾을지는 이 문장 어디에도 없습니다. DB가 정합니다.']},
+   {title:'NULL이 만드는 함정',body:'NULL은 "모름"에 가까워서 평범한 값처럼 비교되지 않습니다. WHERE email = NULL은 어떤 행도 고르지 않고 WHERE email IS NULL로 써야 합니다. NULL과의 비교 결과는 참도 거짓도 아닌 "알 수 없음"이라 WHERE status != \'paid\'는 status가 NULL인 행을 빠뜨립니다. COUNT(*)는 모든 행을, COUNT(열)은 그 열이 NULL이 아닌 행만 셉니다. 꼭 있어야 하는 값에는 NOT NULL을 걸어 NULL이 생길 여지를 줄입니다.'},
+   {title:'앱과 DB 사이의 연결',body:'DB 서버와의 연결은 TCP 연결이고 인증과 세션 준비까지 거쳐서 만드는 데 비용이 듭니다. 그래서 앱은 연결을 미리 몇 개 열어 두고 요청마다 빌려 썼다가 돌려주는 커넥션 풀을 씁니다. 풀 크기는 DB가 감당할 수 있는 최대 연결 수를 앱 서버 수로 나눠 정해야 합니다. 앱 서버를 늘렸더니 DB 연결이 한도를 넘는 문제는 7장 스케일링 단원에서 다시 만납니다.'},
+   {title:'스키마는 어떻게 바꾸나',body:'운영 중인 DB의 테이블 구조를 바꾸는 일을 마이그레이션이라고 합니다. Alembic이나 Django 마이그레이션처럼 변경을 코드로 적어 버전 관리하고 모든 환경에 같은 순서로 적용합니다. 열을 추가할 때는 기본값이나 NULL 허용으로 먼저 추가하고 데이터를 채운 뒤 제약을 거는 식으로 나눠서, 큰 테이블을 오래 잠그지 않게 합니다.'}
+  ],
+  sources:[
+   ['Python · sqlite3','https://docs.python.org/3/library/sqlite3.html'],
+   ['SQLite · Foreign Key Support','https://www.sqlite.org/foreignkeys.html'],
+   ['PostgreSQL · Constraints','https://www.postgresql.org/docs/current/ddl-constraints.html'],
+   ['PostgreSQL · Joins Between Tables','https://www.postgresql.org/docs/current/tutorial-join.html']
+  ]
  }
 };

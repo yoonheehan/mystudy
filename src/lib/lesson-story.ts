@@ -617,7 +617,7 @@ export const stories: Record<string, LessonStory> = {
     '『Site Reliability Engineering』의 과부하 처리 장은 한 걸음 더 나아가 클라이언트가 스스로 거절률을 보고 요청을 줄이는 방법을 소개합니다. 서버가 거절하는 데도 비용이 들기 때문입니다. 결국 과부하는 서버 혼자 막을 수 없고 서버와 클라이언트가 함께 지키는 약속입니다.'
    ]}
   ],
-  to: '이 장에서 요청이 서버 안에서 처리되는 과정을 봤습니다. 요청을 처리하는 동안 서버는 거의 언제나 데이터를 읽고 씁니다. 다음 장에서는 그 데이터를 어떻게 저장하고 찾고 지키는지 봅니다.',
+  to: '이 장에서 요청이 서버 안에서 처리되는 과정을 봤습니다. 요청을 처리하는 동안 서버는 거의 언제나 데이터를 읽고 씁니다. 다음 장은 데이터를 파일에 그냥 저장하면 무엇이 문제인지에서 출발해 데이터베이스가 그 문제를 어떻게 푸는지 봅니다.',
   books: [
    { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '21장 과부하 다루기, 22장 연쇄 장애 다루기', note: '서버 쪽 거절과 클라이언트 쪽 스스로 줄이기를 함께 설계하는 방법을 설명합니다.', url: 'https://sre.google/sre-book/handling-overload/' },
    { title: 'Release It!, 2nd Edition', by: 'Michael T. Nygard', where: '5장 안정성 패턴 (부하 차단, 배압)', note: '거절을 설계의 일부로 다루는 방법을 실무 사례로 설명합니다.', url: 'https://pragprog.com/titles/mnee2/release-it-second-edition/' }
@@ -629,7 +629,7 @@ export const stories: Record<string, LessonStory> = {
   ]
  },
  normalization: {
-  from: '3장에서 서버가 요청을 처리하는 과정을 봤습니다. 요청을 처리하는 동안 서버는 거의 언제나 데이터를 읽고 씁니다. 이 장은 그 데이터를 어떤 모양으로 저장할지에서 시작합니다.',
+  from: '앞 단원에서 데이터를 테이블에 저장하고 기본 키와 외래 키로 잇는 방법을 봤습니다. 이번에는 어떤 열을 어느 테이블에 둘지, 같은 사실을 여러 곳에 적으면 무엇이 문제인지 봅니다.',
   parts: [
    { heading: '데이터가 프로그램에 묶여 있던 시절', paragraphs: [
     '1960년대의 데이터베이스는 데이터를 포인터로 이어진 나무나 그물 모양으로 저장했습니다. IBM의 IMS가 대표적입니다. 프로그램은 "고객 레코드에서 첫 번째 주문 레코드로 가서 다음 주문으로 넘어가라"처럼 길을 따라가며 데이터를 읽었습니다. 빠르긴 했지만 데이터의 저장 구조가 바뀌면 그 길을 따라가던 모든 프로그램을 고쳐야 했습니다. 새로운 질문을 하려면 새 길을 만들어야 했습니다.'
@@ -1525,6 +1525,49 @@ export const stories: Record<string, LessonStory> = {
    { title: 'PEP 3333 · Python Web Server Gateway Interface v1.0.1', by: 'Phillip J. Eby', where: 'Python, 2010 (처음은 2003년 PEP 333)', note: 'WSGI를 정한 문서입니다. 앞부분의 동기 설명이 왜 이런 약속이 필요했는지 보여 줍니다.', url: 'https://peps.python.org/pep-3333/' },
    { title: 'RFC 8259 · The JSON Data Interchange Format', by: 'T. Bray (편)', where: 'IETF, 2017', note: '현재 JSON 규격입니다. 짧아서 한 번에 읽을 수 있습니다.', url: 'https://www.rfc-editor.org/rfc/rfc8259' },
    { title: 'Introducing JSON', by: 'Douglas Crockford', where: 'json.org', note: 'JSON 문법을 그림 몇 장으로 정리한 원래 페이지입니다.', url: 'https://www.json.org/json-en.html' }
+  ]
+ },
+ sqlbasics: {
+  question: '데이터를 파일에 그냥 저장하면 무엇이 문제이고 데이터베이스는 그 문제를 어떻게 대신 풀어 줄까요?',
+  from: '3장에서 서버가 요청을 받아 처리하는 과정을 봤습니다. 요청을 처리하는 동안 서버는 거의 언제나 데이터를 읽고 씁니다. 이 장은 그 데이터를 어디에 어떤 모양으로 둘지에서 시작합니다.',
+  parts: [
+   { heading: '파일에 저장하면 생기는 일', paragraphs: [
+    '가장 쉬운 방법부터 생각해 봅시다. 주문이 들어올 때마다 orders.json 파일을 읽어 목록에 하나를 붙이고 다시 저장합니다. 처음에는 잘 됩니다. 그런데 요청 두 개가 거의 동시에 오면 둘 다 같은 내용을 읽고 각자 하나씩 붙여 저장합니다. 나중에 저장한 쪽이 먼저 저장한 쪽을 덮어써 주문 하나가 사라집니다. 1장 동기화 단원에서 본 경쟁 상태가 파일에서 그대로 일어난 것입니다.',
+    '문제는 이것만이 아닙니다. 저장하는 도중에 서버가 꺼지면 반쯤 쓰인 파일이 남습니다(1장 파일 시스템 단원). 고객 7의 주문만 보려 해도 파일 전체를 읽어야 합니다. 주문에 적힌 고객 번호가 실제로 있는 고객인지 아무도 확인하지 않습니다. 데이터가 커지고 요청이 늘수록 앱이 이 모든 것을 직접 해결해야 합니다.'
+   ]},
+   { heading: '1960년대 기업이 겪은 같은 문제', paragraphs: [
+    '1960년대 기업들이 정확히 이 문제를 겪었습니다. 급여, 재고, 주문 업무마다 데이터 파일을 따로 두고 프로그램이 파일의 구조를 직접 알고 읽고 썼습니다. 같은 고객 정보가 여러 파일에 복사되어 서로 어긋났고 파일 구조를 조금만 바꿔도 그 파일을 쓰는 프로그램을 전부 고쳐야 했습니다.',
+    '그래서 데이터를 프로그램에서 떼어 내 한곳에서 관리하는 소프트웨어가 나왔습니다. 1966년 IBM이 아폴로 계획의 부품 관리를 위해 만든 IMS가 대표적입니다. 이런 소프트웨어를 **데이터베이스 관리 시스템**(DBMS)이라고 부릅니다. DBMS는 여러 프로그램이 동시에 접근해도 꼬이지 않게 순서를 조율하고, 도중에 꺼져도 데이터를 지키고, 원하는 데이터를 찾아 줍니다.',
+    '하지만 초기 DBMS는 데이터를 나무나 그물 모양으로 포인터로 이어 두었습니다. 찰스 바크먼은 1973년 튜링상 강연에서 이를 "항해자로서의 프로그래머"라고 불렀습니다. 프로그래머가 레코드에서 레코드로 길을 따라가며 데이터를 찾는다는 뜻입니다. 빠르긴 했지만 데이터의 연결 구조가 바뀌면 그 길을 따라가던 프로그램을 또 고쳐야 했습니다.'
+   ]},
+   { heading: '표로 저장하고 원하는 것만 말하기', paragraphs: [
+    '1970년 IBM의 에드거 코드는 다른 길을 제안했습니다. 데이터를 열과 행으로 된 **테이블**에만 저장하고 테이블 사이의 연결은 포인터가 아니라 값으로 합니다. 고객 테이블의 각 행에는 겹치지 않는 번호, 즉 **기본 키**를 붙이고 주문 테이블에는 고객 정보를 복사하는 대신 그 번호만 적습니다. 다른 테이블의 기본 키를 가리키는 이 열을 **외래 키**라고 합니다.',
+    '가장 큰 변화는 데이터를 다루는 방식이었습니다. 프로그래머는 길을 따라가는 대신 "고객 7의 주문 중 3만 원 이상인 것"처럼 원하는 결과만 말하고 찾는 방법은 DB가 정합니다. 1974년 IBM의 체임벌린과 보이스는 이를 위한 언어 SEQUEL을 만들었고 이것이 **SQL**이 되었습니다. SELECT … FROM … WHERE …처럼 영어 문장에 가깝게 읽힙니다. 1979년 첫 상용 SQL DB가 나왔고 1986년 SQL은 표준이 되어 지금까지 데이터를 다루는 공통어로 쓰이고 있습니다.'
+   ]},
+   { heading: '잘못된 데이터는 DB가 막는다: 제약 조건', paragraphs: [
+    'DB는 데이터를 저장만 하는 곳이 아닙니다. 테이블을 만들 때 규칙을 함께 적을 수 있습니다. 이름은 비면 안 된다(NOT NULL), 이메일은 겹치면 안 된다(UNIQUE), 금액은 0 이상이어야 한다(CHECK), 주문의 고객 번호는 실제 고객이어야 한다(외래 키). 이런 **제약 조건**을 어기는 쓰기는 DB가 거절합니다.',
+    '앱에서 검사하면 되지 않느냐고 생각할 수 있습니다. 하지만 같은 DB를 여러 앱과 관리 스크립트가 함께 쓰고, 동시에 들어온 두 요청은 앱의 검사를 함께 통과할 수 있습니다. "이 이메일이 있는지 확인하고 없으면 넣는다"는 1장 동기화 단원의 확인과 변경 사이의 틈을 그대로 갖고 있습니다. DB의 UNIQUE 제약은 그 틈이 없습니다. 그래서 제약 조건은 데이터를 지키는 마지막 방어선입니다. 이 단원의 그림과 Python 예제가 DB가 잘못된 쓰기를 거절하는 장면을 보여 줍니다.'
+   ]},
+   { heading: '오늘의 데이터베이스와 이 장의 길', paragraphs: [
+    '지금 서버 개발에서 가장 많이 쓰는 DB는 1986년 버클리에서 시작된 PostgreSQL과 MySQL 같은 관계형 DB입니다. 서버 없이 파일 하나로 동작하는 SQLite는 휴대폰과 브라우저 곳곳에 들어가 가장 널리 배포된 소프트웨어 중 하나가 되었고 Python에도 기본으로 들어 있습니다. 앱은 DB에 연결해 SQL을 보내되 값은 언제나 문장과 따로, 매개변수로 넘깁니다. 문자열에 이어 붙이면 5장에서 볼 SQL 인젝션이 생깁니다.',
+    '테이블과 키, SQL을 알았으니 이제 질문이 이어집니다. 어떤 열을 어느 테이블에 둘지는 어떻게 정할까(정규화), 나눈 테이블은 어떻게 합칠까(JOIN), 수백만 행에서 어떻게 빨리 찾을까(인덱스), 동시에 고치면 어떻게 될까(트랜잭션). 이 장의 나머지 단원이 차례로 답합니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: '앱에서 중복을 검사했으니 DB에 UNIQUE 제약은 필요 없다.', truth: '동시에 들어온 두 요청은 앱의 "확인 후 삽입"을 함께 통과할 수 있습니다. 확인과 삽입 사이에 틈이 없는 것은 DB의 제약 조건뿐입니다.' },
+   { belief: 'WHERE email = NULL로 이메일이 없는 행을 찾을 수 있다.', truth: 'NULL은 어떤 값과도 같지 않아서 = NULL은 아무 행도 고르지 않습니다. IS NULL을 써야 합니다.' },
+   { belief: 'SQL 문장 안에 값을 문자열로 이어 붙여도 따옴표만 잘 넣으면 괜찮다.', truth: '값을 문장과 섞는 순간 값이 명령으로 해석될 여지가 생깁니다. 값은 언제나 매개변수로 따로 넘깁니다.' }
+  ],
+  to: '테이블과 키로 데이터를 저장하는 방법을 봤습니다. 그런데 고객 이름과 주소를 주문 테이블에도 함께 적으면 편하지 않을까요? 어떤 열을 어느 테이블에 둘지 정하는 원칙이 다음 단원 정규화입니다.',
+  books: [
+   { title: 'Database System Concepts (데이터베이스 시스템)', by: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan', where: '7판 1장 소개(파일 처리 시스템의 문제), 2장 관계형 모델, 3장 SQL 소개, 4장 중급 SQL(무결성 제약)', note: '파일에 저장할 때의 문제에서 출발해 DBMS가 왜 필요한지 설명하는 1장이 이 단원과 같은 흐름입니다. 이 장 전체의 기본 교과서입니다.', url: 'https://www.db-book.com/' },
+   { title: 'Readings in Database Systems (Red Book)', by: 'Peter Bailis, Joseph M. Hellerstein, Michael Stonebraker (편)', where: '5판 1장 배경', note: 'DB 연구의 중요한 논문들을 저자들의 해설과 함께 묶은 책입니다. 웹에서 무료로 읽을 수 있습니다.', url: 'http://www.redbook.io/' },
+   { title: 'SQL Performance Explained (Use The Index, Luke)', by: 'Markus Winand', where: '서문과 1장', note: 'SQL이 선언적이라는 것이 실제로 무엇을 뜻하는지 개발자 관점에서 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://use-the-index-luke.com/' }
+  ],
+  papers: [
+   { title: 'The Programmer as Navigator', by: 'Charles W. Bachman', where: 'Communications of the ACM, 1973 (튜링상 강연)', note: '관계형 이전의 DB에서 프로그래머가 데이터를 어떻게 찾았는지 보여 줍니다.', url: 'https://doi.org/10.1145/355611.362534' },
+   { title: 'A Relational Model of Data for Large Shared Data Banks', by: 'E. F. Codd', where: 'Communications of the ACM, 1970', note: '관계형 모델의 출발점입니다.', url: 'https://doi.org/10.1145/362384.362685' },
+   { title: 'Early History of SQL', by: 'Donald D. Chamberlin', where: 'IEEE Annals of the History of Computing, 2012', note: 'SQL을 만든 사람이 직접 쓴 SQL의 탄생 과정입니다.', url: 'https://doi.org/10.1109/MAHC.2012.61' }
   ]
  }
 };

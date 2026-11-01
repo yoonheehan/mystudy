@@ -1388,5 +1388,34 @@ export const histories:Record<string,LessonHistory>={
    ['Gunicorn · Design (pre-fork worker model)','https://gunicorn.org/design/'],
    ['ASGI · Introduction','https://asgi.readthedocs.io/en/latest/introduction.html']
   ]
+ },
+ sqlbasics:{
+  intro:'데이터베이스라는 말이 생기기 전에도 기업은 데이터를 저장했습니다. 문제는 데이터가 프로그램마다 따로 흩어져 있고 프로그램이 데이터의 저장 방식을 속속들이 알아야 했다는 점입니다. DBMS의 역사는 데이터를 프로그램에서 떼어 내 한곳에서 관리하고, 프로그램은 원하는 것만 말하게 만드는 과정이었습니다.',
+  timeline:[
+   {year:'1960년대',title:'파일 처리와 IMS',body:'기업들은 급여, 재고, 주문마다 테이프와 디스크 파일을 따로 두고 프로그램이 직접 읽고 썼습니다. 1966년 IBM은 아폴로 계획의 부품 관리를 위해 노스아메리칸 록웰과 함께 IMS를 만들었습니다. 데이터를 나무 모양으로 연결해 관리한 IMS는 상용 DBMS 시장을 열었습니다.'},
+   {year:'1973',title:'항해자로서의 프로그래머',body:'찰스 바크먼은 레코드를 포인터로 그물처럼 잇는 네트워크형 DB(IDS, CODASYL 모델)를 만들었고 1973년 튜링상 강연 「The Programmer as Navigator」에서 프로그래머가 레코드 사이를 항해하며 데이터를 찾는 모습을 그렸습니다. 빠르지만 데이터 구조가 바뀌면 그 길을 따라가던 프로그램을 모두 고쳐야 했습니다.'},
+   {year:'1970~1979',title:'관계형 모델과 SQL',body:'1970년 IBM의 에드거 코드가 데이터를 테이블로만 표현하고 프로그램은 원하는 것만 말하자는 관계형 모델을 제안했습니다. IBM의 System R 팀(체임벌린, 보이스)이 1974년 SEQUEL을 만들었고 이것이 SQL이 되었습니다. 1979년 지금의 Oracle인 Relational Software가 첫 상용 SQL DB를 내놓았습니다.'},
+   {year:'1986~1987',title:'SQL 표준',body:'ANSI가 1986년, ISO가 1987년 SQL을 표준으로 정했습니다. DB 제품이 달라도 같은 언어로 데이터를 다룰 수 있게 되었고 이후 SQL은 수십 년 동안 데이터를 다루는 공통어가 되었습니다.'},
+   {year:'1986~1996',title:'Postgres에서 PostgreSQL로',body:'Ingres를 만든 버클리의 마이클 스톤브레이커는 1986년 그 후속작 POSTGRES를 시작했습니다. 1990년대 중반 SQL을 붙인 Postgres95가 되었고 1996년 PostgreSQL이라는 이름의 오픈소스 프로젝트로 이어졌습니다.'},
+   {year:'2000',title:'SQLite',body:'D. 리처드 힙은 서버 없이 파일 하나로 동작하는 SQL DB, SQLite를 만들었습니다. 휴대폰, 브라우저, 운영체제 곳곳에 들어가 지금은 가장 널리 배포된 소프트웨어 구성 요소 중 하나로 꼽힙니다. Python에는 sqlite3 모듈로 기본 포함되어 있습니다.'}
+  ],
+  decisions:[
+   {question:'왜 SQL은 "어떻게"가 아니라 "무엇을"만 적게 했을까?',answer:'바크먼의 네트워크형 DB에서는 프로그램이 데이터를 찾는 길을 직접 따라갔기 때문에 저장 구조가 바뀌면 프로그램을 고쳐야 했습니다. 원하는 결과만 선언하게 하면 인덱스를 추가하거나 저장 방식을 바꿔도 프로그램은 그대로이고 찾는 방법은 DB가 상황에 맞게 고릅니다.',cost:'DB가 고른 방법이 나쁠 때 원인을 알기 어렵습니다. 그래서 실행 계획(EXPLAIN)을 읽는 법을 배워야 합니다. 이 장의 인덱스와 JOIN 단원에서 다룹니다.'},
+   {question:'왜 제약 조건을 앱이 아니라 DB에 둘까?',answer:'같은 DB를 여러 앱, 관리 스크립트, 다른 서비스가 함께 씁니다. 앱마다 검사를 따로 하면 하나라도 빠뜨리는 순간 잘못된 데이터가 들어오고 동시에 들어온 두 요청은 앱의 검사를 함께 통과할 수 있습니다. DB가 마지막에 한 번 검사하면 어느 경로로 들어오든 막힙니다.',cost:'제약을 바꾸려면 스키마 변경이 필요하고 큰 테이블에서는 그 작업이 오래 걸릴 수 있습니다.'},
+   {question:'왜 값은 문자열에 이어 붙이지 않고 매개변수로 넘길까?',answer:'SQL 문장과 값을 따로 보내면 DB는 값을 절대 명령으로 해석하지 않습니다. 같은 문장을 다른 값으로 여러 번 실행할 때 DB가 미리 준비한 계획을 다시 쓸 수도 있습니다.',cost:'테이블 이름이나 정렬 방향처럼 문장의 구조 자체를 바꾸는 부분은 매개변수로 넘길 수 없어서 허용 목록으로 따로 검사해야 합니다.'}
+  ],
+  today:[
+   '대부분의 서버 데이터는 PostgreSQL이나 MySQL 같은 관계형 DB에서 시작합니다. 작은 도구나 한 프로세스만 쓰는 데이터는 SQLite로 충분합니다.',
+   '모든 테이블에 기본 키를 두고 다른 테이블을 가리키는 열에는 외래 키를, 꼭 있어야 하는 값에는 NOT NULL을, 겹치면 안 되는 값에는 UNIQUE를 겁니다.',
+   'SQL에 값을 넣을 때는 언제나 매개변수를 쓰고 ORM을 쓰더라도 실제로 어떤 SQL이 나가는지 로그로 확인합니다.'
+  ],
+  sources:[
+   ['IBM · Information Management System','https://www.ibm.com/history/information-management-system'],
+   ['Bachman, The Programmer as Navigator (CACM, 1973)','https://doi.org/10.1145/355611.362534'],
+   ['Codd, A Relational Model of Data for Large Shared Data Banks (1970)','https://doi.org/10.1145/362384.362685'],
+   ['Chamberlin, Early History of SQL (IEEE Annals, 2012)','https://doi.org/10.1109/MAHC.2012.61'],
+   ['PostgreSQL · A Brief History of PostgreSQL','https://www.postgresql.org/docs/current/history.html'],
+   ['SQLite · Most Widely Deployed SQL Database Engine','https://www.sqlite.org/mostdeployed.html']
+  ]
  }
 };
