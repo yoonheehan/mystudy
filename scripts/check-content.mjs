@@ -91,7 +91,7 @@ for(const p of problems){
  if(p.theory)check(pageTitles.some(t=>t===p.theory||t.startsWith(p.theory+' ·')),`practice '${p.id}': theory link '${p.theory}' matches no algorithm lesson`);
 }
 
-// Book-style stories: optional per lesson, but complete when present.
+// Book-style stories: every lesson opens with one, and each hands off to the next in reading order.
 const {stories}=load('src/lib/lesson-story.ts');
 for(const [id,story] of Object.entries(stories)){
  check(ids.has(id),`stories: '${id}' has no matching lesson`);
@@ -109,6 +109,7 @@ for(const [id,story] of Object.entries(stories)){
 // A story that hands off to the next lesson should sit right before it in reading order.
 const {chapterOrder}=load('src/lib/lesson-context.ts');
 const order=chapterOrder.flatMap(c=>lessons.filter(l=>l.category===c).map(l=>l.id)); // reading order across chapters
+for(const id of ids)check(stories[id],`${id}: missing story`);
 for(const [id,story] of Object.entries(stories))if(story.from){const prev=order[order.indexOf(id)-1];check(stories[prev]?.to,`${id}: story starts from the previous lesson, but '${prev}' has no closing hand-off`);}
 
 // Progress backup: a round trip keeps every page's record, and foreign or broken files are refused.

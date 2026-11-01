@@ -475,7 +475,8 @@ const sequence: Record<number, string[]> = {
  2: ['kit', 'rest', 'async', 'proxy', 'ratelimit'],
  3: ['normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],
  5: ['session', 'cors', 'validation', 'iam'],
- 4: ['docker', 'vpc', 'lb', 'storage', 'kubernetes']
+ 4: ['docker', 'vpc', 'lb', 'storage', 'kubernetes'],
+ 6: ['git', 'pytest', 'cicd', 'observability', 'scale', 'recovery']
 };
 const position = (x: Lesson) => { const i = sequence[x.category]?.indexOf(x.id) ?? -1; return i < 0 ? Infinity : i; };
 export const lessons = [...core, ...operatingSystem, ...expansion, ...additions].sort((a,b) => a.category-b.category || position(a)-position(b));

@@ -1164,5 +1164,177 @@ export const stories: Record<string, LessonStory> = {
    { title: 'Large-scale cluster management at Google with Borg', by: 'Abhishek Verma 외', where: 'EuroSys, 2015', note: 'Kubernetes의 원형이 된 Borg의 설계와 교훈입니다.', url: 'https://doi.org/10.1145/2741948.2741964' },
    { title: 'Borg, Omega, and Kubernetes', by: 'Brendan Burns, Brian Grant, David Oppenheimer, Eric Brewer, John Wilkes', where: 'Communications of the ACM, 2016', note: '세 시스템을 거치며 무엇을 배우고 바꿨는지 정리한 글입니다. 짧고 읽기 쉽습니다.', url: 'https://doi.org/10.1145/2890784' }
   ]
+ },
+ git: {
+  from: '6장에서 서비스를 클라우드에 올렸다. 마지막 장은 그 서비스를 계속 바꾸고 지켜보며 운영하는 이야기다. 모든 변경은 코드에서 시작하니 여러 사람이 함께 코드를 바꾸는 방법부터 본다.',
+  parts: [
+   { heading: '누가 언제 무엇을 바꿨나', paragraphs: [
+    '코드를 여러 사람이 함께 고치면 세 가지 질문이 늘 따라온다. 누가 언제 무엇을 바꿨는가? 동시에 고친 것을 어떻게 합칠까? 문제가 생기면 어디로 되돌릴까? 1970년대의 SCCS와 1980년대의 RCS는 파일 하나의 변경 이력을 남겼고 1990년의 CVS와 2000년의 Subversion은 프로젝트 전체의 이력을 중앙 서버 하나에 모았다.',
+    '중앙 서버 방식은 단순했지만 한계가 있었다. 서버에 연결해야 이력을 볼 수 있었고 브랜치를 만들고 합치는 일이 무겁고 위험해서 다들 꺼렸다. 결국 모두가 한 줄기에 직접 커밋하며 서로의 작업에 발을 밟았다.'
+   ]},
+   { heading: '몇 주 만에 만든 도구', paragraphs: [
+    '리눅스 커널 개발자들은 2002년부터 분산 버전 관리 도구 BitKeeper를 무료로 썼다. 2005년 개발 회사와의 관계가 틀어져 무료 사용이 철회되자 리누스 토르발스는 직접 새 도구를 만들기로 했다. 목표는 분명했다. 빨라야 하고, 설계가 단순해야 하며, 수천 개의 브랜치를 동시에 다룰 수 있어야 하고, 완전히 분산되어 있어야 한다. 2005년 4월 첫 커밋을 남긴 **Git**은 몇 달 만에 커널 개발을 떠맡았다.',
+    'Git의 설계는 단순한 생각 위에 있다. 모든 파일 내용과 폴더 구조와 커밋을 그 내용의 해시로 이름 붙여 저장한다. 같은 내용은 어디서나 같은 이름이라 중복이 없고 과거를 몰래 바꾸면 그 뒤의 모든 이름이 달라져 바로 드러난다. **브랜치**는 커밋 하나를 가리키는 작은 이름표일 뿐이라 만들고 지우는 데 비용이 거의 없다. 이 단원의 Python 예제가 Git이 파일에 이름을 붙이는 계산을 직접 해 본다.'
+   ]},
+   { heading: '브랜치가 가벼워지자 바뀐 협업', paragraphs: [
+    '브랜치가 공짜가 되자 일하는 방식이 바뀌었다. 기능마다 브랜치를 만들어 작업하고 끝나면 합친다. 2008년 문을 연 GitHub은 여기에 **풀 리퀘스트**를 얹었다. 변경을 합치기 전에 다른 사람이 읽고 의견을 주고 자동 검사를 돌리는 자리다. 코드 리뷰가 개발의 기본 단계가 된 것은 이 흐름 덕분이다.',
+    '합칠 때 두 브랜치가 같은 줄을 다르게 고쳤다면 Git은 **충돌**로 표시하고 사람에게 고르게 한다. 다른 줄을 고쳤다면 공통 조상과 비교해 알아서 합친다. 합치는 방식에는 두 갈래를 그대로 남기는 merge와 내 커밋을 상대 끝에 다시 쌓는 rebase가 있다. rebase하면 커밋의 부모가 바뀌어 이름(해시)도 바뀌므로 이미 다른 사람과 공유한 브랜치에는 쓰지 않는다. 이 단원의 그림이 같은 줄을 고친 두 브랜치를 합치는 과정을 보여 준다.'
+   ]},
+   { heading: '작게 자주 합치기', paragraphs: [
+    '2010년 빈센트 드리센이 develop, release, hotfix 브랜치를 나누는 git-flow를 발표해 널리 쓰였다. 하지만 하루에도 여러 번 배포하는 웹 서비스에서는 오래 사는 브랜치가 큰 충돌을 낳았다. 그래서 수명이 짧은 브랜치를 main에 자주 합치는 **트렁크 기반 개발**이 다시 주목받았다. 늦게 합칠수록 충돌이 커진다는 단순한 사실 때문이다. 자주 합치려면 합칠 때마다 망가지지 않았다는 확인이 필요하다. 그 확인이 다음 단원의 주제다.'
+   ]}
+  ],
+  to: '자주 합치려면 합칠 때마다 아무것도 망가지지 않았다는 것을 빨리 확인해야 한다. 사람이 매번 손으로 확인할 수는 없다. 다음 단원 테스트와 pytest가 이 확인을 기계에게 맡기는 방법을 다룬다.',
+  books: [
+   { title: 'Pro Git', by: 'Scott Chacon, Ben Straub', where: '1장 시작하기(Git의 짧은 역사), 3장 Git 브랜치, 10장 Git의 내부', note: 'Git 공식 사이트에서 무료로 읽을 수 있는 책입니다. 10장에서 객체 저장소를 직접 들여다봅니다.', url: 'https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git' }
+  ],
+  papers: [
+   { title: 'Git 첫 커밋', by: 'Linus Torvalds', where: '2005년 4월', note: '"the information manager from hell"이라는 메시지로 시작하는 첫 커밋입니다. README에 설계 생각이 짧게 적혀 있습니다.', url: 'https://github.com/git/git/commit/e83c5163316f89bfbde7d9ab23ca2e25604af290' },
+   { title: 'A successful Git branching model', by: 'Vincent Driessen', where: '블로그 글, 2010', note: 'git-flow를 소개한 글입니다. 나중에 덧붙인 메모에서 웹 앱에는 더 단순한 흐름을 권합니다.', url: 'https://nvie.com/posts/a-successful-git-branching-model/' },
+   { title: 'Trunk Based Development', by: 'Paul Hammant 외', where: '웹 사이트', note: '수명이 짧은 브랜치로 자주 합치는 방식을 정리한 사이트입니다.', url: 'https://trunkbaseddevelopment.com/' }
+  ]
+ },
+ pytest: {
+  from: '앞 단원에서 작게 자주 합치려면 합칠 때마다 망가지지 않았다는 확인이 필요하다고 했다. 그 확인을 사람 대신 코드가 하게 하는 방법을 본다.',
+  parts: [
+   { heading: '테스트는 다른 사람의 일이었다', paragraphs: [
+    '오랫동안 테스트는 개발이 끝난 뒤 별도의 팀이 하는 일이었다. 개발자가 코드를 넘기면 테스터가 화면을 눌러 보고 버그를 돌려보냈다. 이 방식은 느렸고 무엇보다 같은 확인을 매번 손으로 반복해야 했다. 한 곳을 고치면 다른 곳이 망가지는 일은 흔했지만 모든 것을 다시 확인할 시간은 없었다.'
+   ]},
+   { heading: '개발자가 테스트를 쓰기 시작하다', paragraphs: [
+    '1990년대 켄트 벡은 Smalltalk용 테스트 도구 SUnit을 만들었고 1997년 에리히 감마와 함께 Java용 JUnit을 만들었다. 개발자가 기대하는 결과를 코드로 적어 두고 버튼 하나로 전부 다시 확인하는 것이다. 이 틀은 수많은 언어로 퍼져 xUnit이라 불렸고 Python에도 2001년 unittest로 들어왔다.',
+    '벡은 2002년 『테스트 주도 개발』에서 더 나아가 테스트를 먼저 쓰자고 했다. 실패하는 테스트를 쓰고, 통과할 만큼만 코드를 쓰고, 정리한다. 테스트를 검증 도구가 아니라 설계 도구로 본 것이다. 테스트하기 쉬운 코드는 대개 의존성이 적고 경계가 분명하다. 3장 첫 단원에서 본 경계 나누기가 테스트를 쓰다 보면 저절로 드러난다.'
+   ]},
+   { heading: '덜 번거롭게: pytest', paragraphs: [
+    'Python의 unittest는 JUnit을 그대로 본떠 클래스를 만들고 self.assertEqual 같은 메서드를 외워야 했다. 2004년 PyPy 프로젝트의 홀거 크레켈은 이것이 Java 같은 문체라 번거롭다고 보고 평범한 함수와 assert 문만으로 테스트하는 도구를 만들기 시작했다. assert가 실패하면 그 식을 다시 해석해 양쪽 값을 보여 주는 기능이 처음부터 있었다. 이것이 py.test를 거쳐 지금의 **pytest**가 되었다.',
+    'pytest의 **픽스처**는 테스트에 필요한 준비물을 매개변수 이름으로 요청하게 해서 필요한 것만 준비하고 서로 조합하게 했다. **parametrize**는 같은 테스트를 여러 입력으로 반복해 경계값을 한 번에 다룬다. 이 단원의 그림이 버그를 테스트로 먼저 재현하고 고친 뒤 경계값을 묶어 두는 과정을 보여 준다.'
+   ]},
+   { heading: '얼마나, 어떤 테스트를', paragraphs: [
+    '모든 테스트가 같지는 않다. 함수 하나를 확인하는 단위 테스트는 빠르고 실패 원인이 분명하지만 부품 사이의 연결은 놓친다. 실제 DB와 서비스를 붙인 통합 테스트와 화면을 끝까지 눌러 보는 E2E 테스트는 실제와 가깝지만 느리고 가끔 이유 없이 실패한다. 마이크 콘이 제안하고 마틴 파울러가 정리한 **테스트 피라미드**는 빠른 테스트를 많이, 느린 테스트를 적게 두라고 권한다. 2000년 Haskell의 QuickCheck에서 시작된 속성 기반 테스트는 예시 몇 개 대신 무작위 입력 수백 개로 성질을 확인해 사람이 생각하지 못한 경우를 찾는다.'
+   ]}
+  ],
+  to: '테스트가 있어도 누군가 돌려야 의미가 있다. 모든 변경마다 테스트를 돌리고 통과하면 자동으로 배포까지 가게 하려면? 다음 단원 CI/CD가 이 흐름을 다룬다.',
+  books: [
+   { title: 'Test Driven Development: By Example (테스트 주도 개발)', by: 'Kent Beck', where: '1부 화폐 예제', note: '실패하는 테스트, 통과, 리팩터링의 짧은 순환을 예제 하나로 따라가는 책입니다. 테스트를 설계 도구로 보는 관점의 출발점입니다.' },
+   { title: 'Python Testing with pytest, 2nd Edition', by: 'Brian Okken', where: '2~5장 테스트 함수, 픽스처, 내장 픽스처, 매개변수화', note: 'pytest의 픽스처와 parametrize를 실무 예제로 차근차근 설명합니다.' },
+   { title: 'Architecture Patterns with Python (파이썬으로 살펴보는 아키텍처 패턴)', by: 'Harry Percival, Bob Gregory', where: '3장 결합과 추상화, 5장 높은 기어와 낮은 기어의 TDD', note: '테스트하기 쉬운 경계를 어떻게 긋는지, 어떤 층을 어떤 테스트로 확인할지 설명합니다.', url: 'https://www.cosmicpython.com/' }
+  ],
+  papers: [
+   { title: 'pytest · History', by: 'pytest 개발팀', where: '공식 문서', note: '2004년 py.test의 시작부터 지금까지의 역사를 정리한 문서입니다.', url: 'https://docs.pytest.org/en/stable/history.html' },
+   { title: 'QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs', by: 'Koen Claessen, John Hughes', where: 'ICFP, 2000', note: '속성 기반 테스트의 출발점이 된 논문입니다.', url: 'https://doi.org/10.1145/351240.351266' },
+   { title: 'TestPyramid', by: 'Martin Fowler', where: '블로그 글, 2012', note: '테스트 피라미드의 생각을 짧게 정리한 글입니다.', url: 'https://martinfowler.com/bliki/TestPyramid.html' }
+  ]
+ },
+ cicd: {
+  from: '앞 단원에서 기대하는 동작을 테스트로 적었다. 이제 모든 변경마다 그 테스트를 자동으로 돌리고 통과한 변경을 안전하게 운영까지 보내는 흐름을 본다.',
+  parts: [
+   { heading: '통합의 지옥', paragraphs: [
+    '1990년대의 많은 팀은 각자 몇 주, 몇 달씩 따로 개발한 뒤 출시 직전에 한꺼번에 합쳤다. 합치는 순간 서로의 가정이 부딪혀 빌드가 깨지고 버그가 쏟아졌고 이 "통합 단계"가 개발만큼 오래 걸리기도 했다. 늦게 합칠수록 고통은 커졌다.',
+    '그래서 1990년대 후반 켄트 벡의 익스트림 프로그래밍은 반대로 하자고 했다. 하루에도 여러 번 합치고 합칠 때마다 전체를 빌드하고 테스트한다. 고통스러운 일일수록 자주 해서 작게 만드는 것이다. 2000년 마틴 파울러의 글 「Continuous Integration」이 이 방식을 정리하며 **지속적 통합**(CI)이라는 이름이 널리 퍼졌다. 이름 자체는 1991년 그래디 부치가 먼저 썼다.'
+   ]},
+   { heading: '배포도 자주, 작게', paragraphs: [
+    '통합을 자동화하자 다음 병목은 배포였다. 2009년 Flickr의 존 올스포와 폴 해먼드는 "하루 10번 이상 배포"라는 발표로 개발과 운영이 함께 자주, 작게 배포하는 모습을 보여 줬고 이 흐름은 DevOps라는 이름으로 퍼졌다. 2010년 제즈 험블과 데이비드 팔리의 책 『Continuous Delivery』는 커밋부터 운영까지 모든 단계를 자동화한 **배포 파이프라인**을 정리했다. 언제든 버튼 하나로 배포할 수 있는 상태를 유지하는 것이 지속적 전달, 그 버튼까지 자동으로 누르는 것이 지속적 배포다.',
+    '자주 배포하는 것이 오히려 안전하다는 근거도 쌓였다. 2018년 『Accelerate』는 수천 개 조직을 조사해 배포를 자주 하는 팀일수록 장애 복구가 빠르고 변경 실패율도 낮다는 결과를 냈다. 변경이 작으면 무엇이 문제인지 찾기 쉽고 되돌리기도 쉽기 때문이다.'
+   ]},
+   { heading: '배포 하나가 회사를 무너뜨린 날', paragraphs: [
+    '2012년 8월 1일 미국의 증권사 Knight Capital은 새 거래 코드를 배포하면서 서버 8대 중 한 대에 새 코드를 빠뜨렸다. 그 서버에서는 오래전에 쓰지 않게 된 옛 기능이 재활용된 설정값 때문에 깨어났고 45분 동안 의도하지 않은 주문을 쏟아 내 4억 달러가 넘는 손실을 냈다. 수동 배포, 서버마다 다른 상태, 빠르게 되돌릴 수단의 부재가 겹친 사고였다.',
+    '이런 사고가 가르치는 것은 같은 산출물을 모든 서버에 똑같이 배포하고 문제가 보이면 빨리 되돌릴 수 있어야 한다는 것이다. 그래서 파이프라인은 한 번 만든 이미지를 그대로 테스트, 스테이징, 운영으로 옮긴다. 새 버전을 일부에게만 먼저 보내는 **카나리 배포**는 지표가 나빠지면 자동으로 되돌린다. 이 단원의 그림이 그 과정을 보여 준다.'
+   ]}
+  ],
+  to: '카나리 배포가 자동으로 되돌리려면 "지표가 나빠졌다"는 것을 알아야 한다. 운영 중인 서비스 안에서 무슨 일이 일어나는지 어떻게 볼까? 다음 단원 로그, 메트릭, 트레이스가 이 질문을 다룬다.',
+  books: [
+   { title: 'Continuous Delivery (신뢰할 수 있는 소프트웨어 출시)', by: 'Jez Humble, David Farley', where: '1장 소프트웨어 배포의 문제, 5장 배포 파이프라인 해부', note: '배포 파이프라인이라는 개념을 정리한 책입니다. 수동 배포가 왜 위험한지부터 설명합니다.', url: 'https://continuousdelivery.com/' },
+   { title: 'Accelerate', by: 'Nicole Forsgren, Jez Humble, Gene Kim', where: '1부 발견한 것', note: '배포 빈도, 변경 리드 타임, 복구 시간, 변경 실패율이라는 네 지표와 그 근거를 설명합니다.', url: 'https://itrevolution.com/product/accelerate/' }
+  ],
+  papers: [
+   { title: 'Continuous Integration', by: 'Martin Fowler', where: '블로그 글, 2000 (2006·2024 개정)', note: 'CI의 실천 원칙을 정리한 글입니다.', url: 'https://martinfowler.com/articles/continuousIntegration.html' },
+   { title: 'DORA Research', by: 'DORA', where: '웹 사이트', note: '『Accelerate』로 이어진 연구 프로그램입니다. 해마다 보고서를 냅니다.', url: 'https://dora.dev/' }
+  ]
+ },
+ observability: {
+  from: '앞 단원에서 카나리 배포가 지표를 보고 스스로 되돌린다고 했다. 운영 중인 서비스 안을 들여다보는 방법으로 넘어간다.',
+  parts: [
+   { heading: '서버 한 대를 지켜보던 시절', paragraphs: [
+    '서버가 몇 대뿐일 때 운영자는 서버에 접속해 로그 파일을 읽고 top으로 CPU를 봤다. 1980년대 BSD의 syslog는 프로그램들의 로그를 한곳으로 모으는 표준이 되었다. 2000년대에는 Nagios 같은 도구가 서버가 살아 있는지, 디스크가 찼는지를 주기적으로 확인해 문제가 생기면 알렸다. 질문은 단순했다. 이 서버는 괜찮은가?'
+   ]},
+   { heading: '무엇을 봐야 하는가: 네 가지 신호', paragraphs: [
+    '서버가 수백, 수천 대가 되자 서버마다의 상태보다 서비스 전체가 사용자에게 어떻게 보이는지가 중요해졌다. 2016년 구글의 『Site Reliability Engineering』은 사용자 쪽에서 봐야 할 **네 가지 황금 신호**를 정리했다. 요청이 얼마나 걸리는가(지연), 얼마나 많이 오는가(트래픽), 얼마나 실패하는가(오류), 자원이 얼마나 찼는가(포화도)다. 그리고 "이 서비스는 요청의 99.9%를 300ms 안에 성공시킨다" 같은 목표(**SLO**)를 정하고 그 목표를 기준으로 알림을 보내라고 권했다. CPU 사용률이 높다는 알림은 사용자가 괜찮다면 새벽에 사람을 깨울 이유가 없다.',
+    '평균은 이 판단을 흐린다. 요청 100개 중 99개가 10ms, 1개가 5초면 평균은 60ms로 멀쩡해 보이지만 사용자 100명 중 한 명은 5초를 기다렸다. 그래서 지연은 평균이 아니라 p99 같은 **백분위수**로 본다.'
+   ]},
+   { heading: '요청 하나를 끝까지 따라가기: 분산 추적', paragraphs: [
+    '서비스가 여러 개로 나뉘자 새로운 문제가 생겼다. 요청 하나가 API 서버, 주문 서비스, 결제 서비스, DB를 거쳐 가는데 어디서 느려졌는지 알 수 없었다. 서비스마다 로그는 있지만 같은 요청의 로그끼리 이어 볼 방법이 없었다.',
+    '2010년 구글은 Dapper 논문에서 요청이 들어올 때 고유한 추적 ID를 붙이고 서비스를 건널 때마다 그 ID를 함께 넘겨 각 구간(**스팬**)의 시작과 끝을 기록하는 방법을 공개했다. 모으면 요청 하나가 지나간 길과 구간별 시간이 나무 모양으로 보인다. 이것이 **분산 추적**이다. 이 단원의 그림이 느린 요청 하나를 스팬으로 펼쳐 원인을 찾는 과정을 보여 준다. 2019년에는 흩어져 있던 오픈소스 표준들이 OpenTelemetry로 합쳐져 로그, 메트릭, 트레이스를 같은 방식으로 수집하게 되었다.'
+   ]},
+   { heading: '모니터링에서 관측 가능성으로', paragraphs: [
+    '메트릭은 미리 정한 질문에 답한다. "오류율이 얼마인가"처럼. 그런데 장애는 대개 아무도 예상하지 못한 방식으로 일어난다. 그래서 요즘은 **관측 가능성**이라는 말을 쓴다. 제어 이론에서 빌려 온 말로 시스템의 외부 출력만 보고 내부 상태를 알아낼 수 있는 정도를 뜻한다. 요청마다 사용자, 버전, 경로 같은 정보를 풍부하게 남겨 두면 처음 보는 문제도 "버전 2.3을 쓰는 안드로이드 사용자의 결제만 느리다"처럼 좁혀 갈 수 있다. 로그를 사람이 읽는 문장이 아니라 JSON 같은 구조로 남기는 이유가 이것이다.'
+   ]}
+  ],
+  to: '지표를 보다 보면 언젠가 "요청이 늘어서 느려진다"는 순간을 만난다. 서버를 늘리면 해결될까? 어디가 진짜 병목일까? 다음 단원 스케일링과 병목이 이 질문을 다룬다.',
+  books: [
+   { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '4장 서비스 수준 목표, 6장 분산 시스템 모니터링', note: '네 가지 황금 신호와 SLO 기반 알림을 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://sre.google/sre-book/monitoring-distributed-systems/' },
+   { title: 'Observability Engineering', by: 'Charity Majors, Liz Fong-Jones, George Miranda', where: '1부 관측 가능성으로 가는 길', note: '모니터링과 관측 가능성의 차이, 구조화된 이벤트로 처음 보는 문제를 좁히는 방법을 설명합니다.' }
+  ],
+  papers: [
+   { title: 'Dapper, a Large-Scale Distributed Systems Tracing Infrastructure', by: 'Benjamin H. Sigelman 외', where: 'Google 기술 보고서, 2010', note: '분산 추적의 원형이 된 논문입니다. 지금의 트레이스 개념이 모두 여기서 나왔습니다.', url: 'https://research.google/pubs/dapper-a-large-scale-distributed-systems-tracing-infrastructure/' },
+   { title: 'What is OpenTelemetry?', by: 'OpenTelemetry', where: '공식 문서', note: 'OpenTracing과 OpenCensus가 합쳐진 배경과 구성 요소를 설명합니다.', url: 'https://opentelemetry.io/docs/what-is-opentelemetry/' },
+   { title: 'W3C Trace Context', by: 'W3C', where: '권고안', note: '서비스 사이에 추적 ID를 넘기는 traceparent 헤더를 정의합니다.', url: 'https://www.w3.org/TR/trace-context/' }
+  ]
+ },
+ scale: {
+  from: '앞 단원에서 지표로 서비스 안을 들여다보는 방법을 봤다. 지표를 보다 보면 요청이 늘수록 느려지는 순간을 만난다.',
+  parts: [
+   { heading: '서버를 늘리면 빨라질까', paragraphs: [
+    '요청이 늘어 느려지면 가장 먼저 떠오르는 답은 서버를 늘리는 것이다. 서버를 더 좋은 것으로 바꾸는 **수직 확장**과 같은 서버를 여러 대로 늘리는 **수평 확장**이 있다. 하지만 서버를 두 배로 늘렸는데 처리량이 거의 그대로인 일이 흔하다. 느린 곳이 앱 서버가 아니었기 때문이다.',
+    '1967년 IBM의 진 암달은 이 문제를 하나의 식으로 보였다. 작업 중 병렬로 나눌 수 없는 부분이 10%라면 프로세서를 아무리 늘려도 10배 이상 빨라지지 않는다. 나눌 수 없는 부분이 전체의 상한을 정한다는 이 **암달의 법칙**은 서버 확장에도 그대로 통한다. 앱 서버를 백 대로 늘려도 모두가 DB 한 대를 기다린다면 DB가 상한이다.'
+   ]},
+   { heading: '줄을 서는 시간: 리틀의 법칙', paragraphs: [
+    '1961년 존 리틀은 줄 서기에 관한 단순한 관계를 증명했다. 시스템 안에 있는 평균 작업 수는 도착률과 평균 머무는 시간의 곱이다(L = λW). 초당 100개의 요청이 오고 각각 0.2초 걸리면 동시에 20개가 처리 중이다. 이 식은 놀랄 만큼 쓸모가 많다. DB 커넥션 풀이 10개인데 동시에 20개가 필요하면 나머지 10개는 줄을 선다. 요청 처리 시간이 늘면 같은 트래픽에서도 동시 연결이 늘어 결국 어딘가의 한도에 닿는다.',
+    '이 단원의 그림처럼 앱 서버를 늘렸더니 오히려 DB 연결이 한도를 넘어 실패하는 것도 같은 이치다. 서버가 늘면 각 서버의 커넥션 풀이 더해져 DB가 감당할 연결 수를 넘는다. 병목은 옮겨 다닌다.'
+   ]},
+   { heading: '병목을 찾는 순서', paragraphs: [
+    '그래서 확장의 첫걸음은 늘리기가 아니라 재기다. 3장 진단에서 본 브렌던 그레그의 USE 방법처럼 자원마다 사용률, 포화도, 오류를 보고 요청 하나의 시간이 어디에 쓰이는지 앞 단원의 분산 추적으로 확인한다. 가장 오래 기다리는 곳이 병목이고 그곳을 넓히지 않으면 다른 곳을 아무리 늘려도 소용이 없다.',
+    '마틴 클레프만의 『데이터 중심 애플리케이션 설계』는 1장에서 트위터의 예를 든다. 트윗을 쓸 때마다 모든 팔로워의 타임라인에 미리 넣어 두면 읽기가 빨라지지만 팔로워가 수천만 명인 계정은 쓰기 한 번에 수천만 번의 작업이 생긴다. 부하는 요청 수 하나로 표현되지 않고 어떤 요청이 어떤 일을 만드는지 알아야 설계할 수 있다는 것이다.'
+   ]},
+   { heading: '늘릴 수 있게 만들어 두기', paragraphs: [
+    '수평 확장이 쉬우려면 앱 서버가 상태를 갖지 않아야 한다. 세션은 5장처럼 공유 저장소나 토큰에, 파일은 6장처럼 객체 스토리지에 두면 어떤 서버가 요청을 받아도 같다. 그러면 Kubernetes나 오토스케일링이 부하에 따라 서버를 늘리고 줄일 수 있다. 상태가 남는 곳, 즉 DB는 4장에서 본 캐시, 복제본, 샤딩으로 넓힌다. 결국 확장이란 "상태를 어디에 두고 그곳을 어떻게 넓힐까"라는 질문이다.'
+   ]}
+  ],
+  to: '아무리 잘 설계해도 장애는 일어난다. 데이터센터가 멈추고, 누군가 실수로 테이블을 지우고, 배포가 잘못된다. 마지막 단원 장애 대응과 백업이 그때를 위한 준비를 다룬다.',
+  books: [
+   { title: 'Designing Data-Intensive Applications (데이터 중심 애플리케이션 설계)', by: 'Martin Kleppmann', where: '1장 신뢰할 수 있고 확장 가능하며 유지보수하기 쉬운 애플리케이션', note: '부하를 어떻게 표현하고 성능을 어떻게 잴지, 트위터 타임라인 예제로 설명합니다.', url: 'https://dataintensive.net/' },
+   { title: 'Systems Performance, 2nd Edition', by: 'Brendan Gregg', where: '2장 방법론, 6~10장 CPU·메모리·파일 시스템·디스크·네트워크', note: '병목을 체계적으로 찾는 방법을 자원별로 설명합니다.', url: 'https://www.brendangregg.com/systems-performance-2nd-edition-book.html' }
+  ],
+  papers: [
+   { title: 'Validity of the Single Processor Approach to Achieving Large Scale Computing Capabilities', by: 'Gene M. Amdahl', where: 'AFIPS Spring Joint Computer Conference, 1967', note: '암달의 법칙이 나온 짧은 논문입니다.', url: 'https://doi.org/10.1145/1465482.1465560' },
+   { title: 'A Proof for the Queuing Formula: L = λW', by: 'John D. C. Little', where: 'Operations Research, 1961', note: '리틀의 법칙을 증명한 논문입니다.', url: 'https://doi.org/10.1287/opre.9.3.383' }
+  ]
+ },
+ recovery: {
+  from: '앞 단원까지 서비스를 늘리고 지켜보는 방법을 봤다. 아무리 잘 만들어도 장애는 일어난다. 이 책의 마지막 단원은 그때를 위한 준비다.',
+  parts: [
+   { heading: '고장은 예외가 아니라 일상', paragraphs: [
+    '1988년 버클리의 패터슨, 깁슨, 카츠는 값싼 디스크 여러 개를 묶어 하나가 고장 나도 데이터를 잃지 않게 하는 RAID를 제안했다. 비싸고 튼튼한 장비 하나 대신 값싸고 잘 고장 나는 장비 여러 개를 쓰고 고장을 전제로 설계하자는 생각이었다. 6장에서 본 GFS와 S3, 4장의 복제가 모두 같은 생각 위에 있다. 장비가 수천 대면 매일 어딘가에서 디스크가 죽는다.',
+    '그런데 복제는 모든 문제를 막지 못한다. 누군가 실수로 테이블을 지우면 그 삭제도 복제본에 충실하게 복제된다. 랜섬웨어가 데이터를 암호화해도 마찬가지다. 그래서 복제와 별개로 과거의 특정 시점으로 돌아갈 수 있는 **백업**이 필요하다.'
+   ]},
+   { heading: '얼마나 잃어도 되고 얼마나 멈춰도 되나', paragraphs: [
+    '백업 계획은 두 숫자로 시작한다. 장애가 나면 최대 몇 분 치의 데이터를 잃어도 되는가(**RPO**, 복구 시점 목표), 그리고 몇 분 안에 다시 서비스해야 하는가(**RTO**, 복구 시간 목표)다. 하루 한 번 백업하면 RPO는 최대 하루다. 4장 트랜잭션 단원의 WAL을 계속 보관해 두면 마지막 전체 백업에 로그를 다시 적용해 원하는 초 단위 시점으로 돌아갈 수 있다. 이것이 **시점 복구**(PITR)다. 이 단원의 그림이 실수로 지운 테이블을 지우기 직전 시점으로 되살리는 과정을 보여 준다.'
+   ]},
+   { heading: '복구해 보지 않은 백업은 백업이 아니다', paragraphs: [
+    '2017년 1월 GitLab의 엔지니어가 지쳐서 밤늦게 작업하다 운영 DB의 데이터 디렉터리를 지웠다. 복제본 문제를 고치던 중이었고 지우는 서버를 착각했다. 회사는 백업과 복제 수단을 다섯 가지나 갖추고 있었지만 막상 복구하려 하자 어느 것도 제대로 동작하지 않았다. 정기 백업은 버전 불일치로 조용히 실패하고 있었고 실패 알림 메일은 차단되어 아무도 받지 못했다. 결국 우연히 몇 시간 전에 만들어 둔 스냅숏으로 복구했고 약 6시간 치 데이터를 잃었다. GitLab은 이 과정을 실시간으로 공개하고 상세한 사후 분석을 남겼다.',
+    '이 사건의 교훈은 백업을 만드는 것보다 복구할 수 있다는 것을 확인하는 일이 중요하다는 점이다. 그래서 복구 연습을 정기적으로 하고 실제로 걸린 시간을 RTO와 비교한다. 『Site Reliability Engineering』의 데이터 무결성 장도 같은 말을 한다. 사람들이 원하는 것은 백업이 아니라 복구다.'
+   ]},
+   { heading: '사람을 탓하지 않는 사후 분석', paragraphs: [
+    '장애가 끝나면 무엇이 일어났고 왜 일어났는지 기록한다. 구글 SRE가 널리 알린 **비난 없는 사후 분석**은 누가 실수했는지가 아니라 왜 그 실수가 가능했는지, 무엇이 피해를 키웠는지를 묻는다. GitLab의 경우라면 "엔지니어가 서버를 착각했다"가 아니라 "두 서버를 오가며 같은 작업을 하다 보니 지금 어느 서버인지 헷갈리기 쉬웠다", "백업 실패를 아무도 알 수 없었다"를 찾는다. 사람을 탓하면 다음 사람은 실수를 숨기고 시스템은 그대로 남는다.',
+    '돌아보면 이 책은 프로세스 하나가 CPU를 나눠 쓰는 이야기에서 시작해 여러 서버와 사람이 함께 장애를 견디는 이야기로 끝났다. 각 단원의 기술은 모두 그 시대의 누군가가 실제 문제를 풀려다 만든 답이고 그 답은 언제나 새로운 문제를 데려왔다. 기술을 외우기보다 "이것은 어떤 문제의 답이었나"를 묻는 습관이 이 책에서 가져갔으면 하는 것이다.'
+   ]}
+  ],
+  books: [
+   { title: 'Site Reliability Engineering (사이트 신뢰성 엔지니어링)', by: 'Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy (편)', where: '14장 장애 관리, 15장 사후 분석 문화, 26장 데이터 무결성', note: '장애 대응 역할, 비난 없는 사후 분석, 백업보다 복구가 중요한 이유를 설명합니다. 웹에서 무료로 읽을 수 있습니다.', url: 'https://sre.google/sre-book/data-integrity/' },
+   { title: 'Release It!, 2nd Edition', by: 'Michael T. Nygard', where: '2장 사례 연구: 항공사를 멈춘 예외', note: '실제 장애가 어떻게 번지고 어떻게 복구되었는지 이야기로 보여 줍니다.', url: 'https://pragprog.com/titles/mnee2/release-it-second-edition/' }
+  ],
+  papers: [
+   { title: 'A Case for Redundant Arrays of Inexpensive Disks (RAID)', by: 'David A. Patterson, Garth Gibson, Randy H. Katz', where: 'SIGMOD, 1988', note: '고장을 전제로 값싼 장비를 묶는 설계의 고전입니다.', url: 'https://doi.org/10.1145/50202.50214' },
+   { title: 'Postmortem of database outage of January 31', by: 'GitLab', where: 'GitLab 블로그, 2017', note: '다섯 가지 백업이 모두 실패한 과정과 교훈을 상세히 공개한 사후 분석입니다.', url: 'https://about.gitlab.com/blog/2017/02/10/postmortem-of-database-outage-of-january-31/' },
+   { title: 'Postmortem Culture: Learning from Failure', by: 'John Lunney, Sue Lueder (Google SRE)', where: 'Site Reliability Engineering 15장', note: '비난 없는 사후 분석의 원칙을 설명합니다.', url: 'https://sre.google/sre-book/postmortem-culture/' }
+  ]
  }
 };
