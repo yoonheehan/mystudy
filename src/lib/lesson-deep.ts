@@ -1088,5 +1088,29 @@ export const deeps:Record<string,LessonDeep>={
    ['Kubernetes · Controllers','https://kubernetes.io/docs/concepts/architecture/controller/'],
    ['Kubernetes · Pod Lifecycle (termination)','https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/']
   ]
+ },
+ machine:{
+  definition:'CPU는 메모리에서 명령을 가져와(fetch) 무슨 일인지 해석하고(decode) 실행하는(execute) 사이클을 반복합니다. 다음에 가져올 명령의 주소는 프로그램 카운터(PC)라는 레지스터가 기억하고 명령을 하나 실행할 때마다 PC가 다음 명령으로 넘어갑니다. 분기 명령은 PC를 다른 주소로 바꿔 반복문과 if를 만듭니다. CPU가 이해하는 명령의 목록과 형식을 명령어 집합(ISA)이라고 하며 x86과 ARM이 대표적입니다. 사람이 쓴 코드는 컴파일러가 미리 그 ISA의 기계어로 바꾸거나 인터프리터라는 프로그램이 실행하면서 해석합니다.',
+  terms:[
+   ['저장 프로그램 방식','명령을 숫자로 바꿔 데이터와 같은 메모리에 저장하는 구조입니다. 폰 노이만 구조라고도 부릅니다.'],
+   ['프로그램 카운터','다음에 실행할 명령의 메모리 주소를 담은 레지스터입니다.'],
+   ['레지스터','CPU 안의 아주 작고 빠른 저장소입니다. 계산 중인 값을 담습니다.'],
+   ['명령어 집합(ISA)','CPU가 이해하는 명령의 목록과 형식입니다. x86, ARM 등이 있습니다.'],
+   ['컴파일러','소스 코드 전체를 미리 다른 형태(기계어, 바이트코드)로 바꾸는 프로그램입니다.'],
+   ['인터프리터','코드를 실행하면서 해석하는 프로그램입니다. CPython은 바이트코드를 해석해 실행합니다.']
+  ],
+  sections:[
+   {title:'명령 하나가 실행되는 순서',body:'counter = counter + 1을 단순한 CPU의 기계어로 옮기면 대략 세 명령이 됩니다.',list:['LOAD R1, [counter]: 메모리의 counter 값을 레지스터 R1로 읽습니다.','ADD R1, 1: 레지스터 R1에 1을 더합니다. 이때 메모리의 counter는 아직 그대로입니다.','STORE [counter], R1: R1의 값을 메모리에 씁니다.','명령마다 PC가 다음 주소로 넘어갑니다. 타이머 인터럽트가 이 세 명령 사이 어디에서든 끼어들 수 있다는 점이 1장 동기화 단원의 출발점입니다.']},
+   {title:'소스 코드가 실행 파일이 되기까지',body:'C 같은 컴파일 언어는 실행 전에 여러 단계를 거칩니다.',list:['컴파일러가 소스를 그 CPU의 어셈블리어로 바꿉니다.','어셈블러가 어셈블리어를 기계어로 바꿔 목적 파일을 만듭니다.','링커가 여러 목적 파일과 라이브러리를 이어 하나의 실행 파일로 만듭니다.','실행하면 운영체제의 로더가 실행 파일을 메모리에 올리고 PC를 시작 주소에 맞춥니다. 이때부터 이것이 프로세스입니다.']},
+   {title:'Python 코드가 실행되는 길',body:'CPython은 조금 다른 길을 갑니다. 소스를 읽어 문법 구조(AST)를 만들고 그것을 바이트코드로 컴파일합니다. 한 번 컴파일한 모듈은 __pycache__ 폴더의 .pyc 파일로 저장해 다음에는 이 단계를 건너뜁니다. 그다음 C로 작성된 인터프리터의 큰 반복문이 바이트코드를 하나씩 꺼내 해당하는 C 코드를 실행합니다. 즉 CPU가 실제로 실행하는 것은 인터프리터의 기계어이고 우리의 Python 코드는 그 인터프리터가 읽는 데이터입니다.'},
+   {title:'왜 속도에 층이 생겼나',body:'CPU가 빨라지는 속도를 메모리가 따라가지 못하면서 저장 장치에 층이 생겼습니다. 대략 레지스터는 1나노초보다 빠르고, CPU 캐시는 몇 나노초, 메인 메모리는 수십~백 나노초, SSD는 수십~백 마이크로초가 걸립니다. 메모리를 한 번 기다리는 동안 CPU는 수백 개의 명령을 실행할 수 있습니다. 그래서 자주 쓰는 데이터를 가까운 층에 두는 캐시가 컴퓨터의 거의 모든 층에 있습니다. 이 생각은 4장 캐시 단원에서 다시 만납니다.'},
+   {title:'컴파일, 인터프리트, 그리고 JIT',body:'미리 컴파일하면 실행 중에 해석할 필요가 없어 빠르지만 CPU와 운영체제마다 따로 빌드해야 합니다. 인터프리터는 어디서든 같은 코드를 바로 실행하지만 해석 비용이 듭니다. Java와 PyPy, 그리고 Python 3.13의 실험적 JIT는 실행하면서 자주 쓰이는 부분만 기계어로 바꿔 둡니다. 어떤 방식이든 마지막에 CPU가 실행하는 것은 기계어라는 점은 같습니다.'}
+  ],
+  sources:[
+   ['Python · dis — Disassembler for Python bytecode','https://docs.python.org/3/library/dis.html'],
+   ['Python · Glossary (bytecode, interpreted)','https://docs.python.org/3/glossary.html'],
+   ['PEP 744 · JIT Compilation','https://peps.python.org/pep-0744/'],
+   ['Nand2Tetris · The Elements of Computing Systems','https://www.nand2tetris.org/']
+  ]
  }
 };

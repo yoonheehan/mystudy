@@ -42,6 +42,7 @@ export const sources = {
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ pyDis: { name: 'Python · dis', url: 'https://docs.python.org/3/library/dis.html' },
  pytestDocs: { name: 'pytest · Fixtures', url: 'https://docs.pytest.org/en/stable/how-to/fixtures.html' },
  gitBook: { name: 'Pro Git · Branching', url: 'https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging' },
  k8sDeployment: { name: 'Kubernetes · Deployments', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/' }
@@ -466,11 +467,25 @@ reconcile()
 print(sorted(pods))        # 다시 3개
 desired = 2                # 원하는 상태를 바꾸면
 reconcile()
-print(len(pods))           # 2개로 줄어듭니다`,codeNotes:['컨트롤러는 "무엇이 바뀌었나"가 아니라 "지금 상태와 원하는 상태가 다른가"를 봅니다. 그래서 놓친 이벤트가 있어도 다음 확인에서 바로잡습니다.','실제 Deployment 컨트롤러는 ReplicaSet을 거쳐 파드를 만들고 롤링 업데이트 때 새 버전과 옛 버전의 개수를 함께 조절합니다.','desired 값을 바꿔 가며 reconcile을 여러 번 불러도 결과가 같은지 확인하세요. 조정 루프는 멱등해야 합니다.'],answer:'Kubernetes는 원하는 상태를 선언하면 컨트롤러가 실제 상태와 비교해 계속 맞춰 주는 시스템입니다. Deployment로 파드 수와 롤링 업데이트를 관리하고 Service로 안정된 주소를 주며 readiness probe로 준비된 파드에만 트래픽을 보내겠습니다. 자원 requests와 limits, 종료 시 SIGTERM 처리도 함께 설정합니다.',follow:[['liveness와 readiness probe는 어떻게 다른가요?','readiness가 실패하면 트래픽만 끊고 파드는 그대로 둡니다. liveness가 실패하면 컨테이너를 재시작합니다. liveness에 DB 같은 외부 의존성을 넣으면 DB 장애 때 모든 파드가 재시작되는 연쇄 장애가 생깁니다.'],['파드를 지울 때 요청이 끊기지 않게 하려면?','Kubernetes는 SIGTERM을 보내고 유예 시간(기본 30초)을 줍니다. 앱은 새 요청을 받지 않고 진행 중인 요청을 마친 뒤 종료해야 합니다. Service에서 빠지는 데 시간이 걸리므로 종료 직전 짧은 대기를 두기도 합니다.']],memory:'원하는 상태를 적어 두면 컨트롤러가 계속 맞춘다. 준비된 파드만 손님을 받는다.',mistake:'liveness probe에 DB 연결 확인을 넣지 마세요. DB가 잠깐 느려지면 모든 파드가 동시에 재시작됩니다.',quiz:{question:'파드는 Running인데 시작 직후 요청이 실패한다면 가장 먼저 확인할 것은?',options:['readiness probe 설정','노드의 디스크 크기','DNS TTL'],correct:0,explanation:'readiness probe가 없으면 앱이 준비되기 전부터 Service가 트래픽을 보냅니다.'},refs:['k8sDeployment','docker']})
+print(len(pods))           # 2개로 줄어듭니다`,codeNotes:['컨트롤러는 "무엇이 바뀌었나"가 아니라 "지금 상태와 원하는 상태가 다른가"를 봅니다. 그래서 놓친 이벤트가 있어도 다음 확인에서 바로잡습니다.','실제 Deployment 컨트롤러는 ReplicaSet을 거쳐 파드를 만들고 롤링 업데이트 때 새 버전과 옛 버전의 개수를 함께 조절합니다.','desired 값을 바꿔 가며 reconcile을 여러 번 불러도 결과가 같은지 확인하세요. 조정 루프는 멱등해야 합니다.'],answer:'Kubernetes는 원하는 상태를 선언하면 컨트롤러가 실제 상태와 비교해 계속 맞춰 주는 시스템입니다. Deployment로 파드 수와 롤링 업데이트를 관리하고 Service로 안정된 주소를 주며 readiness probe로 준비된 파드에만 트래픽을 보내겠습니다. 자원 requests와 limits, 종료 시 SIGTERM 처리도 함께 설정합니다.',follow:[['liveness와 readiness probe는 어떻게 다른가요?','readiness가 실패하면 트래픽만 끊고 파드는 그대로 둡니다. liveness가 실패하면 컨테이너를 재시작합니다. liveness에 DB 같은 외부 의존성을 넣으면 DB 장애 때 모든 파드가 재시작되는 연쇄 장애가 생깁니다.'],['파드를 지울 때 요청이 끊기지 않게 하려면?','Kubernetes는 SIGTERM을 보내고 유예 시간(기본 30초)을 줍니다. 앱은 새 요청을 받지 않고 진행 중인 요청을 마친 뒤 종료해야 합니다. Service에서 빠지는 데 시간이 걸리므로 종료 직전 짧은 대기를 두기도 합니다.']],memory:'원하는 상태를 적어 두면 컨트롤러가 계속 맞춘다. 준비된 파드만 손님을 받는다.',mistake:'liveness probe에 DB 연결 확인을 넣지 마세요. DB가 잠깐 느려지면 모든 파드가 동시에 재시작됩니다.',quiz:{question:'파드는 Running인데 시작 직후 요청이 실패한다면 가장 먼저 확인할 것은?',options:['readiness probe 설정','노드의 디스크 크기','DNS TTL'],correct:0,explanation:'readiness probe가 없으면 앱이 준비되기 전부터 Service가 트래픽을 보냅니다.'},refs:['k8sDeployment','docker']}),
+l({id:'machine',category:1,title:'컴퓨터는 프로그램을 어떻게 실행하나',english:'Stored Program / CPU / Instruction Cycle / Compiler · Interpreter',hook:'print("hello") 한 줄은 CPU에게 어떤 모습으로 도착할까?',definition:'컴퓨터는 메모리에 저장된 명령어를 CPU가 하나씩 꺼내 실행하는 기계입니다. 프로그램도 데이터처럼 메모리에 들어 있다는 생각을 저장 프로그램 방식이라고 부르며 지금의 거의 모든 컴퓨터가 이 구조입니다. CPU는 다음에 실행할 명령의 위치를 프로그램 카운터에 기억하고, 명령을 가져오고(fetch), 해석하고(decode), 실행하는(execute) 일을 끝없이 반복합니다. 계산 중인 값은 CPU 안의 아주 작고 빠른 저장소인 레지스터에 둡니다. 사람이 쓴 코드는 컴파일러가 미리 기계어로 바꾸거나, 인터프리터가 실행하면서 해석합니다. Python은 소스를 바이트코드로 바꾼 뒤 인터프리터가 그 바이트코드를 하나씩 실행합니다.',analogy:'요리책을 보며 요리하는 사람을 떠올리세요. 요리책(메모리)에 순서대로 적힌 지시를 한 줄 읽고, 무슨 뜻인지 이해하고, 실행한 뒤 다음 줄로 넘어갑니다. 책갈피(프로그램 카운터)가 지금 몇 번째 줄인지 알려 주고 손에 든 그릇(레지스터)에 지금 다루는 재료를 담습니다. 외국어 요리책이라면 미리 통째로 번역해 두거나(컴파일러) 옆에서 통역사가 한 줄씩 읽어 주는(인터프리터) 방법이 있습니다.',steps:['소스 코드를 컴파일러나 인터프리터가 CPU가 이해하는 명령으로 바꿉니다.','운영체제가 프로그램을 메모리에 올리고 CPU의 프로그램 카운터를 첫 명령에 맞춥니다.','CPU는 명령을 가져오고, 해석하고, 실행한 뒤 프로그램 카운터를 다음 명령으로 옮깁니다.','계산 중인 값은 레지스터에 두고 필요할 때 메모리에서 읽거나 메모리에 씁니다.'],scenario:'반복문 안에서 리스트를 순회하는 Python 코드가 같은 일을 하는 C 코드보다 수십 배 느렸습니다. Python은 한 줄을 실행할 때마다 인터프리터가 바이트코드를 해석하고 객체의 타입을 확인하는 일을 반복하기 때문입니다. 계산이 많은 부분을 C로 구현된 NumPy 연산으로 바꾸자 해석하는 비용이 반복마다가 아니라 한 번만 들게 되어 크게 빨라졌습니다.',aws:'EC2 인스턴스를 고를 때 x86(Intel·AMD)과 ARM(Graviton) 중 무엇을 쓰는지가 바로 명령어 집합의 차이입니다. Python 코드는 인터프리터가 있으면 어디서든 돌지만 C 확장이 들어간 라이브러리는 그 CPU용으로 컴파일된 패키지가 있어야 합니다.',ncloud:'서버 유형을 고를 때 CPU 아키텍처와 코어 수를 확인합니다. 컨테이너 이미지도 CPU 아키텍처별로 만들어지므로 개발 PC(예: ARM 맥)와 서버의 아키텍처가 다르면 이미지를 그에 맞게 빌드해야 합니다.',tradeoff:'미리 컴파일하면 실행이 빠르지만 CPU와 운영체제마다 따로 빌드해야 하고 고친 뒤 다시 컴파일해야 합니다. 인터프리터는 바로 실행하고 어디서든 같은 코드가 돌지만 실행 중에 해석하는 비용이 듭니다. JIT 컴파일러는 실행 중 자주 쓰는 부분만 기계어로 바꿔 두 장점을 섞습니다.',language:'Python · 한 줄이 바이트코드 몇 개가 되는지 보기',code:`import dis
+
+counter = 0
+
+def add_one():
+    global counter
+    counter += 1   # 한 줄처럼 보이지만
+
+dis.dis(add_one)
+# Python 3.12 예시 출력:
+#   LOAD_GLOBAL  counter   ← 메모리에서 값을 읽고
+#   LOAD_CONST   1
+#   BINARY_OP    +=        ← 더하고
+#   STORE_GLOBAL counter   ← 다시 쓴다`,codeNotes:['dis 모듈은 Python이 함수를 어떤 바이트코드로 바꿨는지 보여 줍니다. 출력은 Python 버전마다 조금씩 다릅니다.','counter += 1이 읽기, 더하기, 쓰기 여러 명령으로 나뉘는 것을 확인하세요. 1장 동기화 단원의 경쟁 상태가 바로 이 틈에서 생깁니다.','다른 함수(리스트 컴프리헨션, if 문)도 dis로 열어 보며 한 줄이 몇 개의 명령이 되는지 비교해 보세요.'],answer:'컴퓨터는 메모리에 저장된 명령어를 CPU가 가져오고, 해석하고, 실행하는 일을 반복하는 기계입니다. 프로그램 카운터가 다음 명령의 위치를, 레지스터가 계산 중인 값을 기억합니다. 사람이 쓴 코드는 컴파일러가 미리 기계어로 바꾸거나 인터프리터가 실행하며 해석하는데 Python은 바이트코드로 바꾼 뒤 인터프리터가 실행합니다. 그래서 한 줄의 코드도 실제로는 여러 명령으로 나뉘어 실행됩니다.',follow:[['Python은 컴파일 언어인가요, 인터프리터 언어인가요?','둘 다의 성격이 있습니다. CPython은 소스를 먼저 바이트코드로 컴파일하고(.pyc 파일) 그 바이트코드를 인터프리터가 실행합니다. 기계어로 바꾸는 것은 아니라서 흔히 인터프리터 언어로 분류합니다.'],['레지스터와 메모리는 무엇이 다른가요?','레지스터는 CPU 안에 있는 수십 개 정도의 아주 작은 저장소로 한 사이클 안에 읽고 씁니다. 메모리는 CPU 밖에 있어 훨씬 크지만 접근에 수십~수백 배 시간이 걸립니다. 그래서 그 사이에 캐시가 있습니다.']],memory:'CPU는 꺼내고, 해석하고, 실행하고, 다음 줄로 간다. 한 줄의 코드는 여러 명령이다.',mistake:'"Python 코드를 CPU가 직접 실행한다"고 설명하지 마세요. CPU는 기계어만 실행하고 Python 코드는 인터프리터라는 프로그램이 대신 실행합니다.',quiz:{question:'counter += 1이 두 스레드에서 동시에 실행될 때 값이 사라질 수 있는 근본 이유는?',options:['CPU가 너무 빨라서','한 줄이 읽기·더하기·쓰기 여러 명령으로 나뉘어 그 사이에 끼어들 수 있어서','정수의 크기가 제한되어서'],correct:1,explanation:'바이트코드와 기계어 수준에서 여러 명령으로 나뉘기 때문에 그 사이에 다른 스레드가 실행될 수 있습니다.'},refs:['pyDis','threads']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
- 1: ['process', 'scheduling', 'sync', 'deadlock', 'memory', 'linux', 'diagnosis'],
+ 1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'linux', 'diagnosis'],
  0: ['dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
  2: ['kit', 'rest', 'async', 'proxy', 'ratelimit'],
  3: ['normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],

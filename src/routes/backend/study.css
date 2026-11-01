@@ -240,3 +240,16 @@
 .recap>summary{font-weight:600}
 .recap[open]>summary{margin-bottom:12px}
 .story-reading a{margin-left:6px}
+/* Chapter opener, the lesson's key question, and predict-then-correct misconceptions */
+.chapter-intro{padding:28px 32px;background:var(--surface)}
+.chapter-intro h2{margin-top:0}
+.chapter-intro p{line-height:1.85}
+.story-question{font-size:var(--step-lead,1.25rem);font-weight:600;line-height:1.5;letter-spacing:-.02em;margin:8px 0 28px}
+.story-question span,.misconception span{display:block;font-size:var(--step-small,.875rem);font-weight:600;color:var(--accent,#2436ff);letter-spacing:0;margin-bottom:4px}
+.misconceptions{display:grid;gap:12px}
+.misconception{padding:18px 20px;border-left:3px solid var(--accent,#2436ff);background:var(--surface)}
+.misconception p{margin:0}
+.misconception p+p{margin-top:12px}
+@media (max-width:720px){.chapter-intro{padding:20px 16px}}
+.reading-page section.chapter-intro{padding:28px 32px;margin-top:40px}
+@media (max-width:720px){.reading-page section.chapter-intro{padding:20px 16px}}

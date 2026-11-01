@@ -442,5 +442,13 @@ export const diagrams:Record<string,Diagram>={
    {from:2,to:1,label:'실제 2 < 원하는 3 → 1개 생성',caption:'ReplicaSet 컨트롤러가 차이를 보고 새 파드를 만듭니다. 사람이 아무것도 하지 않았습니다.'},
    {from:3,to:1,label:'남은 노드에 배정',caption:'스케줄러가 살아 있는 노드에 새 파드를 배정합니다.'},
    {from:4,to:1,label:'Ready · 다시 3개',tone:'ok',caption:'kubelet이 실행하고 readiness가 통과하면 다시 파드 3개가 트래픽을 받습니다. 원하는 상태와 실제 상태가 다시 같아졌습니다.'}
+  ]},
+ machine:{kind:'table',title:'CPU가 counter = counter + 1을 실행할 때',columns:['PC','명령','레지스터 R1','메모리 counter'],packetLabel:'지금 일어나는 일',
+  steps:[
+   {rows:[['100','LOAD R1, [counter]','—','5']],highlight:[0],packet:'가져오기: PC가 가리키는 주소 100의 명령을 읽음',caption:'CPU는 프로그램 카운터가 가리키는 주소에서 명령을 가져옵니다. 프로그램도 데이터처럼 메모리에 들어 있습니다.'},
+   {rows:[['100','LOAD R1, [counter]','5','5']],highlight:[0],packet:'해석·실행: 메모리의 counter를 레지스터로 읽음 · PC → 101',caption:'명령을 해석해 메모리의 값 5를 CPU 안의 레지스터 R1로 가져옵니다. 프로그램 카운터는 다음 명령으로 넘어갑니다.'},
+   {rows:[['100','LOAD R1, [counter]','5','5'],['101','ADD R1, 1','6','5']],highlight:[1],packet:'레지스터에서 계산 · PC → 102',caption:'레지스터에서 1을 더해 6이 되었습니다. 메모리의 counter는 아직 5입니다. 계산 결과는 CPU 안에만 있습니다.'},
+   {rows:[['100','LOAD R1, [counter]','5','5'],['101','ADD R1, 1','6','5'],['102','STORE [counter], R1','6','6']],highlight:[2],packet:'레지스터 값을 메모리에 씀 · PC → 103',caption:'레지스터의 값을 메모리에 써야 비로소 counter가 6이 됩니다. Python의 counter += 1 한 줄이 이렇게 여러 명령으로 나뉩니다.'},
+   {rows:[['101','ADD R1, 1','6','5'],['저장','PC = 102, R1 = 6','—','5']],highlight:[1],packet:'만약 ADD 직후 타이머 인터럽트가 오면?',caption:'ADD 직후에 운영체제가 다른 프로그램으로 바꾸려면 지금의 PC와 레지스터를 어딘가에 저장해 두어야 나중에 정확히 이어 갈 수 있습니다. 그 저장 장소가 다음 단원의 프로세스입니다.'}
   ]}
 };

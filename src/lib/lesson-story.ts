@@ -2,10 +2,13 @@
 // Read before the definitions. **word** marks a term at the place it is first explained.
 export type StoryPart = { heading: string; paragraphs: string[] };
 export type Reading = { title: string; by: string; where?: string; note: string; url?: string };
-export type LessonStory = { from?: string; parts: StoryPart[]; to?: string; books: Reading[]; papers: Reading[] };
+export type Misconception = { belief: string; truth: string };
+// question: the one question the lesson answers, shown first. misconceptions: predict-then-correct notes shown after the story.
+export type LessonStory = { question?: string; from?: string; parts: StoryPart[]; misconceptions?: Misconception[]; to?: string; books: Reading[]; papers: Reading[] };
 
 export const stories: Record<string, LessonStory> = {
  process: {
+  from: '앞 단원에서 CPU는 프로그램 카운터와 레지스터만 있으면 명령을 이어서 실행할 수 있다는 것을 봤습니다. 이제 여러 프로그램이 CPU 하나를 번갈아 쓰려면 그 상태를 어떻게 저장하고 지킬지 봅니다.',
   parts: [
    { heading: '컴퓨터가 한 번에 한 사람만 쓰던 시절', paragraphs: [
     '1950년대의 컴퓨터는 방 하나를 차지했고 한 시간 사용료가 사람 몇 달 월급만큼 비쌌습니다. 프로그래머는 천공 카드 묶음을 운영자에게 맡기고 결과가 인쇄되어 나올 때까지 몇 시간을 기다렸습니다. 운영자는 작업을 하나씩 차례로 넣었습니다. 이렇게 작업을 모아서 하나씩 처리하는 방식을 **일괄 처리**라고 부릅니다.',
@@ -1335,6 +1338,53 @@ export const stories: Record<string, LessonStory> = {
    { title: 'A Case for Redundant Arrays of Inexpensive Disks (RAID)', by: 'David A. Patterson, Garth Gibson, Randy H. Katz', where: 'SIGMOD, 1988', note: '고장을 전제로 값싼 장비를 묶는 설계의 고전입니다.', url: 'https://doi.org/10.1145/50202.50214' },
    { title: 'Postmortem of database outage of January 31', by: 'GitLab', where: 'GitLab 블로그, 2017', note: '다섯 가지 백업이 모두 실패한 과정과 교훈을 상세히 공개한 사후 분석입니다.', url: 'https://about.gitlab.com/blog/2017/02/10/postmortem-of-database-outage-of-january-31/' },
    { title: 'Postmortem Culture: Learning from Failure', by: 'John Lunney, Sue Lueder (Google SRE)', where: 'Site Reliability Engineering 15장', note: '비난 없는 사후 분석의 원칙을 설명합니다.', url: 'https://sre.google/sre-book/postmortem-culture/' }
+  ]
+ },
+ machine: {
+  question: 'print("hello") 한 줄을 실행하면 컴퓨터 안에서는 실제로 무슨 일이 일어날까요?',
+  parts: [
+   { heading: '계산기에서 시작한 질문', paragraphs: [
+    '컴퓨터를 처음 배울 때 가장 먼저 건너뛰는 질문이 있습니다. 컴퓨터는 도대체 어떻게 우리가 쓴 코드를 "실행"할까요? 전기가 흐르는 기계가 print라는 단어를 알아들을 리는 없습니다. 이 질문에 답하려면 컴퓨터가 처음 만들어지던 1940년대로 돌아가는 것이 가장 빠릅니다.',
+    '1945년 미국 펜실베이니아 대학에서 완성된 ENIAC은 포탄의 궤적을 계산하려고 만든 기계였습니다. 사람보다 수천 배 빨리 덧셈을 했지만 큰 불편이 하나 있었습니다. 다른 계산을 시키려면 기계의 케이블과 스위치를 며칠에 걸쳐 다시 꽂아야 했습니다. 프로그램이 기계의 배선 자체였던 것입니다. 이 단원 위의 사진이 바로 그 장면입니다.'
+   ]},
+   { heading: '프로그램도 데이터처럼 저장하자', paragraphs: [
+    '같은 해 수학자 존 폰 노이만은 다음 기계 EDVAC의 설계 초안을 쓰면서 이 문제를 정면으로 다뤘습니다. 해법은 이렇습니다. "더하라", "저장하라" 같은 명령에도 번호를 붙여 숫자로 만들고 계산할 데이터와 함께 **메모리**에 넣어 두자. 그러면 프로그램을 바꾸는 일은 배선을 바꾸는 일이 아니라 메모리의 숫자를 바꾸는 일이 됩니다. 이것이 **저장 프로그램 방식**이고 흔히 폰 노이만 구조라고 부릅니다. ENIAC을 만든 에커트와 모클리도 같은 생각을 발전시키고 있었기 때문에 이 이름이 공정하지 않다는 지적도 있습니다.',
+    '이론적인 뿌리는 그보다 9년 앞선 1936년 앨런 튜링의 논문에 있었습니다. 튜링은 다른 기계의 동작 규칙을 입력으로 받아 그 기계를 흉내 내는 보편 기계를 생각해 냈습니다. 프로그램이 데이터라면 하나의 기계로 어떤 계산이든 할 수 있다는 뜻입니다. 1948년 맨체스터의 작은 실험 기계가 메모리에 저장된 프로그램을 처음 실행했고 1949년 케임브리지의 EDSAC이 실제 업무에 쓰이기 시작했습니다. 지금 여러분의 노트북과 휴대폰, 클라우드 서버가 모두 이 구조를 따릅니다.'
+   ]},
+   { heading: '꺼내고, 해석하고, 실행한다', paragraphs: [
+    '프로그램이 메모리에 숫자로 들어 있다면 누군가 그것을 하나씩 꺼내 실행해야 합니다. 그 일을 하는 것이 **CPU**입니다. CPU가 하는 일은 놀랄 만큼 단순합니다. 메모리에서 명령 하나를 가져오고(fetch), 그 숫자가 어떤 명령인지 해석하고(decode), 실행합니다(execute). 그리고 다음 명령으로 넘어가 같은 일을 반복합니다. 1초에 수십억 번, 전원이 꺼질 때까지 이것만 합니다.',
+    '이 반복을 위해 CPU는 두 가지를 기억해야 합니다. 첫째는 다음에 실행할 명령이 메모리의 몇 번지에 있는지입니다. 이 주소를 담는 칸을 **프로그램 카운터**라고 부릅니다. 둘째는 지금 계산 중인 값입니다. 메모리는 CPU보다 훨씬 느려서 매번 오가면 CPU가 대부분 기다리게 되니 CPU 안에 아주 작고 빠른 저장 칸을 몇십 개 둡니다. 이것이 **레지스터**입니다. 요리에 비유하면 메모리는 요리책, 프로그램 카운터는 책갈피, 레지스터는 손에 든 그릇입니다.',
+    '이 단원의 그림을 보면 counter = counter + 1이라는 한 줄이 CPU에게는 세 명령이라는 것을 알 수 있습니다. 메모리에서 값을 레지스터로 읽고, 레지스터에서 1을 더하고, 다시 메모리에 씁니다. 더한 직후의 6은 CPU 안에만 있고 메모리는 아직 5입니다. 이 작은 사실이 이 장의 거의 모든 이야기로 이어집니다.'
+   ]},
+   { heading: '사람의 언어를 기계의 명령으로', paragraphs: [
+    '초기 프로그래머들은 명령 번호를 직접 외워 숫자로 프로그램을 짰습니다. 곧 "ADD" 같은 짧은 단어로 쓰고 그것을 숫자로 바꿔 주는 어셈블러가 나왔지만 여전히 CPU의 명령 하나하나를 써야 했습니다. 1950년대 그레이스 호퍼는 사람이 쓴 코드를 기계 명령으로 바꿔 주는 프로그램을 만들자고 주장했고 1957년 IBM의 존 배커스 팀은 수식처럼 쓴 코드를 기계어로 바꾸는 **컴파일러** FORTRAN을 내놓았습니다. 사람이 손으로 짠 것만큼 빠른 코드를 만들어 내자 프로그래머들은 고급 언어로 넘어가기 시작했습니다.',
+    '다른 길도 있었습니다. 1960년 존 매카시는 LISP을 만들며 코드를 미리 번역하지 않고 실행하면서 한 줄씩 해석하는 방식을 보였습니다. 이런 프로그램을 **인터프리터**라고 합니다. 미리 번역해 두는 컴파일러는 실행이 빠르고 그때그때 해석하는 인터프리터는 바로 실행해 볼 수 있고 어떤 기계에서든 같은 코드가 돈다는 장점이 있습니다. 여기서 중요한 사실 하나는 저장 프로그램 방식 덕분에 이런 일이 가능했다는 점입니다. 프로그램이 데이터이니 프로그램이 다른 프로그램을 읽고, 바꾸고, 만들어 낼 수 있습니다.'
+   ]},
+   { heading: 'Python 한 줄이 CPU에 닿기까지', paragraphs: [
+    'Python은 두 방식을 섞었습니다. 우리가 .py 파일을 실행하면 CPython은 먼저 코드를 **바이트코드**라는 중간 명령으로 컴파일합니다. CPU의 기계어가 아니라 Python 인터프리터만 이해하는 명령입니다. 그다음 C로 작성된 인터프리터의 큰 반복문이 바이트코드를 하나씩 꺼내 실행합니다. 꺼내고, 해석하고, 실행하는 CPU의 사이클을 소프트웨어로 한 번 더 만든 셈입니다. 이 단원의 Python 예제에서 dis 모듈로 그 바이트코드를 직접 볼 수 있습니다.',
+    '그래서 Python이 C보다 느린 이유가 설명됩니다. C 코드는 미리 기계어가 되어 CPU가 바로 실행하지만 Python 코드는 한 줄마다 인터프리터가 해석하고 값의 타입을 확인하는 일을 거칩니다. 대신 Python 인터프리터만 있으면 x86 서버에서든 ARM 노트북에서든 같은 코드가 돕니다. Python 3.13부터는 자주 실행되는 부분을 기계어로 바꿔 두는 실험적인 JIT 컴파일러도 들어갔습니다.'
+   ]},
+   { heading: '이 단원이 다음 단원에 남기는 것', paragraphs: [
+    '정리하면 CPU는 메모리의 명령을 하나씩 꺼내 실행하는 단순한 기계이고 그 순간의 상태는 프로그램 카운터와 레지스터에 담겨 있습니다. 이제 질문을 하나 던져 봅시다. 비싼 CPU가 한 번에 한 프로그램만 실행하고 그 프로그램이 디스크를 기다리는 동안 놀고 있다면 어떻게 해야 할까요? 다른 프로그램으로 잠시 바꿨다가 돌아오려면 바로 이 프로그램 카운터와 레지스터를 어딘가에 저장해 두어야 합니다. 그 "어딘가"가 다음 단원의 주인공, 프로세스입니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: 'Python 코드는 CPU가 직접 실행한다.', truth: 'CPU는 자기 명령어 집합의 기계어만 실행합니다. Python 코드는 바이트코드로 바뀐 뒤 인터프리터라는 프로그램이 대신 실행합니다. CPU가 실제로 실행하는 것은 인터프리터의 기계어입니다.' },
+   { belief: 'counter += 1은 한 번에 끝나는 동작이다.', truth: '바이트코드로는 읽기, 더하기, 쓰기 여러 명령이고 기계어로도 마찬가지입니다. 그 사이에 다른 실행이 끼어들 수 있어서 1장 동기화 단원의 경쟁 상태가 생깁니다.' },
+   { belief: '변수에 값을 넣으면 곧바로 메모리에 저장된다.', truth: '계산 중인 값은 먼저 CPU 레지스터에 있고 메모리에 쓰는 명령이 실행되어야 메모리가 바뀝니다. 그 사이의 값은 CPU 안에만 있습니다.' }
+  ],
+  to: 'CPU는 프로그램 카운터와 레지스터만 있으면 명령을 이어서 실행할 수 있습니다. 그렇다면 여러 프로그램이 CPU 하나를 번갈아 쓰려면 이 상태를 어떻게 저장하고 지켜야 할까요? 다음 단원 프로세스와 스레드가 이 질문을 다룹니다.',
+  books: [
+   { title: 'Code: The Hidden Language of Computer Hardware and Software (CODE 코드)', by: 'Charles Petzold', where: '2판 전체, 특히 CPU와 메모리를 직접 조립해 가는 후반부', note: '전구와 스위치에서 시작해 CPU가 명령을 실행하는 원리까지 쌓아 올리는 책입니다. 이 단원을 가장 쉽고 깊게 풀어 주는 책입니다.' },
+   { title: 'Computer Systems: A Programmer’s Perspective (컴퓨터 시스템)', by: 'Randal E. Bryant, David R. O’Hallaron', where: '3판 1장 컴퓨터 시스템으로의 여행, 3장 프로그램의 기계 수준 표현', note: 'hello.c 한 파일이 컴파일되어 실행되기까지를 1장에서 따라갑니다. 이 장 전체의 기본 교과서입니다.', url: 'https://csapp.cs.cmu.edu/' },
+   { title: 'The Elements of Computing Systems (밑바닥부터 만드는 컴퓨팅 시스템)', by: 'Noam Nisan, Shimon Schocken', where: '2판 1~5장 하드웨어, 7~11장 가상 머신과 컴파일러', note: 'NAND 게이트에서 CPU, 바이트코드 가상 머신, 컴파일러까지 직접 만들어 보는 Nand2Tetris 과정의 교과서입니다. 강의와 도구가 무료로 공개되어 있습니다.', url: 'https://www.nand2tetris.org/' },
+   { title: 'Operating Systems: Three Easy Pieces (운영체제: 아주 쉬운 세 가지 이야기)', by: 'Remzi H. Arpaci-Dusseau, Andrea C. Arpaci-Dusseau', where: '2장 운영체제 개요', note: '프로그램이 실행된다는 것이 무엇인지에서 출발해 운영체제가 왜 필요한지로 넘어갑니다. 다음 단원과 이어 읽기 좋습니다.', url: 'https://pages.cs.wisc.edu/~remzi/OSTEP/' }
+  ],
+  papers: [
+   { title: 'On Computable Numbers, with an Application to the Entscheidungsproblem', by: 'Alan M. Turing', where: 'Proceedings of the London Mathematical Society, 1936', note: '보편 기계를 정의한 논문입니다. 프로그램도 데이터라는 생각의 이론적 뿌리입니다.', url: 'https://doi.org/10.1112/plms/s2-42.1.230' },
+   { title: 'First Draft of a Report on the EDVAC', by: 'John von Neumann', where: '1945 (IEEE Annals of the History of Computing, 1993 재수록)', note: '저장 프로그램 방식을 정리한 설계 초안입니다.', url: 'https://doi.org/10.1109/85.238389' },
+   { title: 'The FORTRAN Automatic Coding System', by: 'J. W. Backus 외', where: 'Western Joint Computer Conference, 1957', note: '첫 번째로 널리 쓰인 고급 언어 컴파일러를 소개한 논문입니다.', url: 'https://doi.org/10.1145/1455567.1455599' },
+   { title: 'Python · dis 모듈 문서', by: 'Python Software Foundation', where: '공식 문서', note: '바이트코드 명령 목록과 dis 사용법입니다. 버전마다 명령이 조금씩 바뀝니다.', url: 'https://docs.python.org/3/library/dis.html' }
   ]
  }
 };

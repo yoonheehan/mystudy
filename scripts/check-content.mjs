@@ -103,6 +103,8 @@ for(const [id,story] of Object.entries(stories)){
    check((para.match(/\*\*/g)||[]).length%2===0,`${id}: unmatched ** in '${part.heading}'`);
   }
  }
+ if(story.question!==undefined)check(filled(story.question,10)&&story.question.trim().endsWith('?'),`${id}: key question should be one question ending with ?`);
+ for(const m of story.misconceptions||[])check(filled(m.belief,8)&&filled(m.truth,20),`${id}: incomplete misconception`);
  check(story.books.length>=1,`${id}: story needs at least one textbook`);
  for(const r of [...story.books,...story.papers])check(filled(r.title)&&filled(r.by)&&filled(r.note,10)&&(!r.url||isUrl(r.url)),`${id}: incomplete reading '${r.title}'`);
 }
@@ -111,6 +113,11 @@ const {chapterOrder}=load('src/lib/lesson-context.ts');
 const order=chapterOrder.flatMap(c=>lessons.filter(l=>l.category===c).map(l=>l.id)); // reading order across chapters
 for(const id of ids)check(stories[id],`${id}: missing story`);
 for(const [id,story] of Object.entries(stories))if(story.from){const prev=order[order.indexOf(id)-1];check(stories[prev]?.to,`${id}: story starts from the previous lesson, but '${prev}' has no closing hand-off`);}
+
+// Chapter openers line up with chapters and are complete when written.
+const {chapterIntros,chapterNames}=load('src/lib/lesson-context.ts');
+check(chapterIntros.length===chapterNames.length,'chapterIntros must have one slot per chapter');
+for(const intro of chapterIntros.filter(Boolean))check(filled(intro.title)&&intro.paragraphs.length>=2&&intro.paragraphs.every(p=>filled(p,40)),`chapter intro '${intro.title}' is incomplete`);
 
 // Progress backup: a round trip keeps every page's record, and foreign or broken files are refused.
 const {buildBackup,parseBackup,applyBackup,progressKeys}=load('src/lib/progress-backup.ts');
