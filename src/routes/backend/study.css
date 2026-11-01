@@ -131,6 +131,10 @@
 .history-sources{padding-left:1.2em}
 .history-sources a{text-decoration:none}
 .history-sources a:hover{color:var(--accent)}
+.term-table{margin:32px 0 40px}
+.term-table tbody th{white-space:normal;min-width:7em}
+.mechanism-list{padding-left:1.3em;margin:0 0 8px}
+.mechanism-list li{margin:.55em 0;line-height:1.7}
 .role-table{overflow-x:auto;margin:0 0 16px}
 .role-table table{width:100%;border-collapse:collapse;font-size:var(--step-body)}
 .role-table th,.role-table td{text-align:left;vertical-align:top;padding:14px 16px 14px 0;border-bottom:1px solid var(--surface-2);line-height:1.6}
