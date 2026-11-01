@@ -91,6 +91,19 @@ for(const p of problems){
  if(p.theory)check(pageTitles.some(t=>t===p.theory||t.startsWith(p.theory+' ·')),`practice '${p.id}': theory link '${p.theory}' matches no algorithm lesson`);
 }
 
+// Progress backup: a round trip keeps every page's record, and foreign or broken files are refused.
+const {buildBackup,parseBackup,applyBackup,progressKeys}=load('src/lib/progress-backup.ts');
+const memory=entries=>{const m=new Map(Object.entries(entries));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),map:m};};
+const source=memory({'serverNotebook.v1':'{"completed":["dns"],"lastLesson":"dns"}','csLabPractice.v1':'{"records":{"maximum":{"accepted":true}}}','oneStepAlgorithmV1':'{"completed":[0,3]}','unrelated':'x'});
+const backup=buildBackup(source,new Date('2026-01-02T03:04:05Z'));
+assert.deepEqual(Object.keys(backup.data).sort(),[...progressKeys].sort());
+const target=memory({'serverNotebook.v1':'{"completed":[]}'});
+assert.equal(applyBackup(target,parseBackup(JSON.stringify(backup))),3);
+for(const key of progressKeys)assert.deepEqual(JSON.parse(target.map.get(key)),JSON.parse(source.getItem(key)),key+' restored');
+assert.ok(!target.map.has('unrelated'));
+for(const bad of ['not json','{"app":"other","version":1,"data":{}}','{"app":"cs-note","version":2,"data":{"csLabPractice.v1":{}}}','{"app":"cs-note","version":1,"data":{"csLabPractice.v1":[1]}}','{"app":"cs-note","version":1,"data":{"unrelated":{}}}'])
+ assert.throws(()=>parseBackup(bad),Error,'should refuse '+bad);
+
 if(errors.length){console.error(errors.map(e=>'✗ '+e).join('\n'));console.error(`\n${errors.length} content problem(s).`);process.exit(1);}
 const withDiagram=lessons.filter(l=>diagrams[l.id]).length;
-console.log(`${lessons.length} lessons: history, deep notes and ${withDiagram} diagrams valid; ${pageTitles.length} algorithm notes and practice links valid.`);
+console.log(`${lessons.length} lessons: history, deep notes and ${withDiagram} diagrams valid; ${pageTitles.length} algorithm notes, practice links and progress backup valid.`);

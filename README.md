@@ -41,7 +41,6 @@ npm run check:links  # 인용한 출처 URL이 아직 열리는지 확인 (네�
 - 틀린 확인 문제는 즉시, 정답 또는 완료한 단원은 24시간 뒤 복습 목록에 나타납니다. 알림 발송 기능은 없습니다.
 - 완료·메모·북마크·복습 기록은 브라우저 localStorage에 저장됩니다. 면접 연습 답안은 현재 화면에서만 유지됩니다. 서술형 답변은 자동 채점하지 않습니다.
 - `/api/health`는 실제 GET 서버 핸들러이며 프로세스 생존 확인만 제공합니다.
-- 원래 `index.html`은 보존했습니다. 기존 알고리즘 학습 화면은 `/algorithm.html`에서도 사용할 수 있습니다.
 
 ## 출처와 범위
 
@@ -64,7 +63,7 @@ GitHub의 `jbee37142/Interview_Question_for_Beginner`(MIT), `ksundong/backend-in
 
 시간은 현재 기기에서 측정합니다. Python 메모리는 tracemalloc 추가 할당량이며 전체 WASM/브라우저 메모리가 아닙니다. Big-O는 자동 추론하지 않고, 자신의 예상과 기준 풀이의 시간·공간 설명을 비교합니다. 모바일 본문 19px, 코드 17px이며 문제/코드/결과를 전환합니다.
 
-초안·힌트·점수·최근 20회 이력은 `csLabPractice.v1`에 저장됩니다. 주소와 브라우저별 기록이므로 LAN 주소와 localhost 기록은 별개입니다. `npm run test:practice`는 24개 문제의 예시, 생성 케이스, 독립 기준 비교, 감점과 재도전 보정 규칙을 검증합니다. `predev/prebuild/prepreview`는 설치한 Pyodide 실행 파일을 static에 복사합니다.
+초안·힌트·점수·최근 20회 이력은 `csLabPractice.v1`에 저장됩니다. 주소와 브라우저별 기록이므로 LAN 주소와 localhost 기록은 별개입니다. `npm run test:practice`는 24개 문제의 예시, 생성 케이스, 독립 기준 비교, 감점과 재도전 보정 규칙을 검증합니다. `predev/prebuild/prepreview`는 설치한 Pyodide 실행 파일을 static에 복사합니다. 홈 화면 맨 아래의 "기록 내보내기"로 세 화면(백엔드·CS, 코딩 테스트, 알고리즘 그림)의 기록을 JSON 파일 하나로 저장하고 "기록 가져오기"로 다른 브라우저나 기기에서 불러올 수 있습니다.
 
 Pyodide의 MPL-2.0 라이선스와 소스 링크는 `static/licenses/pyodide.txt`에 안내합니다. 런타임은 수정하지 않았습니다.
 
