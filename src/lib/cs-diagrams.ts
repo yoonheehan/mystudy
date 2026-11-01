@@ -450,5 +450,21 @@ export const diagrams:Record<string,Diagram>={
    {rows:[['100','LOAD R1, [counter]','5','5'],['101','ADD R1, 1','6','5']],highlight:[1],packet:'레지스터에서 계산 · PC → 102',caption:'레지스터에서 1을 더해 6이 되었습니다. 메모리의 counter는 아직 5입니다. 계산 결과는 CPU 안에만 있습니다.'},
    {rows:[['100','LOAD R1, [counter]','5','5'],['101','ADD R1, 1','6','5'],['102','STORE [counter], R1','6','6']],highlight:[2],packet:'레지스터 값을 메모리에 씀 · PC → 103',caption:'레지스터의 값을 메모리에 써야 비로소 counter가 6이 됩니다. Python의 counter += 1 한 줄이 이렇게 여러 명령으로 나뉩니다.'},
    {rows:[['101','ADD R1, 1','6','5'],['저장','PC = 102, R1 = 6','—','5']],highlight:[1],packet:'만약 ADD 직후 타이머 인터럽트가 오면?',caption:'ADD 직후에 운영체제가 다른 프로그램으로 바꾸려면 지금의 PC와 레지스터를 어딘가에 저장해 두어야 나중에 정확히 이어 갈 수 있습니다. 그 저장 장소가 다음 단원의 프로세스입니다.'}
+  ]},
+ filesystem:{kind:'flow',title:'Python이 open("/srv/app/config.txt")를 부를 때',
+  nodes:[
+   {label:'디렉터리 따라가기',sub:'/ → srv → app'},
+   {label:'이름으로 inode 찾기',sub:'config.txt → inode 1042'},
+   {label:'권한 확인',sub:'rw-r--r-- · 소유자 app'},
+   {label:'파일 디스크립터 발급',sub:'fd 3'},
+   {label:'읽기와 쓰기',sub:'페이지 캐시 ↔ 데이터 블록'}
+  ],
+  steps:[
+   {active:0,status:{0:'ok'},caption:'커널은 루트 디렉터리에서 시작해 srv, app 디렉터리를 차례로 엽니다. 각 디렉터리를 지나갈 권한(x)이 있어야 합니다.'},
+   {active:1,status:{0:'ok',1:'ok'},caption:'app 디렉터리 안의 목록에서 config.txt를 찾습니다. 디렉터리에는 이름과 inode 번호 1042만 적혀 있습니다.'},
+   {active:2,status:{0:'ok',1:'ok',2:'ok'},caption:'inode 1042에서 권한과 소유자를 확인합니다. 이 단계에서 거절되면 PermissionError가 납니다. 다음 단원 Linux 권한이 이 규칙을 다룹니다.'},
+   {active:3,status:{0:'ok',1:'ok',2:'ok',3:'ok'},result:'f.fileno() == 3',caption:'커널이 프로세스의 열린 파일 표에 항목을 만들고 번호 3을 돌려줍니다. 0, 1, 2는 표준 입력, 출력, 오류가 이미 쓰고 있습니다.'},
+   {active:4,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'ok'},result:'write → 페이지 캐시 · fsync → 디스크',caption:'이후 read와 write는 경로를 다시 찾지 않고 fd 3으로 합니다. write는 먼저 메모리의 페이지 캐시에 들어가고 fsync를 불러야 디스크에 확실히 기록됩니다.'},
+   {active:4,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'fail'},result:'정전 · fsync 전의 쓰기는 사라질 수 있음',caption:'fsync 전에 전원이 나가면 페이지 캐시에만 있던 내용은 사라집니다. 그래서 중요한 파일은 임시 파일에 쓰고 fsync한 뒤 이름을 바꿉니다.'}
   ]}
 };

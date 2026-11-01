@@ -42,6 +42,7 @@ export const sources = {
  pgReplication: { name: 'PostgreSQL · Standby Servers', url: 'https://www.postgresql.org/docs/current/warm-standby.html' },
  raft: { name: 'Raft · Consensus Algorithm', url: 'https://raft.github.io/' },
  etcd: { name: 'etcd · FAQ', url: 'https://etcd.io/docs/v3.5/faq/' },
+ fsyncMan: { name: 'Linux man-pages · fsync', url: 'https://man7.org/linux/man-pages/man2/fsync.2.html' },
  pyDis: { name: 'Python · dis', url: 'https://docs.python.org/3/library/dis.html' },
  pytestDocs: { name: 'pytest · Fixtures', url: 'https://docs.pytest.org/en/stable/how-to/fixtures.html' },
  gitBook: { name: 'Pro Git · Branching', url: 'https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging' },
@@ -481,11 +482,32 @@ dis.dis(add_one)
 #   LOAD_GLOBAL  counter   ← 메모리에서 값을 읽고
 #   LOAD_CONST   1
 #   BINARY_OP    +=        ← 더하고
-#   STORE_GLOBAL counter   ← 다시 쓴다`,codeNotes:['dis 모듈은 Python이 함수를 어떤 바이트코드로 바꿨는지 보여 줍니다. 출력은 Python 버전마다 조금씩 다릅니다.','counter += 1이 읽기, 더하기, 쓰기 여러 명령으로 나뉘는 것을 확인하세요. 1장 동기화 단원의 경쟁 상태가 바로 이 틈에서 생깁니다.','다른 함수(리스트 컴프리헨션, if 문)도 dis로 열어 보며 한 줄이 몇 개의 명령이 되는지 비교해 보세요.'],answer:'컴퓨터는 메모리에 저장된 명령어를 CPU가 가져오고, 해석하고, 실행하는 일을 반복하는 기계입니다. 프로그램 카운터가 다음 명령의 위치를, 레지스터가 계산 중인 값을 기억합니다. 사람이 쓴 코드는 컴파일러가 미리 기계어로 바꾸거나 인터프리터가 실행하며 해석하는데 Python은 바이트코드로 바꾼 뒤 인터프리터가 실행합니다. 그래서 한 줄의 코드도 실제로는 여러 명령으로 나뉘어 실행됩니다.',follow:[['Python은 컴파일 언어인가요, 인터프리터 언어인가요?','둘 다의 성격이 있습니다. CPython은 소스를 먼저 바이트코드로 컴파일하고(.pyc 파일) 그 바이트코드를 인터프리터가 실행합니다. 기계어로 바꾸는 것은 아니라서 흔히 인터프리터 언어로 분류합니다.'],['레지스터와 메모리는 무엇이 다른가요?','레지스터는 CPU 안에 있는 수십 개 정도의 아주 작은 저장소로 한 사이클 안에 읽고 씁니다. 메모리는 CPU 밖에 있어 훨씬 크지만 접근에 수십~수백 배 시간이 걸립니다. 그래서 그 사이에 캐시가 있습니다.']],memory:'CPU는 꺼내고, 해석하고, 실행하고, 다음 줄로 간다. 한 줄의 코드는 여러 명령이다.',mistake:'"Python 코드를 CPU가 직접 실행한다"고 설명하지 마세요. CPU는 기계어만 실행하고 Python 코드는 인터프리터라는 프로그램이 대신 실행합니다.',quiz:{question:'counter += 1이 두 스레드에서 동시에 실행될 때 값이 사라질 수 있는 근본 이유는?',options:['CPU가 너무 빨라서','한 줄이 읽기·더하기·쓰기 여러 명령으로 나뉘어 그 사이에 끼어들 수 있어서','정수의 크기가 제한되어서'],correct:1,explanation:'바이트코드와 기계어 수준에서 여러 명령으로 나뉘기 때문에 그 사이에 다른 스레드가 실행될 수 있습니다.'},refs:['pyDis','threads']})
+#   STORE_GLOBAL counter   ← 다시 쓴다`,codeNotes:['dis 모듈은 Python이 함수를 어떤 바이트코드로 바꿨는지 보여 줍니다. 출력은 Python 버전마다 조금씩 다릅니다.','counter += 1이 읽기, 더하기, 쓰기 여러 명령으로 나뉘는 것을 확인하세요. 1장 동기화 단원의 경쟁 상태가 바로 이 틈에서 생깁니다.','다른 함수(리스트 컴프리헨션, if 문)도 dis로 열어 보며 한 줄이 몇 개의 명령이 되는지 비교해 보세요.'],answer:'컴퓨터는 메모리에 저장된 명령어를 CPU가 가져오고, 해석하고, 실행하는 일을 반복하는 기계입니다. 프로그램 카운터가 다음 명령의 위치를, 레지스터가 계산 중인 값을 기억합니다. 사람이 쓴 코드는 컴파일러가 미리 기계어로 바꾸거나 인터프리터가 실행하며 해석하는데 Python은 바이트코드로 바꾼 뒤 인터프리터가 실행합니다. 그래서 한 줄의 코드도 실제로는 여러 명령으로 나뉘어 실행됩니다.',follow:[['Python은 컴파일 언어인가요, 인터프리터 언어인가요?','둘 다의 성격이 있습니다. CPython은 소스를 먼저 바이트코드로 컴파일하고(.pyc 파일) 그 바이트코드를 인터프리터가 실행합니다. 기계어로 바꾸는 것은 아니라서 흔히 인터프리터 언어로 분류합니다.'],['레지스터와 메모리는 무엇이 다른가요?','레지스터는 CPU 안에 있는 수십 개 정도의 아주 작은 저장소로 한 사이클 안에 읽고 씁니다. 메모리는 CPU 밖에 있어 훨씬 크지만 접근에 수십~수백 배 시간이 걸립니다. 그래서 그 사이에 캐시가 있습니다.']],memory:'CPU는 꺼내고, 해석하고, 실행하고, 다음 줄로 간다. 한 줄의 코드는 여러 명령이다.',mistake:'"Python 코드를 CPU가 직접 실행한다"고 설명하지 마세요. CPU는 기계어만 실행하고 Python 코드는 인터프리터라는 프로그램이 대신 실행합니다.',quiz:{question:'counter += 1이 두 스레드에서 동시에 실행될 때 값이 사라질 수 있는 근본 이유는?',options:['CPU가 너무 빨라서','한 줄이 읽기·더하기·쓰기 여러 명령으로 나뉘어 그 사이에 끼어들 수 있어서','정수의 크기가 제한되어서'],correct:1,explanation:'바이트코드와 기계어 수준에서 여러 명령으로 나뉘기 때문에 그 사이에 다른 스레드가 실행될 수 있습니다.'},refs:['pyDis','threads']}),
+l({id:'filesystem',category:1,title:'파일과 파일 시스템',english:'File / Directory / Inode / File Descriptor / fsync',hook:'파일을 저장했다는 메시지가 떴는데 전원이 나가면 그 파일은 정말 남아 있을까?',definition:'파일은 이름이 붙은 바이트의 나열이고 파일 시스템은 그 바이트들을 디스크의 어느 블록에 두었는지, 누가 주인이고 언제 바뀌었는지를 관리하는 운영체제의 구성 요소입니다. UNIX 계열에서는 파일의 정보(크기, 권한, 소유자, 데이터 블록의 위치)를 inode라는 구조에 담고 디렉터리는 이름과 inode 번호를 짝지은 목록입니다. 프로그램이 파일을 열면 운영체제는 작은 정수인 파일 디스크립터를 돌려주고 이후 읽기와 쓰기는 이 번호로 합니다. write가 성공해도 데이터는 먼저 메모리의 페이지 캐시에 들어갈 뿐이고 디스크에 확실히 남기려면 fsync를 불러야 합니다.',analogy:'도서관을 떠올리세요. 책장(디스크)에 책(데이터)이 꽂혀 있고 색인 카드(inode)에 책의 위치와 대출 규칙이 적혀 있습니다. 서가 안내판(디렉터리)은 "운영체제 → 카드 1042번"처럼 제목과 카드 번호만 알려 줍니다. 책을 빌리면 받는 대출 번호표(파일 디스크립터)로 이후 일을 처리합니다. 사서가 "반납 처리했어요"라고 해도 장부에 아직 옮겨 적지 않았다면(fsync 전) 정전 때 기록이 사라질 수 있습니다.',steps:['프로그램이 경로로 파일을 열면 운영체제가 디렉터리를 차례로 따라가 inode를 찾고 권한을 확인합니다.','운영체제가 열린 파일을 가리키는 파일 디스크립터 번호를 돌려줍니다.','read와 write는 이 번호로 하고 쓴 내용은 먼저 메모리의 페이지 캐시에 들어갑니다.','fsync를 부르거나 운영체제가 나중에 내려쓸 때 데이터가 디스크에 기록됩니다.'],scenario:'설정 파일을 그 자리에서 덮어쓰다가 서버가 재부팅되자 파일이 반쯤 쓰인 채 남아 앱이 시작하지 못했습니다. 새 내용을 임시 파일에 쓰고 fsync한 뒤 os.replace로 이름을 바꾸는 방식으로 고쳤습니다. 이름 바꾸기는 원자적이라 읽는 쪽은 옛 파일이나 새 파일 중 하나만 보고 반쯤 쓰인 파일은 보지 않습니다.',aws:'EC2의 EBS 볼륨은 블록 장치라 그 위에 ext4나 XFS 같은 파일 시스템을 만들어 씁니다. 여러 서버가 같은 파일을 함께 써야 하면 EFS 같은 네트워크 파일 시스템을, 파일을 통째로 올리고 받기만 하면 S3 같은 객체 스토리지를 씁니다.',ncloud:'서버의 기본 스토리지와 추가 블록 스토리지 위에 파일 시스템을 만들어 마운트합니다. 여러 서버가 함께 쓰는 파일은 NAS 상품을, 사용자 업로드 파일은 Object Storage를 검토합니다.',tradeoff:'매번 fsync하면 데이터가 안전하지만 디스크를 기다리느라 느려집니다. 페이지 캐시에 맡기면 빠르지만 정전 시 최근 쓰기가 사라질 수 있습니다. 그래서 DB는 꼭 필요한 순간(커밋)에만 로그를 fsync하고 나머지는 운영체제에 맡깁니다.',language:'Python · inode, 하드 링크, 안전한 덮어쓰기',code:`import os, tempfile
+
+folder = tempfile.mkdtemp()
+original = os.path.join(folder, "config.txt")
+with open(original, "w") as f:
+    f.write("timeout=5\\n")
+    print("파일 디스크립터 번호:", f.fileno())
+
+alias = os.path.join(folder, "config-link.txt")
+os.link(original, alias)               # 같은 inode를 가리키는 두 번째 이름
+a, b = os.stat(original), os.stat(alias)
+print("같은 inode인가:", a.st_ino == b.st_ino, "· 이름 수:", a.st_nlink)
+
+# 안전한 덮어쓰기: 임시 파일에 쓰고 fsync한 뒤 이름을 바꾼다
+tmp = original + ".tmp"
+with open(tmp, "w") as f:
+    f.write("timeout=8\\n")
+    f.flush()
+    os.fsync(f.fileno())               # 디스크에 확실히 기록
+os.replace(tmp, original)              # 원자적으로 교체
+print(open(original).read().strip())`,codeNotes:['os.link로 만든 두 번째 이름은 복사본이 아니라 같은 inode를 가리킵니다. 그래서 st_ino가 같고 st_nlink가 2가 됩니다.','os.replace는 같은 파일 시스템 안에서 원자적이라 읽는 쪽이 반쯤 쓰인 파일을 볼 일이 없습니다.','os.fsync를 빼도 프로그램은 똑같이 동작하는 것처럼 보입니다. 차이는 정전이나 커널 장애 때만 드러납니다.'],answer:'파일 시스템은 이름 붙은 바이트를 디스크의 블록에 배치하고 그 정보를 관리합니다. UNIX 계열은 파일의 정보와 블록 위치를 inode에 두고 디렉터리는 이름과 inode 번호를 잇습니다. 프로그램은 파일 디스크립터로 읽고 쓰며 write는 먼저 페이지 캐시에 들어가므로 꼭 남아야 하는 데이터는 fsync하고 덮어쓰기는 임시 파일과 원자적 이름 바꾸기로 하겠습니다.',follow:[['파일을 지웠는데 디스크 공간이 안 줄어드는 이유는?','rm은 디렉터리에서 이름을 지울 뿐이고 그 파일을 열고 있는 프로세스가 있으면 inode와 데이터 블록은 남아 있습니다. 로그 파일을 지웠는데 공간이 그대로라면 lsof로 아직 열고 있는 프로세스를 찾아 재시작합니다.'],['하드 링크와 심볼릭 링크는 어떻게 다른가요?','하드 링크는 같은 inode를 가리키는 또 하나의 이름이라 원본 이름을 지워도 데이터가 남습니다. 심볼릭 링크는 다른 경로를 적어 둔 작은 파일이라 원본이 사라지면 끊어집니다.']],memory:'이름은 디렉터리에, 정보는 inode에, 내용은 블록에. 저장했다는 말은 fsync 뒤에 믿는다.',mistake:'write가 성공했다고 디스크에 저장됐다고 단정하지 마세요. 정전에 대비해야 하는 데이터는 fsync가 필요합니다.',quiz:{question:'설정 파일을 덮어쓰는 도중 서버가 꺼져도 반쯤 쓰인 파일이 남지 않게 하는 방법은?',options:['더 빠른 디스크를 쓴다','임시 파일에 쓰고 fsync한 뒤 원자적으로 이름을 바꾼다','파일 권한을 777로 바꾼다'],correct:1,explanation:'이름 바꾸기는 원자적이라 읽는 쪽은 옛 파일이나 새 파일 중 하나만 봅니다.'},refs:['fsyncMan','linux']})
 ];
 // Reading order inside a chapter when it differs from the order lessons were written in; unlisted lessons keep their place after these.
 const sequence: Record<number, string[]> = {
- 1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'linux', 'diagnosis'],
+ 1: ['machine', 'process', 'scheduling', 'sync', 'deadlock', 'memory', 'filesystem', 'linux', 'diagnosis'],
  0: ['dns', 'tcp', 'nat', 'http', 'tls', 'websocket'],
  2: ['kit', 'rest', 'async', 'proxy', 'ratelimit'],
  3: ['normalization', 'join', 'index', 'transaction', 'database-choice', 'cache', 'queue', 'replication', 'raft'],

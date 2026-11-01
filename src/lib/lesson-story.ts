@@ -197,7 +197,7 @@ export const stories: Record<string, LessonStory> = {
     '컨테이너 시대에는 이 일이 더 자주, 더 작은 범위에서 일어납니다. cgroup으로 컨테이너마다 메모리 상한을 걸면 노드에 메모리가 남아 있어도 컨테이너가 자기 상한을 넘는 순간 그 안의 프로세스가 죽습니다. Kubernetes에서 보는 OOMKilled가 이것입니다. 그래서 메모리 문제를 볼 때는 누수인지, 캐시인지, 일시적인 최고점인지, 상한이 너무 낮은지를 차례로 구분해야 합니다.'
    ]}
   ],
-  to: '여기까지는 프로그램 하나가 CPU와 메모리를 어떻게 나눠 쓰는지 봤습니다. 그런데 서버 한 대는 여러 사람과 여러 서비스가 함께 씁니다. 누가 어떤 파일을 읽고 어떤 프로세스를 멈출 수 있는지는 어떻게 정할까요? 다음 단원 Linux 권한과 서비스가 이 질문을 다룹니다.',
+  to: '여기까지는 프로그램이 실행되는 동안 쓰는 CPU와 메모리를 봤습니다. 그런데 메모리의 내용은 전원이 꺼지면 사라집니다. 꺼져도 남아야 하는 데이터는 어디에 어떻게 저장될까요? 다음 단원 파일과 파일 시스템이 이 질문을 다룹니다.',
   books: [
    { title: '운영체제: 아주 쉬운 세 가지 이야기 (Operating Systems: Three Easy Pieces)', by: 'Remzi H. Arpaci-Dusseau, Andrea C. Arpaci-Dusseau', where: '13장 주소 공간, 15장 주소 변환, 18장 페이징 개요, 19장 TLB, 21~22장 스와핑', note: '오버레이 시절부터 주소 공간, 페이징, 스와핑으로 넘어가는 흐름을 핵심 질문 중심으로 따라갑니다.', url: 'https://pages.cs.wisc.edu/~remzi/OSTEP/' },
    { title: 'Computer Systems: A Programmer’s Perspective (컴퓨터 시스템)', by: 'Randal E. Bryant, David R. O’Hallaron', where: '3판 9장 가상 메모리', note: '주소 변환을 비트 단위로 따라가 보고 malloc이 어떻게 메모리를 얻는지까지 프로그래머 관점에서 설명합니다.', url: 'https://csapp.cs.cmu.edu/' },
@@ -210,7 +210,7 @@ export const stories: Record<string, LessonStory> = {
   ]
  },
  linux: {
-  from: '앞 단원까지는 프로그램 하나가 CPU와 메모리를 나눠 쓰는 이야기였습니다. 이제 기계 한 대를 여러 사람과 여러 서비스가 함께 쓸 때 누가 무엇을 할 수 있는지 정하는 문제로 넘어갑니다.',
+  from: '앞 단원에서 파일마다 주인과 권한이 inode에 적혀 있다는 것을 봤습니다. 이제 기계 한 대를 여러 사람과 여러 서비스가 함께 쓸 때 누가 무엇을 할 수 있는지 정하는 문제로 넘어갑니다.',
   parts: [
    { heading: '여러 사람이 한 기계를 쓰기 시작하면', paragraphs: [
     '시분할 시스템이 생기자 한 컴퓨터에 수십 명이 동시에 접속했습니다. 그러자 새로운 질문이 생겼습니다. 내 파일을 다른 사람이 읽거나 지우지 못하게 하려면 어떻게 할까요? 다른 사람의 프로그램을 멈추는 것은 누가 할 수 있을까요? MIT의 Multics는 1960년대에 이 문제를 진지하게 다룬 첫 시스템 중 하나였습니다. 파일마다 누가 무엇을 할 수 있는지 적은 목록(**접근 제어 목록**)을 두고 보호 등급을 여러 단계의 고리로 나눴습니다. 정교했지만 그만큼 복잡했습니다.'
@@ -1385,6 +1385,54 @@ export const stories: Record<string, LessonStory> = {
    { title: 'First Draft of a Report on the EDVAC', by: 'John von Neumann', where: '1945 (IEEE Annals of the History of Computing, 1993 재수록)', note: '저장 프로그램 방식을 정리한 설계 초안입니다.', url: 'https://doi.org/10.1109/85.238389' },
    { title: 'The FORTRAN Automatic Coding System', by: 'J. W. Backus 외', where: 'Western Joint Computer Conference, 1957', note: '첫 번째로 널리 쓰인 고급 언어 컴파일러를 소개한 논문입니다.', url: 'https://doi.org/10.1145/1455567.1455599' },
    { title: 'Python · dis 모듈 문서', by: 'Python Software Foundation', where: '공식 문서', note: '바이트코드 명령 목록과 dis 사용법입니다. 버전마다 명령이 조금씩 바뀝니다.', url: 'https://docs.python.org/3/library/dis.html' }
+  ]
+ },
+ filesystem: {
+  question: '전원이 꺼져도 남아야 하는 데이터는 어디에 어떻게 저장되고 "저장했다"는 말은 언제부터 믿을 수 있을까요?',
+  from: '앞 단원까지 CPU와 메모리를 나눠 쓰는 방법을 봤습니다. 그런데 메모리의 내용은 전원이 꺼지면 사라집니다. 프로그램이 만든 결과를 다음에도 쓰려면 꺼져도 남는 곳에 이름을 붙여 저장해야 합니다.',
+  parts: [
+   { heading: '테이프를 감아 데이터를 찾던 시절', paragraphs: [
+    '초기 컴퓨터의 데이터는 천공 카드 묶음과 자기 테이프에 순서대로 기록되었습니다. 테이프 중간의 데이터를 읽으려면 처음부터 그 위치까지 감아 가야 했습니다. 그래서 일은 대개 "급여 자료 테이프를 처음부터 끝까지 읽으며 계산한다"처럼 순서대로 처리하는 방식이었습니다.',
+    '1956년 IBM은 회전하는 원판 50장에 약 5백만 글자를 담는 RAMAC을 내놓았습니다. 첫 하드 디스크입니다. 헤드를 원하는 위치로 옮기면 어느 데이터든 바로 읽을 수 있었습니다. 이 "아무 데나 바로 읽기"가 가능해지자 새로운 질문이 생겼습니다. 디스크는 번호가 붙은 블록의 긴 배열일 뿐인데 사람은 블록 번호가 아니라 이름으로 데이터를 찾고 싶습니다. 누군가 이름과 위치를 짝지어 관리해야 했습니다.'
+   ]},
+   { heading: '이름을 나무 모양으로: 디렉터리와 경로', paragraphs: [
+    '데이터에 이름을 붙인 덩어리를 **파일**이라고 부르게 되었습니다. 처음에는 디스크 전체에 파일 이름 목록이 하나뿐이었습니다. 사용자가 많아지자 이름이 겹치고 목록이 끝없이 길어졌습니다. 1965년 MIT의 Multics 팀은 목록 안에 다시 목록을 둘 수 있게 했습니다. 이것이 **디렉터리**입니다. 디렉터리를 나무 모양으로 쌓으면 /home/minsu/report.txt처럼 루트에서 내려가는 **경로**로 어떤 파일이든 가리킬 수 있습니다. 같은 이름도 디렉터리가 다르면 다른 파일입니다.',
+    'Multics는 파일마다 누가 읽고 쓸 수 있는지도 적어 두었습니다. 여러 사람이 한 컴퓨터를 나눠 쓰기 시작한 시분할 시대였기 때문입니다. 이 생각은 이 장 뒤의 Linux 권한 단원으로 이어집니다.'
+   ]},
+   { heading: 'UNIX의 단순한 설계: 이름과 정보를 나누다', paragraphs: [
+    '1970년대 UNIX를 만든 톰슨과 리치는 파일을 아주 단순하게 정의했습니다. 파일은 구조 없는 바이트의 나열입니다. 레코드나 형식은 프로그램이 알아서 해석합니다. 그리고 파일의 정보, 즉 크기, 주인, 권한, 수정 시각, 그리고 데이터가 디스크의 어느 블록들에 있는지를 **inode**라는 구조에 담았습니다. 놀라운 점은 inode에 이름이 없다는 것입니다. 이름은 디렉터리가 "report.txt는 inode 1042번"처럼 짝지어 갖고 있습니다.',
+    '이렇게 나누자 여러 일이 쉬워졌습니다. 한 파일에 이름을 둘 붙이는 **하드 링크**는 디렉터리에 같은 inode 번호를 하나 더 적는 일이고 파일 이름을 바꾸거나 옮기는 일은 데이터를 건드리지 않고 디렉터리 항목만 바꾸는 일이 됩니다. 그래서 같은 파일 시스템 안의 이름 바꾸기는 한순간에 일어나는 **원자적** 동작입니다. 이 성질은 뒤에서 파일을 안전하게 저장하는 비결이 됩니다.',
+    '프로그램이 파일을 열면 운영체제는 경로를 따라가 inode를 찾고 권한을 확인한 뒤 작은 정수 하나를 돌려줍니다. 이것이 **파일 디스크립터**입니다. 이후의 읽기와 쓰기는 경로 대신 이 번호로 합니다. UNIX는 키보드, 화면, 파이프, 그리고 나중에는 네트워크 소켓까지 같은 번호와 같은 read, write로 다루게 했습니다. "모든 것은 파일이다"라는 UNIX의 철학이 여기서 나왔습니다. 2장에서 만날 소켓도 결국 파일 디스크립터입니다.'
+   ]},
+   { heading: '빠르게 하려고 미뤄 두기: 페이지 캐시', paragraphs: [
+    '디스크는 메모리보다 수천에서 수만 배 느립니다. 프로그램이 write를 부를 때마다 디스크에 쓰기를 기다린다면 모든 프로그램이 느려집니다. 그래서 운영체제는 쓰기를 메모리의 **페이지 캐시**에 일단 받아 두고 바로 "성공"을 돌려준 뒤 몇 초 안에 한꺼번에 디스크로 내려씁니다. 1장 메모리 단원에서 free가 낮아도 누수가 아니라고 했던 그 캐시가 바로 이것입니다.',
+    '이 설계에는 대가가 있습니다. write가 성공했다는 것은 "운영체제가 받았다"는 뜻이지 "디스크에 남았다"는 뜻이 아닙니다. 그 사이에 전원이 나가면 최근 쓰기는 사라집니다. 그래서 반드시 남아야 하는 데이터는 **fsync**를 불러 디스크에 기록될 때까지 기다립니다. 데이터베이스가 커밋할 때마다 로그를 fsync하는 이유가 이것입니다. 4장 트랜잭션 단원에서 다시 만납니다.'
+   ]},
+   { heading: '꺼져도 깨지지 않게: 저널링', paragraphs: [
+    '파일 하나에 데이터를 덧붙이려면 파일 시스템은 여러 곳을 고쳐야 합니다. 빈 블록 표시를 바꾸고, inode의 크기와 블록 목록을 고치고, 데이터 블록에 내용을 씁니다. 그 사이에 전원이 나가면 블록은 쓰였다고 표시됐는데 어느 파일에도 속하지 않는 식으로 구조가 어긋납니다. 예전에는 재부팅할 때마다 fsck라는 도구로 디스크 전체를 검사해 고쳤는데 디스크가 커지자 몇 시간씩 걸렸습니다.',
+    '해법은 고칠 내용을 먼저 별도의 영역에 한 덩어리로 적어 두는 것이었습니다. 이것이 **저널**입니다. 재부팅하면 디스크 전체가 아니라 저널만 보고 끝까지 반영하거나 버리면 됩니다. 1993년 Windows NT의 NTFS, 2001년 Linux의 ext3가 저널링을 기본으로 했고 지금의 ext4와 XFS도 그렇습니다. 1992년 로젠블럼과 오스터하우트는 아예 모든 쓰기를 로그처럼 끝에 덧붙이는 로그 구조 파일 시스템을 제안했습니다. "먼저 기록하고 나중에 반영한다"는 이 생각은 데이터베이스의 로그 선행 기록과 같은 뿌리입니다.'
+   ]},
+   { heading: '서버 개발자가 기억할 것', paragraphs: [
+    '설정 파일이나 상태 파일을 그 자리에서 덮어쓰면 도중에 꺼졌을 때 반쯤 쓰인 파일이 남습니다. 그래서 새 내용을 임시 파일에 쓰고, fsync하고, 원자적인 이름 바꾸기(os.replace)로 교체합니다. 읽는 쪽은 언제나 옛 파일이나 새 파일 중 하나만 봅니다. 이 단원의 Python 예제가 그 방법을 보여 줍니다.',
+    '이 가정들은 생각보다 미묘합니다. 2018년 PostgreSQL 개발자들은 Linux에서 fsync가 실패하면 오류를 한 번만 알려 주고 쓰지 못한 데이터를 버릴 수 있다는 것을 발견했습니다. 다시 fsync하면 성공처럼 보였습니다. 20년 넘게 믿어 온 가정이 틀렸던 것입니다. 저장을 다루는 코드는 "언제 정말로 남는가"를 정확히 알고 써야 합니다.'
+   ]}
+  ],
+  misconceptions: [
+   { belief: 'write가 성공하면 데이터가 디스크에 저장된 것이다.', truth: 'write는 데이터를 메모리의 페이지 캐시에 넣었다는 뜻입니다. 정전에 대비해야 하는 데이터는 fsync가 끝나야 디스크에 남았다고 볼 수 있습니다.' },
+   { belief: '파일 이름이 곧 파일이다.', truth: '파일의 정보와 데이터는 inode가 갖고 이름은 디렉터리가 inode를 가리키는 꼬리표입니다. 그래서 한 파일에 이름이 여러 개일 수 있고 이름을 지워도 열고 있는 프로세스가 있으면 데이터가 남습니다.' },
+   { belief: '디스크 용량이 남아 있으면 파일을 더 만들 수 있다.', truth: 'inode 수도 정해져 있어서 작은 파일이 아주 많으면 용량이 남았는데도 "No space left on device"가 납니다. df -i로 확인합니다.' }
+  ],
+  to: '파일에는 주인과 권한이 적혀 있다고 했습니다. 그렇다면 한 서버를 여러 사람과 여러 서비스가 함께 쓸 때 누가 어떤 파일을 읽고 고칠 수 있는지는 어떻게 정할까요? 다음 단원 Linux 권한과 서비스가 이 질문을 다룹니다.',
+  books: [
+   { title: 'Operating Systems: Three Easy Pieces (운영체제: 아주 쉬운 세 가지 이야기)', by: 'Remzi H. Arpaci-Dusseau, Andrea C. Arpaci-Dusseau', where: '39장 파일과 디렉터리, 40장 파일 시스템 구현, 41장 FFS, 42장 충돌 일관성(fsck와 저널링)', note: '파일 API에서 출발해 inode와 비트맵으로 파일 시스템을 직접 설계해 보고 전원이 꺼질 때의 문제까지 다룹니다. 이 단원 흐름 그대로입니다.', url: 'https://pages.cs.wisc.edu/~remzi/OSTEP/' },
+   { title: 'The Linux Programming Interface (리눅스 API의 모든 것)', by: 'Michael Kerrisk', where: '4~5장 파일 I/O, 13장 파일 I/O 버퍼링, 14장 파일 시스템, 18장 디렉터리와 링크', note: 'open, write, fsync, rename이 커널에서 정확히 무엇을 보장하는지 가장 자세히 설명합니다.', url: 'https://man7.org/tlpi/' },
+   { title: 'Computer Systems: A Programmer’s Perspective (컴퓨터 시스템)', by: 'Randal E. Bryant, David R. O’Hallaron', where: '3판 10장 시스템 수준 입출력', note: '파일 디스크립터와 열린 파일 표, 공유와 리다이렉션을 그림으로 설명합니다.', url: 'https://csapp.cs.cmu.edu/' }
+  ],
+  papers: [
+   { title: 'A General-Purpose File System for Secondary Storage', by: 'R. C. Daley, P. G. Neumann', where: 'AFIPS Fall Joint Computer Conference, 1965', note: '계층형 디렉터리와 경로 이름을 제안한 Multics 파일 시스템 논문입니다.', url: 'https://doi.org/10.1145/1463891.1463915' },
+   { title: 'A Fast File System for UNIX', by: 'Marshall K. McKusick, William N. Joy, Samuel J. Leffler, Robert S. Fabry', where: 'ACM Transactions on Computer Systems, 1984', note: '디스크의 물리적 성질을 고려해 파일 시스템을 빠르게 만든 고전입니다.', url: 'https://doi.org/10.1145/989.990' },
+   { title: 'The Design and Implementation of a Log-Structured File System', by: 'Mendel Rosenblum, John K. Ousterhout', where: 'ACM Transactions on Computer Systems, 1992', note: '모든 쓰기를 로그로 덧붙이는 파일 시스템입니다. SSD와 LSM-tree의 생각과도 이어집니다.', url: 'https://doi.org/10.1145/146941.146943' },
+   { title: 'PostgreSQL’s fsync() surprise', by: 'Jonathan Corbet', where: 'LWN.net, 2018', note: 'fsync 실패의 의미를 둘러싼 사건을 정리한 기사입니다.', url: 'https://lwn.net/Articles/752063/' }
   ]
  }
 };

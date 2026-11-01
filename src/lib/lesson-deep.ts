@@ -1112,5 +1112,30 @@ export const deeps:Record<string,LessonDeep>={
    ['PEP 744 · JIT Compilation','https://peps.python.org/pep-0744/'],
    ['Nand2Tetris · The Elements of Computing Systems','https://www.nand2tetris.org/']
   ]
+ },
+ filesystem:{
+  definition:'파일 시스템은 블록 단위로만 읽고 쓸 수 있는 저장 장치 위에 파일과 디렉터리라는 추상을 만듭니다. ext4 같은 UNIX 계열 파일 시스템은 디스크를 몇 영역으로 나눠 어떤 블록이 비었는지 표시하는 비트맵, 파일마다의 inode, 실제 데이터 블록을 둡니다. inode에는 파일 종류, 권한, 소유자, 크기, 시각, 데이터 블록의 위치가 들어 있고 이름은 들어 있지 않습니다. 이름은 디렉터리가 inode 번호와 짝지어 갖고 있습니다. Linux는 그 위에 VFS라는 공통 계층을 두어 ext4, XFS, NFS 같은 서로 다른 파일 시스템을 같은 open, read, write로 다루게 합니다.',
+  terms:[
+   ['블록','저장 장치를 읽고 쓰는 고정 크기 단위입니다. 보통 4KB입니다.'],
+   ['inode','파일의 정보와 데이터 블록 위치를 담은 구조입니다. 이름은 없습니다.'],
+   ['디렉터리 항목','이름과 inode 번호의 짝입니다. 디렉터리는 이 항목들의 목록입니다.'],
+   ['파일 디스크립터','프로세스가 연 파일을 가리키는 정수입니다. 0, 1, 2는 표준 입력, 출력, 오류입니다.'],
+   ['페이지 캐시','파일 내용을 메모리에 캐시해 두는 커널의 영역입니다. write는 먼저 여기에 들어갑니다.'],
+   ['저널','바꿀 내용을 먼저 적어 두는 영역입니다. 재부팅 때 이것만 보고 구조를 복구합니다.']
+  ],
+  sections:[
+   {title:'open("/srv/app/config.txt")에서 일어나는 일',body:'커널은 경로를 왼쪽부터 한 단계씩 따라갑니다.',list:['루트 디렉터리의 inode에서 시작해 디렉터리 내용에서 srv의 inode 번호를 찾습니다.','같은 방식으로 app, config.txt까지 내려가며 각 단계에서 디렉터리를 지나갈 권한(x)이 있는지 확인합니다.','config.txt의 inode에서 요청한 동작(읽기, 쓰기)에 대한 권한을 확인합니다.','프로세스의 열린 파일 표에 항목을 만들고 그 번호(파일 디스크립터)를 돌려줍니다. 이후 read와 write는 경로를 다시 찾지 않고 이 번호로 합니다.']},
+   {title:'write와 fsync 사이',body:'write는 데이터를 페이지 캐시에 복사하고 바로 돌아옵니다. 커널은 이 "더러운" 페이지를 몇 초 안에 백그라운드에서 디스크로 내려씁니다. fsync를 부르면 그 파일의 더러운 페이지와 필요한 메타데이터가 디스크에 기록될 때까지 기다립니다. 새 파일을 만들었다면 파일뿐 아니라 그 이름이 들어간 디렉터리도 fsync해야 정전 뒤에 이름이 남는다는 점도 기억해 둡니다. DB가 커밋마다 로그를 fsync하는 이유가 이것입니다.'},
+   {title:'안전하게 덮어쓰는 방법',body:'파일을 그 자리에서 덮어쓰면 도중에 꺼졌을 때 앞부분은 새 내용, 뒷부분은 옛 내용인 파일이 남습니다.',list:['같은 디렉터리에 임시 파일을 만들어 새 내용을 씁니다.','임시 파일을 fsync해 내용이 디스크에 있음을 확실히 합니다.','os.replace(임시, 원래)로 이름을 바꿉니다. 같은 파일 시스템 안의 rename은 원자적입니다.','필요하면 디렉터리를 fsync해 이름 바꾸기 자체를 확정합니다.']},
+   {title:'자주 만나는 문제',body:'디스크 공간이 남았는데 "No space left on device"가 나오면 inode가 바닥났을 수 있습니다. 작은 파일이 아주 많으면 생깁니다(df -i로 확인). 파일을 지웠는데 공간이 그대로면 열고 있는 프로세스가 있습니다(lsof | grep deleted). 열 수 있는 파일 수 제한(ulimit -n)에 걸리면 소켓도 파일 디스크립터라 새 연결을 받지 못합니다. 2장 이후 네트워크 단원에서 소켓을 만나면 그것도 파일 디스크립터라는 점을 떠올려 보세요.'},
+   {title:'블록 장치, 네트워크 파일 시스템, 객체 스토리지',body:'클라우드에서는 세 가지 저장소를 구분해 씁니다. EBS 같은 블록 장치는 서버 한 대에 붙어 그 위에 파일 시스템을 만듭니다. EFS나 NFS 같은 네트워크 파일 시스템은 여러 서버가 같은 디렉터리를 함께 씁니다. S3 같은 객체 스토리지는 파일 시스템의 약속(디렉터리, 부분 수정, 잠금)을 버리는 대신 무한히 늘어납니다. 이 차이는 6장 스토리지 단원에서 다시 다룹니다.'}
+  ],
+  sources:[
+   ['Linux man-pages · inode(7)','https://man7.org/linux/man-pages/man7/inode.7.html'],
+   ['Linux man-pages · fsync(2)','https://man7.org/linux/man-pages/man2/fsync.2.html'],
+   ['Linux Kernel · Virtual File System','https://docs.kernel.org/filesystems/vfs.html'],
+   ['Linux Kernel · ext4 Data Structures and Algorithms','https://docs.kernel.org/filesystems/ext4/index.html'],
+   ['Python · os (fsync, replace, link)','https://docs.python.org/3/library/os.html']
+  ]
  }
 };
