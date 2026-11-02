@@ -26,6 +26,7 @@
     "vite": "^7.0.0"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "pyodide": "^314.0.7"
   },
   "engines": {
