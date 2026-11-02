@@ -12,7 +12,7 @@
  let csDone=$state<string[]>([]),solvedIds=$state<string[]>([]),algDone=$state(0),last=$state<string|null>(null);
  let warning=$state(false);
  const lastLesson=$derived(lessons.find(l=>l.id===last));
- const route=['먼저 컴퓨터가 실행하고','요청은 네트워크를 건너','서버가 받아 처리하고','데이터를 읽고 씁니다','누구인지 확인하고','클라우드에 배치해','배포하고 지켜봅니다'];
+ const route=['먼저 컴퓨터가 실행하고','요청은 네트워크를 건너','서버가 받아 처리하고','데이터를 읽고 씁니다','누구인지 확인하고','클라우드에 배치해','배포하고 지켜봅니다','그리고 Python으로 다시 봅니다'];
  const levels=['입문','중급','도전'] as const;
  const history=[0,1,3,6].map(i=>chapterPictures[i]);
  let backupNote=$state('');
@@ -57,7 +57,7 @@
  <div class="hero-foot">
   <p>백엔드·CS {lessons.length}단원과 Python 코딩 테스트 24문제를 담은 공부 노트입니다. 프로그램 실행부터 운영까지, 요청이 지나는 순서대로 읽습니다.</p>
   <div class="hero-actions">
-   {#if lastLesson}<a class="btn light" href={'/backend?lesson='+lastLesson.id}>이어 읽기 · {lastLesson.title}</a>{:else}<a class="btn light" href="/backend?lesson=process">첫 단원부터 읽기</a>{/if}
+   {#if lastLesson}<a class="btn light" href={'/backend?lesson='+lastLesson.id}>이어 읽기 · {lastLesson.title}</a>{:else}<a class="btn light" href={'/backend?lesson='+chapterLessons(0)[0].id}>첫 단원부터 읽기 · {chapterLessons(0)[0].title}</a>{/if}
    <a class="text-link" href="/practice">코딩 테스트 풀기</a>
   </div>
  </div>
@@ -74,13 +74,13 @@
    <div data-rise><dt><a href="/backend">{lessons.length}단원</a></dt><dd>백엔드·CS · {csDone.length}개 완료</dd></div>
    <div data-rise><dt><a href="/practice">24문제</a></dt><dd>Python 코딩 테스트 · {solvedIds.length}개 해결</dd></div>
    <div data-rise><dt><a href="/algorithm.html" data-sveltekit-reload>12단원</a></dt><dd>알고리즘 그림 · {algDone}개 학습</dd></div>
-   <div data-rise><dt>7장</dt><dd>실행에서 운영까지</dd></div>
+   <div data-rise><dt>8장</dt><dd>실행에서 운영, 그리고 Python까지</dd></div>
   </dl>
   <figure class="archive contents-figure" data-rise><img src={chapterPictures[2].src} width={chapterPictures[2].width} height={chapterPictures[2].height} alt={chapterPictures[2].alt} loading="lazy" decoding="async"/><figcaption>{chapterPictures[2].caption}</figcaption></figure>
  </section>
 
  <section class="route" use:rise aria-labelledby="route-title">
-  <h2 id="route-title" class="visually-hidden">요청이 지나는 일곱 장</h2>
+  <h2 id="route-title" class="visually-hidden">요청이 지나는 일곱 장과 Python</h2>
   <ol>
    {#each route as line,ci}
     {@const items=chapterLessons(ci)}

@@ -131,6 +131,29 @@ for(const id of ids){
  }
 }
 
+// Each lesson has its own credited picture, and no two lessons share a sentence of their own text.
+const {lessonPictures}=load('src/lib/lesson-pictures.ts');
+const {chapterPictures}=load('src/lib/archive.ts');
+const credited=new Set(JSON.parse(fs.readFileSync('static/archive/credits.json','utf8')).map(c=>c.file.replace(/^static/,'')));
+const pictureSrcs=Object.values(lessonPictures).map(p=>p.src);
+check(new Set(pictureSrcs).size===pictureSrcs.length&&!chapterPictures.some(p=>pictureSrcs.includes(p.src)),'lesson pictures must all differ from each other and from the chapter pictures');
+for(const id of ids){
+ const p=lessonPictures[id];
+ check(p,`${id}: missing lesson picture`);
+ if(!p)continue;
+ check(fs.existsSync('static'+p.src)&&credited.has(p.src),`${id}: picture file or credit missing (${p.src})`);
+ check(filled(p.caption,40)&&filled(p.alt)&&filled(p.credit)&&filled(p.license),`${id}: picture needs caption, alt text, credit and licence`);
+}
+const ownSentences=new Map();
+for(const id of ids){
+ const l=lessons.find(x=>x.id===id);
+ const own=allText([l,histories[id]?.timeline,histories[id]?.decisions,deeps[id]?.sections,stories[id]?.parts,stories[id]?.misconceptions]);
+ for(const t of own)for(const s of t.split(/(?<=[다요])\.\s+/).map(x=>x.trim()).filter(x=>x.length>=30)){
+  const seen=ownSentences.get(s);
+  if(seen&&seen!==id)check(false,`${id}: repeats a sentence from '${seen}': ${s.slice(0,50)}…`);else ownSentences.set(s,id);
+ }
+}
+
 // Every story opens with a key question and closes with misconceptions to correct.
 for(const id of ids)if(stories[id])check(stories[id].question&&(stories[id].misconceptions||[]).length>=2,`${id}: story needs a key question and at least 2 misconceptions`);
 

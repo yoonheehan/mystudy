@@ -21,10 +21,10 @@ export const focusedQuestions: Record<string, { question: string; intent: string
  memory: {question:'가상 메모리는 무엇이며 RAM을 늘려도 OOM이 생길 수 있나요?',intent:'주소 공간·실제 사용량·프로세스 제한을 구분합니다.',outline:['가상 주소와 물리 페이지','페이지 폴트와 매핑','컨테이너 제한·힙 제한·누수','swap은 무한한 RAM이 아님']}
 };
 
-type Draft = Omit<Lesson, 'minutes' | 'codeNotes'>;
+type Draft = Omit<Lesson, 'minutes' | 'codeNotes'> & Partial<Pick<Lesson, 'codeNotes'>>;
 const drafts: Draft[] = [
 {
- id:'deadlock',category:1,title:'교착 상태와 잠금 순서',english:'Deadlock / Starvation',hook:'두 사람이 서로 가진 열쇠만 기다리면 누가 먼저 움직일까?',
+ id:'deadlock',codeNotes:['두 세션이 서로 상대가 쥔 행을 FOR UPDATE로 기다리면 PostgreSQL이 약 1초(deadlock_timeout) 뒤 원을 찾아 한쪽을 deadlock detected 오류로 끝냅니다.','두 세션 모두 계좌 번호가 작은 쪽부터 잠그면 늦게 온 쪽은 첫 잠금에서 기다릴 뿐 원이 생기지 않습니다. 순서를 정하는 것이 가장 단순한 예방입니다.'],category:1,title:'교착 상태와 잠금 순서',english:'Deadlock / Starvation',hook:'두 사람이 서로 가진 열쇠만 기다리면 누가 먼저 움직일까?',
  definition:'교착 상태는 여러 작업이 서로가 가진 자원을 기다려 더 진행하지 못하는 상태입니다. 고전적인 자원 모델의 발생 조건은 상호 배제, 점유 대기, 비선점, 순환 대기입니다. 기아 상태는 다른 작업은 진행하지만 특정 작업이 자원을 얻지 못하는 상황입니다. 잠금이 있다는 사실만으로 교착 상태인 것은 아닙니다.',
  analogy:'지수는 프린터를 잡고 스캐너를 기다리고, 민수는 스캐너를 잡고 프린터를 기다립니다. 둘 다 지금 가진 장비를 놓지 않아 업무가 멈춥니다. 모두 프린터부터 예약하면 원형 대기가 끊깁니다. 반대로 새치기가 계속되어 한 사람만 차례를 못 받는 것은 기아입니다.',
  steps:['A가 계좌 1을, B가 계좌 2를 잠급니다.','A가 계좌 2를, B가 계좌 1을 기다리면 대기 관계가 원을 만듭니다.','DB가 교착 상태를 감지하면 한 트랜잭션을 중단시켜 다른 작업이 진행하게 합니다.','모든 경로에서 잠금 순서를 통일하고 중단된 트랜잭션 전체를 제한적으로 재시도합니다.'],
@@ -53,7 +53,7 @@ SELECT * FROM lab_accounts WHERE id = 2 FOR UPDATE;
  quiz:{question:'반대 방향의 송금에서 교착 가능성을 줄이려면?',options:['계좌 ID 순으로 잠금 순서를 통일한다','모든 트랜잭션에 sleep을 추가한다','RAM만 늘린다'],correct:0,explanation:'일관된 잠금 순서는 원형 대기를 줄입니다. 관련된 모든 코드 경로가 같은 규칙을 따라야 합니다.'},refs:['locking']
 },
 {
- id:'normalization',category:3,title:'정규화와 데이터 중복',english:'Normalization / Functional Dependency',hook:'고객 주소를 주문마다 복사하면 이사한 뒤 어떤 주소가 맞을까?',
+ id:'normalization',codeNotes:['이름은 lab_customers 한 곳에만 있어서 UPDATE 한 번으로 모든 주문 조회에 새 이름이 나옵니다. 중복이 없으니 고칠 곳도 하나입니다.','shipping_address_at_order는 일부러 주문 표에 복사했습니다. 주문 당시의 주소는 고객이 이사해도 바뀌면 안 되는 별개의 사실이기 때문입니다.'],category:3,title:'정규화와 데이터 중복',english:'Normalization / Functional Dependency',hook:'고객 주소를 주문마다 복사하면 이사한 뒤 어떤 주소가 맞을까?',
  definition:'정규화는 함수적 종속을 기준으로 테이블을 구성해 불필요한 중복과 삽입·수정·삭제 이상을 줄이는 과정입니다. X→Y는 X가 같으면 Y가 하나로 결정된다는 뜻입니다. 1NF는 단일 값으로 구성된 속성, 2NF는 후보키 일부에만 의존하는 비주요 속성의 분리, 3NF는 비주요 속성의 부적절한 이행 종속 제거를 중심으로 이해할 수 있습니다.',
  analogy:'학급 명부의 매 줄에 학생·반·담임 전화번호를 반복하면 담임 번호를 바꿀 때 학생 수만큼 고쳐야 합니다. 학생 명부와 반 정보를 나누고 반 번호로 연결하면 한 곳만 수정합니다. 테이블 개수보다 무엇이 무엇을 결정하는지가 핵심입니다.',
  steps:['주문 행에 고객 ID와 현재 고객명을 반복 저장한 표를 생각합니다.','고객 ID가 고객의 현재 이름을 결정한다는 업무 규칙을 확인합니다.','고객과 주문을 나누고 키로 연결합니다.','주문 당시 주소·가격은 현재 정보가 아니라 사건의 기록이므로 따로 보관합니다.'],
@@ -80,7 +80,7 @@ FROM lab_orders o JOIN lab_customers c ON c.id = o.customer_id;
  quiz:{question:'가격 변경 후에도 과거 주문 금액을 유지하려면?',options:['주문 당시 단가를 주문 항목에 기록한다','현재 단가로 과거 주문도 재계산한다','모든 외래키를 삭제한다'],correct:0,explanation:'당시 단가는 주문 사건의 속성이므로 불필요한 원본 중복과 구별합니다.'},refs:['normalization']
 },
 {
- id:'join',category:3,title:'JOIN과 누락된 행',english:'INNER JOIN / LEFT JOIN / NULL',hook:'주문하지 않은 고객도 고객 목록에 남겨야 한다면?',
+ id:'join',codeNotes:['LEFT JOIN은 주문이 없는 지수도 남기고 주문 칸을 NULL로 채웁니다. 상태 조건을 ON에 둬서 결제된 주문만 붙이되 고객은 모두 남겼습니다.','AND o.status = \'paid\'를 WHERE로 옮겨 실행해 보세요. NULL인 지수 행이 조건에서 걸러져 사라지고 결과가 INNER JOIN과 같아집니다.'],category:3,title:'JOIN과 누락된 행',english:'INNER JOIN / LEFT JOIN / NULL',hook:'주문하지 않은 고객도 고객 목록에 남겨야 한다면?',
  definition:'JOIN은 두 테이블의 행을 조건으로 조합합니다. INNER JOIN은 맞는 조합만 남기고 LEFT JOIN은 왼쪽 행을 유지하며 오른쪽에 대응이 없으면 NULL을 채웁니다. 한 고객에 주문이 세 개면 결과도 세 행이 될 수 있습니다. 집합 그림보다 실제 행 수와 NULL을 직접 확인하세요.',
  analogy:'고객 명단과 영수증을 고객 번호로 붙입니다. 영수증이 있는 사람만 모으면 INNER JOIN, 없는 사람도 명단에 남기면 LEFT JOIN입니다. 영수증이 여러 장이면 같은 고객이 여러 번 나타납니다.',
  steps:['고객 두 명과 주문 한 건을 준비합니다.','INNER JOIN으로 주문한 고객만 남는지 확인합니다.','LEFT JOIN으로 미주문 고객도 남고 주문 ID가 NULL인지 봅니다.','오른쪽 조건을 WHERE에 넣으면 NULL 행이 사라질 수 있습니다. ON과 WHERE의 의미를 구분합니다.'],
@@ -106,7 +106,7 @@ LEFT JOIN orders o
  quiz:{question:'미주문 고객도 남기며 결제 주문만 연결하려면?',options:['LEFT JOIN의 ON에 주문 상태 조건을 둔다','WHERE에서 오른쪽 상태를 필터링한다','INNER JOIN을 쓴다'],correct:0,explanation:'ON은 연결될 오른쪽 행을 제한하고 LEFT JOIN은 연결되지 않은 왼쪽 고객을 유지합니다.'},refs:['joins']
 },
 {
- id:'database-choice',category:3,title:'관계형 DB와 NoSQL 선택',english:'Relational / Document / Key-value',hook:'주문과 장바구니를 꼭 같은 저장 방식으로 다뤄야 할까?',
+ id:'database-choice',codeNotes:['관계형 쪽은 주문 항목이 상품을 id로 가리키고 주문 당시 단가를 따로 저장합니다. 상품 가격이 바뀌어도 지난 주문 금액은 그대로입니다.','문서 쪽은 옵션 목록을 상품 문서 안에 넣었습니다. 상품 화면을 한 번에 읽기 좋지만 옵션을 여러 상품이 공유한다면 고칠 곳이 늘어납니다.'],category:3,title:'관계형 DB와 NoSQL 선택',english:'Relational / Document / Key-value',hook:'주문과 장바구니를 꼭 같은 저장 방식으로 다뤄야 할까?',
  definition:'관계형 DB는 행·컬럼·관계와 제약 조건을 중심으로 데이터를 관리합니다. NoSQL은 문서·키값·그래프 등 여러 모델을 묶은 이름입니다. 두 종류 모두 구현에 따라 트랜잭션·복제·확장을 제공할 수 있습니다. 조회 패턴, 변경 단위, 일관성 요구, 운영 경험을 기준으로 고릅니다.',
  analogy:'연결된 주문·결제 장부는 표로 검증하기 편하고 한 상품의 다양한 옵션은 문서로 함께 읽기 편할 수 있습니다. 공구함에서 드라이버와 렌치를 고르듯 작업에 맞는 모델을 고릅니다.',
  steps:['주문 결제 확인, 사용자별 목록처럼 대표 조회를 구체적으로 씁니다.','어떤 변경이 함께 성공해야 하는지와 허용 지연을 정합니다.','관계·제약·JOIN 중심인지 문서 한 건 또는 키 조회 중심인지 비교합니다.','성능·백업·복구·개발 복잡도를 작은 구현으로 검증합니다.'],

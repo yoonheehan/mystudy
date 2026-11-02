@@ -25,6 +25,7 @@ export const techMap: MapLayer[] = [
  { title: '요청의 길목', question: '요청은 어디를 거쳐 앱에 닿나요?', tools: [
   { name: 'Nginx', born: '접속 하나에 프로세스 하나를 쓰던 서버로는 동시 접속 1만 개를 감당할 수 없어서', role: 'TLS 종료, 정적 파일, 리버스 프록시, 타임아웃과 버퍼링을 맡습니다.', notFor: '업무 로직', lesson: 'proxy' },
   { name: 'API 게이트웨이 (Kong · AWS API Gateway)', born: '서비스가 수십 개로 나뉘자 앱이 모든 주소를 알 수 없어서', role: '외부 요청의 입구에서 인증, 처리율 제한, 서비스별 라우팅을 맡습니다.', notFor: '업무 로직(넣으면 새 모놀리스가 됩니다)', lesson: 'microservices' },
+  { name: 'gunicorn · uvicorn', born: '프레임워크마다 서버와 붙는 방식이 달라 조합을 고르기 어려워서', role: 'Python 웹 앱 앞에서 소켓, HTTP, 워커 프로세스를 맡고 WSGI·ASGI 약속으로 Django, Flask, FastAPI를 부릅니다.', notFor: '느린 클라이언트와 TLS 처리(앞에 리버스 프록시를 둡니다)', lesson: 'py-web' },
   { name: '로드 밸런서 (ALB · NLB)', born: '서버 한 대로는 요청과 장애를 감당할 수 없어서', role: '요청을 건강한 서버들에 나눠 보내고 고장 난 서버를 뺍니다.', notFor: '서버 안의 느린 쿼리 같은 병목 해결', lesson: 'lb' }
  ]},
  { title: '실행하고 배포하기', question: '코드를 어떻게 똑같이 옮기고 자동으로 올리나요?', tools: [

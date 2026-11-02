@@ -577,5 +577,70 @@ export const diagrams:Record<string,Diagram>={
    {from:2,to:3,label:'이벤트: 주문 생성됨',caption:'결제 서비스는 큐에서 이벤트를 받아 결제를 시도합니다. 두 서비스는 DB를 공유하지 않아 한 트랜잭션으로 묶을 수 없습니다.'},
    {from:3,to:2,label:'이벤트: 결제 실패',tone:'fail',caption:'카드 한도 초과로 결제가 실패했습니다. 결제 서비스는 실패를 이벤트로 알립니다.'},
    {from:2,to:0,label:'보상: 주문 취소 → 알림',tone:'ok',caption:'주문 서비스가 사가의 보상 단계로 주문을 "취소"로 바꾸고 사용자에게 알립니다. 트랜잭션의 ROLLBACK 대신 업무적으로 되돌리는 단계를 실행한 것입니다.'}
+  ]},
+ 'py-origin':{kind:'table',title:'Python이 걸어온 길',columns:['때','버전','바뀐 것'],packetLabel:'이 시기의 질문',
+  steps:[
+   {rows:[['1989년 12월','—','취미 프로젝트 시작']],highlight:[0],packet:'ABC의 장점은 살리고 확장 가능한 언어를 만들 수 없을까?',caption:'반 로섬이 CWI에서 ABC를 만들던 경험을 바탕으로 크리스마스 휴가 동안 새 인터프리터를 쓰기 시작합니다.'},
+   {rows:[['1991년 2월','0.9.0','클래스, 예외, 리스트, 딕셔너리']],highlight:[0],packet:'다른 사람들도 쓸 수 있을까?',caption:'뉴스그룹에 공개됩니다. 지금 Python의 핵심 모양이 이미 있었습니다.'},
+   {rows:[['2000년','2.0','리스트 컴프리헨션, 순환 GC, PEP 절차']],highlight:[0],packet:'언어를 어떻게 함께 바꿀까?',caption:'공개 제안 문서(PEP)로 변경을 논의하는 방식이 자리 잡습니다.'},
+   {rows:[['2008년 12월','3.0','str과 bytes 분리, print 함수']],highlight:[0],packet:'호환을 깨더라도 정리해야 할까?',caption:'이전 코드와 호환되지 않는 정리를 합니다. 옮겨 가는 데 10년 넘게 걸립니다.'},
+   {rows:[['2020년 1월','2.7 지원 종료','Python 3만 남음'],['2022~2025년','3.11~3.14','빨라진 인터프리터, GIL 없는 빌드']],highlight:[1],packet:'더 빠르고 더 병렬적으로 갈 수 있을까?',caption:'Python 2가 끝나고 Python 3는 속도와 병렬성을 크게 손보고 있습니다.'}
+  ]},
+ 'py-runtime':{kind:'flow',title:'python app.py를 실행했을 때',
+  nodes:[
+   {label:'소스 코드',sub:'app.py'},
+   {label:'토큰과 AST',sub:'토크나이저 · PEG 파서'},
+   {label:'바이트코드',sub:'코드 객체 · .pyc 캐시'},
+   {label:'인터프리터 반복문',sub:'C로 만든 eval loop'},
+   {label:'C 함수 실행',sub:'int 더하기, list 추가 …'},
+   {label:'CPU',sub:'기계어'}
+  ],
+  steps:[
+   {active:0,status:{0:'ok'},caption:'우리가 쓴 것은 텍스트일 뿐입니다. CPU는 이것을 읽지 못합니다.'},
+   {active:1,status:{0:'ok',1:'ok'},caption:'소스를 단어(토큰)로 나누고 문법에 맞는 나무 구조(AST)로 만듭니다. 문법 오류는 이 단계에서 납니다.'},
+   {active:2,status:{0:'ok',1:'ok',2:'ok'},caption:'컴파일러가 AST를 바이트코드로 바꿉니다. import한 모듈은 __pycache__에 .pyc로 저장해 다음에는 이 단계를 건너뜁니다.'},
+   {active:3,status:{0:'ok',1:'ok',2:'ok',3:'wait'},caption:'인터프리터가 바이트코드를 한 명령씩 꺼내 분기합니다. 3.11 이상은 자주 쓰는 명령을 타입 전용 명령으로 바꿔 끼웁니다.'},
+   {active:4,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'ok'},caption:'명령마다 해당하는 C 함수가 실행됩니다. sum이나 NumPy는 반복 전체가 이 안에서 돌아 해석 비용이 없습니다.'},
+   {active:5,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'ok',5:'ok'},result:'CPU가 실행하는 것은 Python 코드가 아니라 인터프리터라는 C 프로그램입니다.',caption:'결국 CPU는 인터프리터의 기계어를 실행합니다. Python 명령 하나가 기계어 수십 개 이상이 되는 이유입니다.'}
+  ]},
+ 'py-memory':{kind:'table',title:'이름표와 객체, 참조 횟수',columns:['코드','이름 → 객체','참조 횟수'],packetLabel:'지금 실행한 줄',
+  steps:[
+   {rows:[['a = [1, 2]','a → 리스트#1','1']],highlight:[0],packet:'a = [1, 2]',caption:'힙에 리스트 객체가 생기고 a라는 이름표가 붙습니다.'},
+   {rows:[['b = a','a, b → 리스트#1','2']],highlight:[0],packet:'b = a',caption:'복사가 아닙니다. 같은 객체에 이름표가 하나 더 붙어 참조 횟수가 2가 됩니다.'},
+   {rows:[['b.append(3)','a, b → 리스트#1 [1, 2, 3]','2']],highlight:[0],packet:'b.append(3)',caption:'객체가 하나뿐이니 b로 고친 내용이 a로 봐도 보입니다.'},
+   {rows:[['c = a.copy()','a, b → #1 · c → 리스트#2','#1: 2 · #2: 1']],highlight:[0],packet:'c = a.copy()',caption:'copy는 새 객체를 만듭니다. 이제 c를 고쳐도 a는 그대로입니다.'},
+   {rows:[['del a; del b','리스트#1에 붙은 이름 없음','0 → 즉시 해제']],highlight:[0],packet:'del a; del b',caption:'del은 객체가 아니라 이름표를 지웁니다. 마지막 이름표가 사라져 참조 횟수가 0이 되는 순간 CPython이 객체를 해제합니다.'}
+  ]},
+ 'py-concurrency':{kind:'timeline',title:'스레드 두 개가 GIL을 주고받을 때',lanes:['스레드 A (API 호출)','스레드 B (계산)'],stateLabel:'GIL',
+  steps:[
+   {lane:0,text:'요청 준비',tone:'ok',state:'A가 쥠',caption:'A가 GIL을 쥐고 요청을 만드는 바이트코드를 실행합니다. B는 기다립니다.'},
+   {lane:0,text:'응답 기다림',tone:'wait',state:'비어 있음',caption:'A가 네트워크 응답을 기다리는 동안 GIL을 내려놓습니다. 기다리는 일이 스레드로 빨라지는 이유입니다.'},
+   {lane:1,text:'계산 실행',tone:'ok',state:'B가 쥠',caption:'B가 GIL을 받아 계산합니다. A의 기다림과 B의 계산이 겹칩니다.'},
+   {lane:0,text:'응답 도착 · GIL 대기',tone:'wait',state:'B가 쥠',caption:'응답이 왔지만 A는 B가 GIL을 넘길 때까지 기다립니다. B는 약 5ms마다 기다리는 스레드가 있으면 GIL을 넘깁니다.'},
+   {lane:1,text:'계산 스레드를 하나 더 늘리면?',tone:'fail',state:'한 번에 하나',caption:'계산 스레드를 늘려도 GIL을 쥔 하나만 실행되어 계산은 빨라지지 않습니다. 계산을 나누려면 프로세스를 여러 개 띄웁니다.'}
+  ]},
+ 'py-io':{kind:'flow',title:'f.write("안녕")이 디스크에 닿기까지',
+  nodes:[
+   {label:'TextIOWrapper',sub:'str → UTF-8 바이트'},
+   {label:'BufferedWriter',sub:'바이트를 모아 둠'},
+   {label:'FileIO',sub:'파일 디스크립터 3'},
+   {label:'커널 페이지 캐시',sub:'write 시스템 콜'},
+   {label:'디스크',sub:'fsync 때 확정'}
+  ],
+  steps:[
+   {active:0,status:{0:'ok'},caption:'문자열 "안녕"이 지정한 인코딩(UTF-8)으로 6바이트가 됩니다. 인코딩을 빼먹으면 운영체제 기본값을 써서 서버마다 결과가 달라집니다.'},
+   {active:1,status:{0:'ok',1:'wait'},caption:'바이트가 버퍼에 쌓입니다. 아직 운영체제는 모릅니다. 프로그램이 여기서 죽으면 이 바이트는 사라집니다.'},
+   {active:2,status:{0:'ok',1:'ok',2:'ok'},caption:'버퍼가 차거나 flush, close를 하면 원시 입출력층이 write 시스템 콜로 커널에 넘깁니다.'},
+   {active:3,status:{0:'ok',1:'ok',2:'ok',3:'wait'},caption:'커널은 1장에서 본 페이지 캐시에 먼저 둡니다. 다른 프로세스는 이제 읽을 수 있지만 전원이 꺼지면 사라질 수 있습니다.'},
+   {active:4,status:{0:'ok',1:'ok',2:'ok',3:'ok',4:'ok'},result:'반드시 남아야 하는 데이터는 flush 뒤 os.fsync까지 부릅니다.',caption:'os.fsync를 부르면 커널이 디스크에 확정하고 돌아옵니다. with 블록이 끝나면 버퍼를 비우고 디스크립터를 닫습니다.'}
+  ]},
+ 'py-web':{kind:'sequence',title:'브라우저 요청이 Flask 함수에 닿기까지',lanes:['브라우저','nginx','gunicorn 워커','Flask 앱'],
+  steps:[
+   {from:0,to:1,label:'GET /health (HTTPS)',caption:'브라우저의 요청은 먼저 리버스 프록시 nginx에 닿습니다. TLS는 여기서 풉니다(3장 프록시 단원).'},
+   {from:1,to:2,label:'GET /health (HTTP)',caption:'nginx가 내부의 gunicorn으로 요청을 넘깁니다. 기다리고 있던 워커 프로세스 하나가 연결을 받습니다.'},
+   {from:2,to:3,label:'app(environ, start_response)',tone:'note',caption:'워커가 HTTP를 해석해 environ 딕셔너리를 만들고 WSGI 약속대로 Flask 앱을 부릅니다.'},
+   {from:3,to:2,label:'200 OK · [b\'{"ok": true}\']',tone:'ok',caption:'Flask가 경로에 맞는 함수를 실행하고 start_response로 상태와 헤더를 알린 뒤 본문 바이트를 돌려줍니다.'},
+   {from:2,to:1,label:'HTTP/1.1 200 OK',caption:'워커가 응답을 HTTP 바이트로 써서 보냅니다.'},
+   {from:1,to:0,label:'200 OK (HTTPS)',tone:'ok',caption:'nginx가 다시 TLS로 감싸 브라우저에 돌려줍니다. Flask 코드 어디에도 소켓이 보이지 않는 이유입니다.'}
   ]}
 };
