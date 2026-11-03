@@ -1,0 +1,10 @@
+// Pictures on the home page, kept apart from the chapter covers. Files and licences: static/archive/credits.json
+import type {ArchivePicture} from './archive';
+export const homePictures:Record<string,ArchivePicture>={
+ 'servers':{src:'/archive/home/servers.jpg',width:1280,height:853,alt:'위키미디어 재단 데이터 센터의 서버 랙과 케이블',year:'2015',caption:'위키미디어 재단의 서버 랙. 위키백과 문서 한 장을 여는 요청도 이런 서버가 받아 데이터를 찾아 응답으로 돌려줍니다.',credit:'Victor Grigas',license:'CC BY-SA 3.0',page:'https://commons.wikimedia.org/wiki/File:Wikimedia_Foundation_Servers-8055_35.jpg'},
+ 'internet-map':{src:'/archive/home/internet-map.jpg',width:1280,height:1280,alt:'인터넷 경로를 선으로 이어 색으로 구분한 지도',year:'2005',caption:'Opte 프로젝트의 인터넷 지도. 네트워크 사이의 경로를 선으로 그렸습니다. 요청 하나도 이 그물 어딘가를 지나 서버에 닿습니다.',credit:'The Opte Project',license:'CC BY 2.5',page:'https://commons.wikimedia.org/wiki/File:Internet_map_1024.jpg'},
+ 'harvard-mark-i':{src:'/archive/home/harvard-mark-i.jpg',width:1280,height:855,alt:'하버드 마크 I 계산기의 오른쪽 부분과 기계식 장치',year:'1944',caption:'하버드 마크 I. 릴레이와 축으로 돌아가는 전기 기계식 계산기로, 프로그램은 구멍 뚫린 종이 테이프에서 한 줄씩 읽었습니다.',credit:'Topory',license:'CC BY-SA 3.0',page:'https://commons.wikimedia.org/wiki/File:Harvard_Mark_I_Computer_-_Right_Segment.JPG'},
+ 'card-deck':{src:'/archive/home/card-deck.jpg',width:1280,height:975,alt:'고무줄로 묶은 천공 카드 프로그램 묶음',year:'1960년대',caption:'천공 카드 프로그램. 카드 한 장이 코드 한 줄이었고, 묶음을 떨어뜨리면 순서를 다시 맞춰야 했습니다.',credit:'ArnoldReinhold',license:'CC BY-SA 3.0',page:'https://commons.wikimedia.org/wiki/File:Punched_card_program_deck.agr.jpg'},
+ 'teletype':{src:'/archive/home/teletype.jpg',width:1280,height:960,alt:'컴퓨터 역사 박물관에 전시된 텔레타이프 ASR-33',year:'1963',caption:'텔레타이프 ASR-33. 화면 대신 종이에 찍어 가며 컴퓨터와 대화하던 단말기로, 지금 터미널의 tty라는 이름이 여기서 왔습니다.',credit:'ArnoldReinhold',license:'CC BY-SA 3.0',page:'https://commons.wikimedia.org/wiki/File:ASR-33_at_CHM.agr.jpg'},
+ 'altair':{src:'/archive/home/altair.jpg',width:1280,height:1155,alt:'전면에 스위치와 램프가 늘어선 Altair 8800',year:'1975',caption:'Altair 8800. 스위치로 명령을 한 비트씩 넣던 조립식 컴퓨터로, 개인용 컴퓨터 시대를 연 기계입니다.',credit:'Michael Holley (Swtpc6800)',license:'Public domain',page:'https://commons.wikimedia.org/wiki/File:Altair_8800_Computer.jpg'}
+};

@@ -3,7 +3,7 @@
  import {lessons} from '$lib/lessons';
  import {chapterOrder,chapterNames,chapterGoals} from '$lib/lesson-context';
  import {problems} from '$lib/practice/problems';
- import {chapterPictures} from '$lib/archive';
+ import {homePictures} from '$lib/home-pictures';
  import {rise} from '$lib/rise';
  import {techMap} from '$lib/tech-map';
  import {buildBackup,parseBackup,applyBackup} from '$lib/progress-backup';
@@ -14,7 +14,8 @@
  const lastLesson=$derived(lessons.find(l=>l.id===last));
  const route=['먼저 컴퓨터가 실행하고','요청은 네트워크를 건너','서버가 받아 처리하고','데이터를 읽고 씁니다','누구인지 확인하고','클라우드에 배치해','배포하고 지켜봅니다','그리고 Python으로 다시 봅니다'];
  const levels=['입문','중급','도전'] as const;
- const history=[0,1,3,6].map(i=>chapterPictures[i]);
+ const contents=homePictures.servers,routeMap=homePictures['internet-map'];
+ const history=['harvard-mark-i','card-deck','teletype','altair'].map(id=>homePictures[id]);
  let backupNote=$state('');
  function exportProgress(){
   try{
@@ -76,7 +77,7 @@
    <div data-rise><dt><a href="/algorithm.html" data-sveltekit-reload>12단원</a></dt><dd>알고리즘 그림 · {algDone}개 학습</dd></div>
    <div data-rise><dt>8장</dt><dd>실행에서 운영, 그리고 Python까지</dd></div>
   </dl>
-  <figure class="archive contents-figure" data-rise><img src={chapterPictures[2].src} width={chapterPictures[2].width} height={chapterPictures[2].height} alt={chapterPictures[2].alt} loading="lazy" decoding="async"/><figcaption>{chapterPictures[2].caption}</figcaption></figure>
+  <figure class="archive contents-figure" data-rise><img src={contents.src} width={contents.width} height={contents.height} alt={contents.alt} loading="lazy" decoding="async"/><figcaption>{contents.caption}</figcaption></figure>
  </section>
 
  <section class="route" use:rise aria-labelledby="route-title">
@@ -90,7 +91,7 @@
     </li>
    {/each}
   </ol>
-  <figure class="archive route-figure" data-rise><img src={chapterPictures[5].src} width={chapterPictures[5].width} height={chapterPictures[5].height} alt={chapterPictures[5].alt} loading="lazy" decoding="async"/><figcaption><b>{chapterPictures[5].year}</b>{chapterPictures[5].caption}</figcaption></figure>
+  <figure class="archive route-figure" data-rise><img src={routeMap.src} width={routeMap.width} height={routeMap.height} alt={routeMap.alt} loading="lazy" decoding="async"/><figcaption><b>{routeMap.year}</b>{routeMap.caption}</figcaption></figure>
  </section>
 
  <section class="techmap" id="tech-map" use:rise aria-labelledby="techmap-title">
@@ -121,7 +122,7 @@
  <section class="history" use:rise aria-labelledby="history-title">
   <div class="history-top">
    <h2 id="history-title" data-rise>기술은 불편에서 나왔습니다</h2>
-   <p data-rise>각 장은 그 기술이 왜 생겼는지 보여 주는 장면으로 시작합니다. 배선을 다시 꽂던 컴퓨터, 손으로 그린 네트워크 지도, 냉장고만 한 디스크, 숫자로 가득한 관제실.</p>
+   <p data-rise>단원마다 그 기술이 왜 생겼는지부터 이야기합니다. 릴레이로 돌던 계산기, 카드 한 장이 한 줄이던 프로그램, 종이에 찍히던 터미널, 스위치로 명령을 넣던 개인용 컴퓨터도 모두 어떤 불편을 풀려고 나왔습니다.</p>
   </div>
   <div class="history-row">
    {#each history as picture}
@@ -161,7 +162,7 @@
   <nav aria-label="학습 분야 바로가기"><a href="/backend">백엔드·CS</a><a href="/practice">코딩 테스트</a><a href="/algorithm.html" data-sveltekit-reload>알고리즘 그림</a></nav>
   <div class="close-credits">
    <h2>사진 출처</h2>
-   <ul>{#each chapterPictures as picture}<li><a href={picture.page} target="_blank" rel="noreferrer">{picture.year} · {picture.credit}</a> · {picture.license}</li>{/each}</ul>
+   <ul>{#each Object.values(homePictures) as picture}<li><a href={picture.page} target="_blank" rel="noreferrer">{picture.year} · {picture.credit}</a> · {picture.license}</li>{/each}</ul>
    <p>Python 실행기 <a href="/licenses/pyodide.txt">Pyodide</a></p>
   </div>
  </div>
