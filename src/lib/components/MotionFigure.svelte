@@ -1,6 +1,7 @@
 <script lang="ts">
  import {onMount,tick} from 'svelte';
  import type {Motion,Place} from '$lib/lesson-motions';
+ import {steadyHeight} from '$lib/steady-height';
  let {motion,id}:{motion:Motion;id:string}=$props();
  let step=$state(0),playing=$state(false),delay=$state(2600),reduced=$state(false);
  const total=$derived(motion.frames.length);
@@ -41,11 +42,14 @@
  function move(value:number){playing=false;step=Math.max(0,Math.min(total-1,value));}
  function play(){if(playing){playing=false;return;}if(step===total-1)step=0;playing=true;}
  $effect(()=>{if(!playing)return;const timer=setInterval(()=>{if(step<total-1)step++;if(step===total-1)playing=false;},delay);return()=>clearInterval(timer);});
+ let body=$state<HTMLElement>();
+ onMount(()=>{const steady=steadyHeight(body!,()=>total,i=>step=i,()=>step);return steady.stop;});
  onMount(()=>{const pref=matchMedia('(prefers-reduced-motion: reduce)');reduced=pref.matches;const change=()=>{reduced=pref.matches;playing=false;};const hide=()=>{if(document.hidden)playing=false;};pref.addEventListener('change',change);document.addEventListener('visibilitychange',hide);return()=>{pref.removeEventListener('change',change);document.removeEventListener('visibilitychange',hide);};});
 </script>
 
 <figure class="motion" class:reduce-motion={reduced} aria-labelledby={'motion-title-'+id}>
  <figcaption class="motion-title" id={'motion-title-'+id}><span>움직이는 그림</span>{motion.title}</figcaption>
+ <div class="motion-body" bind:this={body}>
  <div class="motion-stage">
   <svg bind:this={stage} viewBox={`0 0 ${motion.width} ${motion.height}`} role="img" aria-label={`${motion.title}. ${step+1}단계: ${frame.caption}`}>
    <defs><marker id={'arrow-'+id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow-head"/></marker></defs>
@@ -73,6 +77,7 @@
   </svg>
  </div>
  <div class="motion-caption" aria-live={playing?'off':'polite'}><span>{step+1} / {total} 단계</span><p>{frame.caption}</p></div>
+ </div>
  <div class="motion-controls">
   <div><button onclick={()=>move(0)} disabled={step===0}>처음</button><button onclick={()=>move(step-1)} disabled={step===0}>이전</button></div>
   <input aria-label="단계 선택" type="range" min="0" max={total-1} value={step} aria-valuetext={`${step+1}단계: ${frame.caption}`} oninput={e=>move(Number(e.currentTarget.value))}/>
@@ -83,6 +88,7 @@
 </figure>
 
 <style>
+ .motion-body{display:flow-root}
  .motion{margin:40px 0;padding:28px;background:var(--surface,#f3f3f3);color:var(--ink,#0a0a0a)}
  .motion-title{display:grid;gap:6px;font-size:var(--step-lead,1.4rem);font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
  .motion-title span{font-size:13px;font-weight:700;letter-spacing:0;color:var(--accent,#2436ff)}

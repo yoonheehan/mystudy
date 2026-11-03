@@ -1,6 +1,7 @@
 <script lang="ts">
  import {onMount} from 'svelte';
  import type {Diagram,Tone} from '$lib/cs-diagrams';
+ import {steadyHeight} from '$lib/steady-height';
  let {diagram,id}:{diagram:Diagram;id:string}=$props();
  let step=$state(0),playing=$state(false),delay=$state(2600),reduced=$state(false);
  const total=$derived(diagram.steps.length);
@@ -9,11 +10,14 @@
  function move(value:number){playing=false;step=Math.max(0,Math.min(total-1,value));}
  function play(){if(playing){playing=false;return;}if(step===total-1)step=0;playing=true;}
  $effect(()=>{if(!playing)return;const timer=setInterval(()=>{if(step<total-1)step++;if(step===total-1)playing=false;},delay);return()=>clearInterval(timer);});
+ let body=$state<HTMLElement>();
+ onMount(()=>{const steady=steadyHeight(body!,()=>total,i=>step=i,()=>step);return steady.stop;});
  onMount(()=>{const pref=matchMedia('(prefers-reduced-motion: reduce)');reduced=pref.matches;const change=()=>{reduced=pref.matches;playing=false;};const hide=()=>{if(document.hidden)playing=false;};pref.addEventListener('change',change);document.addEventListener('visibilitychange',hide);return()=>{pref.removeEventListener('change',change);document.removeEventListener('visibilitychange',hide);};});
 </script>
 
 <figure class="diagram" class:reduce-motion={reduced} aria-labelledby={'diagram-title-'+id}>
  <figcaption class="diagram-title" id={'diagram-title-'+id}>{diagram.title}</figcaption>
+ <div class="diagram-body" bind:this={body}>
 
  {#if diagram.kind==='sequence'}
   {@const d=diagram}
@@ -63,6 +67,7 @@
  {/if}
 
  <div class="diagram-caption" aria-live={playing?'off':'polite'}><span>{step+1} / {total} 단계</span><p>{caption}</p></div>
+ </div>
  <div class="diagram-controls">
   <div><button onclick={()=>move(0)} disabled={step===0}>처음</button><button onclick={()=>move(step-1)} disabled={step===0}>이전</button></div>
   <input aria-label="단계 선택" type="range" min="0" max={total-1} value={step} aria-valuetext={`${step+1}단계: ${caption}`} oninput={e=>move(Number(e.currentTarget.value))}/>
@@ -73,6 +78,7 @@
 </figure>
 
 <style>
+ .diagram-body{display:flow-root}
  .diagram{margin:40px 0;padding:28px;background:var(--surface,#f3f3f3);color:var(--ink,#0a0a0a)}
  .diagram-title{font-size:var(--step-lead,1.4rem);font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
  .tone-ok{--tone:var(--accent,#2436ff)}.tone-fail{--tone:#c4271b}.tone-wait{--tone:#8a6d00}.tone-note{--tone:#8a8a8a}

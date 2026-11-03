@@ -1,6 +1,7 @@
 <script lang="ts">
  import {onMount} from 'svelte';
  import {csScenes} from '$lib/cs-scenes';
+ import {steadyHeight} from '$lib/steady-height';
  let {id}:{id:string}=$props();
  const scene=$derived(csScenes[id]);
  let step=$state(0),playing=$state(false),delay=$state(2600),reduced=$state(false),mode=$state('threads');
@@ -13,11 +14,16 @@
  function move(value:number){playing=false;step=Math.max(0,Math.min(scene.frames.length-1,value));}
  function play(){if(playing){playing=false;return;}if(step===scene.frames.length-1)step=0;playing=true;}
  $effect(()=>{if(!playing)return;const timer=setInterval(()=>{if(step<scene.frames.length-1)step++;if(step===scene.frames.length-1)playing=false;},delay);return()=>clearInterval(timer);});
+ let body=$state<HTMLElement>(),steady:ReturnType<typeof steadyHeight>|undefined;
+ onMount(()=>{if(!body)return;steady=steadyHeight(body,()=>scene.frames.length,i=>step=i,()=>step);return steady.stop;});
+ // The two process views have different captions, so measure again after switching.
+ $effect(()=>{mode;queueMicrotask(()=>steady?.remeasure());});
  onMount(()=>{const preference=matchMedia('(prefers-reduced-motion: reduce)');reduced=preference.matches;const change=()=>{reduced=preference.matches;playing=false;};const hide=()=>{if(document.hidden)playing=false;};preference.addEventListener('change',change);document.addEventListener('visibilitychange',hide);return()=>{preference.removeEventListener('change',change);document.removeEventListener('visibilitychange',hide);};});
 </script>
 {#if scene}
 <div class="concept-animation" class:reduce-motion={reduced}>
  <div class="animation-heading"><strong>{scene.title}</strong></div>
+ <div class="animation-body" bind:this={body}>
  {#if id==='process'}
   <div class="animation-modes" aria-label="실행 구조 비교"><button class:selected={mode==='threads'} aria-pressed={mode==='threads'} onclick={()=>{mode='threads';move(0);}}>같은 프로세스의 스레드</button><button class:selected={mode==='processes'} aria-pressed={mode==='processes'} onclick={()=>{mode='processes';move(0);}}>서로 다른 프로세스</button></div>
   <div class="cpu-box"><strong>CPU 실행 흐름</strong><span>{step===0?'실행 준비':mode==='threads'?(step===1?'스레드 1 진행':'스레드 2 진행'):(step<3?'프로세스 A 진행':'프로세스 B 진행')}</span><p>하나의 실행 흐름을 따라가는 모형입니다. 실제 병렬 실행 수는 코어·런타임에 따라 다릅니다.</p></div>
@@ -30,12 +36,14 @@
   <ol class="scene-nodes" aria-label="구성 요소와 현재 상태">{#each scene.nodes as name,i}<li class:node-active={frame.active.includes(i)}><div class="node-title"><strong>{name}</strong></div><div class="node-value">{frame.values[i]}</div><span class="node-status">{frame.active.includes(i)?'이번 단계의 동작':'상태 유지 / 대기'}</span></li>{/each}</ol>
  {/if}
  <div class="animation-caption" aria-live={playing?'off':'polite'}><strong>{step+1} / {scene.frames.length} 단계</strong><p>{caption}</p></div>
+ </div>
  <div class="animation-timeline"><label for={'timeline-'+id}>단계 직접 선택</label><input id={'timeline-'+id} type="range" min="0" max={scene.frames.length-1} value={step} aria-valuetext={`${step+1}단계: ${caption}`} oninput={e=>move(Number(e.currentTarget.value))}/></div>
  <div class="animation-controls"><button disabled={step===0} onclick={()=>move(step-1)}>← 이전</button><button onclick={play} aria-pressed={playing}>{playing?'일시 정지':'자동 재생'}</button><button disabled={step===scene.frames.length-1} onclick={()=>move(step+1)}>다음 →</button><button onclick={()=>move(0)}>처음</button><label>속도<select aria-label="그림 재생 속도" bind:value={delay} onchange={()=>playing=false}><option value={4000}>천천히 · 4초</option><option value={2600}>보통 · 2.6초</option><option value={1400}>빠르게 · 1.4초</option></select></label></div>
  <p class="animation-footnote">{scene.note}{reduced?' 움직임 줄이기 설정을 적용했습니다.':''}</p>
 </div>
 {/if}
 <style>
+ .animation-body{display:flow-root}
  .concept-animation{margin:40px 0;padding:32px;background:var(--surface,#f3f3f3);color:var(--ink,#0a0a0a);container-type:inline-size}
  .animation-heading{margin-bottom:24px}
  .animation-heading>strong{display:block;font-size:var(--step-lead,1.5rem);letter-spacing:-.02em;line-height:1.3}
