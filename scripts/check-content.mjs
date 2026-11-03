@@ -3,7 +3,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
-import assert from 'node:assert/strict';
 import ts from 'typescript';
 const cache=new Map();
 function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const module={exports:{}};cache.set(file,module.exports);const source=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('require','exports','module',source)(name=>load(path.resolve(path.dirname(file),name+'.ts')),module.exports,module);return module.exports;}
@@ -176,25 +175,13 @@ const {chapterIntros,chapterNames}=load('src/lib/lesson-context.ts');
 check(chapterIntros.length===chapterNames.length,'chapterIntros must have one slot per chapter');
 for(const intro of chapterIntros.filter(Boolean))check(filled(intro.title)&&intro.paragraphs.length>=2&&intro.paragraphs.every(p=>filled(p,40)),`chapter intro '${intro.title}' is incomplete`);
 
-// Progress backup: a round trip keeps every page's record, and foreign or broken files are refused.
+// Every tool on the tech map points at a real lesson.
 const {techMap}=load('src/lib/tech-map.ts');
 for(const layer of techMap)for(const tool of layer.tools){
  check(ids.has(tool.lesson),'techMap: '+tool.name+' points at unknown lesson '+tool.lesson);
  check(tool.born&&tool.role&&tool.notFor,'techMap: '+tool.name+' needs born, role and notFor');
 }
 
-const {buildBackup,parseBackup,applyBackup,progressKeys}=load('src/lib/progress-backup.ts');
-const memory=entries=>{const m=new Map(Object.entries(entries));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),map:m};};
-const source=memory({'serverNotebook.v1':'{"completed":["dns"],"lastLesson":"dns"}','csLabPractice.v1':'{"records":{"maximum":{"accepted":true}}}','oneStepAlgorithmV1':'{"completed":[0,3]}','unrelated':'x'});
-const backup=buildBackup(source,new Date('2026-01-02T03:04:05Z'));
-assert.deepEqual(Object.keys(backup.data).sort(),[...progressKeys].sort());
-const target=memory({'serverNotebook.v1':'{"completed":[]}'});
-assert.equal(applyBackup(target,parseBackup(JSON.stringify(backup))),3);
-for(const key of progressKeys)assert.deepEqual(JSON.parse(target.map.get(key)),JSON.parse(source.getItem(key)),key+' restored');
-assert.ok(!target.map.has('unrelated'));
-for(const bad of ['not json','{"app":"other","version":1,"data":{}}','{"app":"cs-note","version":2,"data":{"csLabPractice.v1":{}}}','{"app":"cs-note","version":1,"data":{"csLabPractice.v1":[1]}}','{"app":"cs-note","version":1,"data":{"unrelated":{}}}'])
- assert.throws(()=>parseBackup(bad),Error,'should refuse '+bad);
-
 if(errors.length){console.error(errors.map(e=>'✗ '+e).join('\n'));console.error(`\n${errors.length} content problem(s).`);process.exit(1);}
 const withDiagram=lessons.filter(l=>diagrams[l.id]).length;
-console.log(`${lessons.length} lessons: history, deep notes and ${withDiagram} diagrams valid; ${pageTitles.length} algorithm notes, ${Object.keys(stories).length} stories, practice links and progress backup valid.`);
+console.log(`${lessons.length} lessons: history, deep notes and ${withDiagram} diagrams valid; ${pageTitles.length} algorithm notes, ${Object.keys(stories).length} stories, and practice links valid.`);

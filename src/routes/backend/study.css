@@ -15,29 +15,16 @@
 .book-sidebar{position:sticky;top:64px;height:calc(100svh - 64px);overflow:auto;padding:32px 20px 48px var(--margin);background:var(--surface);font-size:1rem;scrollbar-width:thin;display:grid;align-content:start;gap:24px}
 .course-link{justify-self:start;border:0;background:none;padding:0;color:var(--muted);transition:color .2s}
 .course-link:hover{color:var(--ink)}
-.book-progress{display:grid;gap:4px}
-.book-progress strong{font-size:var(--step-lead);letter-spacing:-.02em}
-.book-progress span{color:var(--muted)}
-.book-progress progress{appearance:none;width:100%;height:6px;margin-top:8px;border:0;background:var(--surface-2)}
-.book-progress progress::-webkit-progress-bar{background:var(--surface-2)}
-.book-progress progress::-webkit-progress-value{background:var(--accent)}
-.book-progress progress::-moz-progress-bar{background:var(--accent)}
 .book-search{display:grid;gap:8px;color:var(--muted)}
 .book-search input{width:100%;min-height:44px;padding:0 12px;border:0;background:var(--bg);color:var(--ink)}
-.book-tools summary,.book-chapter summary{cursor:pointer;list-style:none;font-weight:600;padding:6px 0}
-.book-tools summary::-webkit-details-marker,.book-chapter summary::-webkit-details-marker{display:none}
-.book-tools summary::after,.book-chapter summary::after{content:'+';float:right;color:var(--muted);font-weight:400}
-.book-tools[open] summary::after,.book-chapter[open] summary::after{content:'−'}
-.book-tools div{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-.book-tools div button{border:0;background:var(--bg);min-height:36px;padding:0 12px;transition:background-color .2s}
-.book-tools div button:hover{background:var(--surface-2)}
-.book-tools p{color:var(--muted)}
+.book-chapter summary{cursor:pointer;list-style:none;font-weight:600;padding:6px 0}
+.book-chapter summary::-webkit-details-marker{display:none}
+.book-chapter summary::after{content:'+';float:right;color:var(--muted);font-weight:400}
+.book-chapter[open] summary::after{content:'−'}
 .book-sidebar nav{display:grid;gap:12px}
 .book-chapter button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border:0;background:none;padding:8px 10px;margin-left:-10px;width:calc(100% + 10px);color:var(--ink);line-height:1.45;transition:background-color .2s}
 .book-chapter button:hover{background:var(--surface-2)}
 .book-chapter button.active{background:var(--ink);color:var(--bg)}
-.done-mark{color:var(--accent);font-weight:700}
-.book-chapter button.active .done-mark{color:inherit}
 .book-sidebar>small{color:var(--muted);font-size:var(--step-small)}
 
 .book-main{min-width:0;padding:0 var(--margin) 0 clamp(24px,5vw,96px)}
@@ -83,9 +70,6 @@
 .reading-heading h1{grid-column:1;font-size:clamp(2.5rem,1rem + 4.6vw,5.5rem);font-weight:800;letter-spacing:-.045em;line-height:1.05}
 .reading-hook{grid-column:1;margin-top:24px;font-size:var(--step-lead);line-height:1.5;max-width:32ch}
 .reading-meta{grid-column:1;margin-top:16px;font-size:var(--step-small);color:var(--muted)}
-.book-bookmark{grid-column:1;justify-self:start;margin-top:24px;min-height:44px;padding:0 18px;border:0;background:var(--surface);transition:background-color .2s}
-.book-bookmark:hover{background:var(--surface-2)}
-.book-bookmark[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .reading-figure{grid-column:2;grid-row:1/6}
 .reading-figure img{aspect-ratio:4/3}
 
@@ -183,8 +167,6 @@
 .unit-references a{display:block;padding:8px 24px;text-decoration:none;transition:color .2s}
 .unit-references a:hover{color:var(--accent)}
 .unit-references a:last-child{padding-bottom:20px}
-.book-completion{max-width:46rem;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin:48px 0}
-.book-completion p{color:var(--muted);max-width:30ch}
 .book-pager{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;margin:96px 0 0;padding:48px 0}
 .book-pager button{border:0;background:none;text-align:left;padding:16px 0;font-weight:600;display:grid;gap:6px;transition:color .2s}
 .book-pager button:last-child{text-align:right}
